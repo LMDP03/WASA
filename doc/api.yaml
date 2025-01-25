@@ -5,7 +5,14 @@ info:
     This OpenAPI document describes the simplified login API.
     Copy and paste the API from the `paths` key to your OpenAPI document.
   version: "1"
-
+servers:
+  - url: 'https://localhost:3000'
+tags:
+  - name: 'login'
+  - name: 'user'
+  - name: 'conversation'
+  - name: 'group'
+  - name: 'message'
 components:
 
   schemas:
@@ -19,8 +26,8 @@ components:
         and can't be changed in any way.
       type: string
       format: password
+      pattern: 'ˆ.*?$'
       readOnly: true
-      example: "adksb32r5E$&"
       minLength: 8
       maxLength: 16
 
@@ -30,7 +37,7 @@ components:
             the username you choose;
             it can be later modified, but no 2 people can have the same one at the same time
       type: string
-      example: "Maria"
+      format: byte
       pattern: 'ˆ.*?$'
       minLength: 5
       maxLength: 20
@@ -44,7 +51,7 @@ components:
       type: string
       format: binary
       minLength: 0
-      maxLength: 1000
+      maxLength: 1000000
 
 
     MessageID:
@@ -54,7 +61,9 @@ components:
         it's automatically generated when the message is first created and sent
         and can't be changed unless the message is deleted
       type: integer
+      format: int64
       minimum: 1
+      maximum: 10000
       example: 1
       readOnly: true
 
@@ -63,19 +72,26 @@ components:
         The content of the messsage;
         can be either a simple text message or a file/img/emoji
         there must be at least a character/file/emoji and no more than 1000 chracters
-      type: string
       anyOf:
-        - format: byte
+        - type: string
+          format: byte
+          pattern: 'ˆ.*?$'
           description: text message or Base-64 encoded file
           example: "Hello There!"
           minLength: 1
           maxLength: 1000
-        - format: binary
+        - type: string
+          format: binary
           description: image or binary file (e.g. Gif...)
           minLength: 0
-          maxLength: 1000
-        - pattern: "^[\u203C-\u3299\u1F004\u1F0CF\u1F9FF]$"
+          maxLength: 1000000
+        - type: string
+          format: byte
+          pattern: "^[\u203C-\u3299\u1F004\u1F0CF\u1F9FF]$"
           description: emoji
+          minLength: 0
+          maxLength: 100
+      additionalProperties: false
 
 
     ConversationID:
@@ -83,7 +99,9 @@ components:
         unique identifier of this chat, automatically generated when the conversation is started
         can't be changed, nor can be reused until the conversation exists
       type: integer
+      format: int64
       minimum: 1
+      maximum: 10000
       example: 1
       readOnly: true
 
@@ -93,16 +111,12 @@ components:
         if it's a group chat, it's the name you chose when you
         made the group and can be changed by an admin;
         otherwise, it's the username of the other person
-      oneOf:
-        - type: string
-          format: byte
-          minLength: 1
-          maxLength: 20
-          description: the group chat's name
-          example: "Party Group!"
-        - $ref: "#/components/schemas/UserName"
-          description: the other user's name
-          readOnly: true
+      type: string
+      format: byte
+      pattern: 'ˆ.*?$'
+      minLength: 5
+      maxLength: 20
+      readOnly: true
 
     ConversationImage:
       description: |-
@@ -110,13 +124,19 @@ components:
         if it's a group chat, it can be modified by admins.
         if you are in a direct/private conversation (i.e. not in a group),
         and the image is the profile picture of the other user.
-      oneOf:
-        - type: string
-          description: group image, can be modified (by admins)
-          format: binary
-        - $ref: "#/components/schemas/ProfilePicture"
-          description: other user's profile pictures
-          readOnly: true
+      type: string
+      format: binary
+      minLength: 0
+      maxLength: 1000000
+
+    TimeStamp:
+        description: the time at which the last message was sent/received
+        type: string
+        format: date-time
+        minLength: 20
+        maxLength: 20
+        readOnly: true
+        example: "2017-07-21T17:32:28Z"
 
     Preview:
       description: |-
@@ -126,15 +146,11 @@ components:
       type: object
       properties:
         name:
-          description: the name of the conversation
           $ref: "#/components/schemas/ConversationName"
-          readOnly: true
         picture:
-          description: the photo of the conversation
           $ref: "#/components/schemas/ConversationImage"
-          readOnly: true
         snippet:
-          $ref: "#/components/schemas/MessageContent"
+          $ref: "#/components/schemas/Snippet"
 
     Snippet:
       description: |-
@@ -144,35 +160,36 @@ components:
         will be blank (null) instead.
       type: object
       nullable: true
-      default: null
+      readOnly: true
       properties:
         sender:
-          description: sender of the last message
           $ref: "#/components/schemas/UserName"
-          readOnly: true
         timestamp:
-          description: the time at which the last message was sent/received
-          type: string
-          format: date-time
-          example: "2017-07-21T17:32:28Z"
-          readOnly: true
+          $ref: "#/components/schemas/TimeStamp"
         content:
           description: |-
             the preview of the actual Message:
             in case of a text it will be the first 30 characters,
             while if it is an image, you will see a symbol in its stead.
-          oneOf:
-            - $ref: "#/components/schemas/MessageContent"
+          anyOf:
+            - type: string
+              format: byte
+              pattern: 'ˆ.*?$'
               minLength: 1
               maxLength: 30
-              description: text preview
+              description: text preview              
             - type: string
               format: binary
-              description: the icon representing an image
-          readOnly: true
+              minLength: 100
+              maxLength: 100
+              description: the icon representing an image or file
+            - type: string
+              format: byte
+              pattern: "^[\u203C-\u3299\u1F004\u1F0CF\u1F9FF]$"
+              description: emoji
+              minLength: 1
+              maxLength: 30
         link:
-          description: |-
-            the unique id of the conversation, which is used as a connection to the actual conversation
           $ref: "#/components/schemas/ConversationID"
 
 
@@ -195,35 +212,23 @@ components:
         id:
           $ref: "#/components/schemas/MessageID"
         sender:
-          description: |-
-            the username with which the sender is saved (if saved at all) in the receiver's phone book
           $ref: "#/components/schemas/UserName"
-          readOnly: true
         timestamp:
-          description: The time at which the message was sent
-          type: string
-          format: date-time
-          example: "2017-07-21T17:32:28Z"
-          readOnly: true
+          $ref: "#/components/schemas/TimeStamp"
         checkmark:
           description: |-
             tells you whether the message was received, read, or none of the two.
-            no checkmark indicates that the messages hasn't benn read by (all) the participants of the conversation.
+            no checkmark indicates that the messages hasn't been received by (all) the participants of the conversation.
             1 checkmark indicates that the message has been received by all the recipients of that conversation.
             2 checkmarks mean that the message has been read by all the recipients of the conversation.
           type: integer
-          example: true
+          format: int32
+          example: 1
           minimum: 0
           maximum: 2
         content:
           $ref: "#/components/schemas/MessageContent"
         response:
-          description: |-
-            contains the snippet of the message to which
-            you are responding to, if any.
-            if the message isn't an answer to a message, you just
-            leave this property empty, and the default null value
-            0 will be inserted instead
           $ref: "#/components/schemas/Snippet"
         forwarded: 
           description: |-
@@ -238,15 +243,14 @@ components:
             each person can put at most one emoji.
           type: array
           minItems: 0
+          maxItems: 100
           items:
             type: object
             properties: 
               emoji:
                 type: string
                 pattern: "^[\u203C-\u3299\u1F004\u1F0CF\u1F9FF]{1}$"
-                description: the reaction (emoji) given to the message
               sender:
-                description: the ID of the user who put that reaction to that message
                 $ref: "#/components/schemas/UserID"
 
     Conversation:
@@ -277,12 +281,11 @@ components:
             If all admins leave the conversation, the first person in chronological order among the remaining ones will be set to 'admin' automatically
           type: array
           minItems: 1
-          maxItems: 50
+          maxItems: 100
           items:
             type: object
             properties:
-              participants:
-                description: the username of the participant.
+              participant:
                 $ref: "#/components/schemas/UserName"
               admin:
                 description: |-
@@ -296,7 +299,10 @@ components:
           description: |-
             the list of messages sent by all users in the chat,
             shown in reverse chronological order.
+            Only the first 50 messages will be loaded at once.
           type: array
+          minItems: 0
+          maxItems: 50
           items:
             $ref: "#/components/schemas/Message"
         preview:
@@ -307,7 +313,7 @@ components:
   parameters:
 
     UserId:
-      description: the user identifier, which must be passed for any possible operation
+      description: The user identifier, which must be passed for any possible operation.
       name: usrId
       in: path
       required: true
@@ -315,7 +321,7 @@ components:
         $ref: "#/components/schemas/UserID"
     
     ConversationId:
-      description: the identifer of a conversation, used for any kind of acess to that conversation
+      description: The identifer of a conversation, used for any kind of acess to that conversation.
       name: convId
       in: path
       required: true
@@ -324,17 +330,26 @@ components:
 
     MessageId:
       description: |-
-        unique identifer of a message,
-        used whenever you want to comment, respond, share, or modify that message
+        The unique identifer of a message,
+        used whenever you want to comment, respond, share, or modify that message,
       name: msgId
       in: path
       required: true
       schema: 
         $ref: "#/components/schemas/MessageID"
-          
+
+    SenderId:
+      description: |-
+        The id of the user who sent a specific (emoji) reaction.
+        If UserId and Sender Id match, it is possible to modify a reaction.
+      name: sdrId
+      in: path
+      required: true
+      schema:
+        $ref: "#/components/schemas/UserID"
+
   
   securitySchemes:
-
     AuthenticationId:
       type: http
       scheme: bearer
@@ -362,11 +377,20 @@ components:
     ItemDeleted:
       description: Item(s) succesfully deleted.
 
-    ItemUpdated:
-      description: Item(s) succesfully deleted.
+    ConversationUpdated:
+      description: Conversation succesfully updated.
+      content:
+        application/json:
+          schema: 
+            $ref: "#/components/schemas/Conversation"
 
-    ItemCreated:
-      description: Item(s) succesfully created.
+    UserInfoUpdated:
+      description: Info of User successfully updated.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/User"
+
 
 
 security:
@@ -379,7 +403,7 @@ paths:
 
   /session:
     post:
-      tags: ["login"]
+      tags: [login]
       summary: Logs in the user
       description: |-
         If the user does not exist, it will be created, and an identifier is returned.
@@ -408,7 +432,7 @@ paths:
     parameters:
       - $ref: "#/components/parameters/UserId"
     put:
-      tags: ["user"]
+      tags: [user]
       summary: modifies the username, if possible
       description: |-
         if the username isn't already taken,
@@ -422,11 +446,7 @@ paths:
               $ref: "#/components/schemas/UserName"
       responses:
         "200":
-          $ref: "#/components/responses/ItemUpdated"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/User"
+          $ref: "#/components/responses/UserInfoUpdated"
         "401":
           $ref: "#/components/responses/UnauthorizedError"
         "400":
@@ -440,7 +460,7 @@ paths:
     parameters:
       - $ref: "#/components/parameters/UserId"  
     put:
-      tags: ["user"]
+      tags: [user]
       summary: modifies the profile picture
       description: |-
         modifies the profile picture, with the one specified in the request body.
@@ -453,11 +473,7 @@ paths:
               $ref: "#/components/schemas/ProfilePicture"
       responses:
         "200":
-          $ref: "#/components/responses/ItemUpdated"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/User"
+          $ref: "#/components/responses/UserInfoUpdated"
         "401":
           $ref: "#/components/responses/UnauthorizedError"
         "400":
@@ -493,12 +509,13 @@ paths:
           schema:
             type: string
             format: byte
+            pattern: 'ˆ.*?$'
             minLength: 0
-            maxLength: 16
+            maxLength: 20
             default: ""
       responses:
         "200":
-          $ref: "#/components/responses/ItemUpdated"
+          description: The following conversations have been found.
           content:
             application/json:
               schema:
@@ -516,7 +533,7 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
     post: 
-      tags: ["group"]
+      tags: [group]
       summary: creates a new group
       description: |-
         creates a new group,
@@ -535,7 +552,7 @@ paths:
               $ref: "#/components/schemas/Conversation"
       responses:
         "201":
-          $ref: "#/components/responses/ItemCreated"
+          description: New group succesfully created.
           content:
             application/json:
               schema: 
@@ -547,43 +564,6 @@ paths:
         "404":
           $ref: "#/components/responses/NotFoundError"
         "500":
-          description: server error occurred. Please, try again in a few minutes.
-    delete:
-      tags: ["conversation"]
-      summary: deletes a conversation
-      description: |-
-        totally deletes a conversation, along with all its messages,
-        media and everything else.
-        the conversation is then removed from the list of the user's conversation.
-        if the deleted conversation was a private chat, the chat can always be searched again,
-        but it will appear empty.
-        you can delete up to 10 conversations at once
-      operationId: deleteConversation
-      parameters:
-        - name: conversationId
-          in: query
-          description: |-
-            the identifier of the conversation you want to deleted.
-            once the process is successfully completed, the conversation
-            can't be given bad, and all messages from that conversation
-            will disappear
-          required: true
-          schema:
-            type: array
-            minItems: 1
-            maxItems: 10
-            items:
-              $ref: "#/components/schemas/ConversationID"
-      responses:
-        "204": 
-          $ref: "#/components/responses/ItemDeleted"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "400":
-          $ref: "#/components/responses/BadRequestError"
-        "404":
-          $ref: "#/components/responses/NotFoundError"
-        "500":
           $ref: "#/components/responses/ServerError"
 
   /users/{usrId}/conversations/{convId}:
@@ -591,7 +571,7 @@ paths:
       - $ref: "#/components/parameters/UserId"
       - $ref: "#/components/parameters/ConversationId"
     get:
-      tags: ["conversation"]
+      tags: [conversation]
       summary: opens the chosen conversation
       description: |-
         based on the given id, taken from the conversation's preview,
@@ -611,7 +591,7 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
     put: 
-      tags: ["group"]
+      tags: [group]
       summary: add new members to group
       description: |-
         if the conversation is a group chat, and the user is an admin of such group,
@@ -625,15 +605,12 @@ paths:
             schema: 
               type: array
               minItems: 1
+              maxItems: 100
               items:
                 $ref: "#/components/schemas/UserName"
       responses:
         "200":
-          $ref: "#/components/responses/ItemUpdated"
-          content:
-            application/json:
-              schema: 
-                $ref: "#/components/schemas/Conversation"
+          $ref: "#/components/responses/ConversationUpdated"
         "404":
           $ref: "#/components/responses/NotFoundError"
         "400":
@@ -641,18 +618,19 @@ paths:
         "401":
           $ref: "#/components/responses/UnauthorizedError"
         "500":
-          description: server error occurred. Please, try again in a few minutes.
+          $ref: "#/components/responses/ServerError"
     delete:
-      tags: ["group"]
+      tags: [group]
       summary: leaves the group
       description: |-
-        makes you leave a group,
-        completely removing you from the group participants' list.
-        the messages written and received so far will stay, but
-        you won't be able to neither write nor read any new message
-        in/from that group/conversation.
-        if you were the only remaining admin if the group chat,
+        Makes you leave a group, completely removing you from the group participants' list.
+        The group will also be removed from your list of conversations.
+        If you were the only remaining admin if the group chat,
         the next person in alphabetical order, will automatically become the new admin.
+        If instead it was a cimple conversation between you an another user,
+        the conversation will be removed from your list of conversations and its messages deleted,
+        but it will still be possible to have a private conversation with that same person,
+        even though you won't be able to see any previous message you had.
       operationId: leaveGroup
       responses:
         "204":
@@ -662,14 +640,14 @@ paths:
         "404":
           $ref: "#/components/responses/NotFoundError"
         "500":
-          description: server error occurred. Please, try again in a few minutes.
+          $ref: "#/components/responses/ServerError"
   
   /users/{usrId}/conversations/{convId}/name:
     parameters:
       - $ref: "#/components/parameters/UserId"
       - $ref: "#/components/parameters/ConversationId"
     put:
-      tags: ["group"]
+      tags: [group]
       summary: changes the group's name
       description: |-
         if the conversation is a group chat, and the user is an admin of such group,
@@ -681,14 +659,10 @@ paths:
         content:
           application/json:
             schema: 
-              $ref: "#/components/schemas/Conversation/properties/name"
+              $ref: "#/components/schemas/ConversationName"
       responses:
         "200":
-          $ref: "#/components/responses/ItemUpdated"
-          content:
-            application/json:
-              schema: 
-                $ref: "#/components/schemas/Conversation"
+          $ref: "#/components/responses/ConversationUpdated"
         "404":
           $ref: "#/components/responses/NotFoundError"
         "401":
@@ -701,7 +675,7 @@ paths:
       - $ref: "#/components/parameters/UserId"
       - $ref: "#/components/parameters/ConversationId"
     put:
-      tags: ["group"]
+      tags: [group]
       summary: changes the group's image
       description: |-
         if the conversation is a group chat, and the user is an admin of such group,
@@ -716,11 +690,7 @@ paths:
               $ref: "#/components/schemas/ConversationImage"
       responses:
         "200":
-          $ref: "#/components/responses/ItemUpdated"
-          content:
-            application/json:
-              schema: 
-                $ref: "#/components/schemas/Conversation"
+          $ref: "#/components/responses/ConversationUpdated"
         "404":
           $ref: "#/components/responses/NotFoundError"
         "400":
@@ -736,7 +706,7 @@ paths:
       - $ref: "#/components/parameters/UserId"
       - $ref: "#/components/parameters/ConversationId"
     post: 
-      tags: ["message"]
+      tags: [message]
       summary: sends new message
       description: |-
         creates a new message and sends it to the conversation,
@@ -751,7 +721,7 @@ paths:
               $ref: "#/components/schemas/Message" 
       responses:
         "201":
-          $ref: "#/components/responses/ItemCreated"
+          description: New message sent succesfully.
           content:
             application/json:
               schema: 
@@ -764,37 +734,7 @@ paths:
           $ref: "#/components/responses/NotFoundError"
         "500":
           $ref: "#/components/responses/ServerError"
-    delete:
-      tags: ["message"]
-      summary: deletes one or more messages
-      description: |-
-        deletes all messages that have their Ids in the list
-        passed in the requestbody (up to 10 messages at once)
-        if the operation succeeds, the chosen messages are cancelled
-        and removed from the conversation messages' list.
-        Afterwards the chat will be updated,
-        showing only the remaining messages
-      operationId: deleteMessage
-      parameters:
-        - name: messageIds
-          in: query
-          schema:
-            type: array
-            minItems: 1
-            maxItems: 10
-            items:
-              $ref: "#/components/schemas/MessageID"
-      responses:
-        "204": 
-          $ref: "#/components/responses/ItemDeleted"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "400":
-          $ref: "#/components/responses/BadRequestError"
-        "404":
-          $ref: "#/components/responses/NotFoundError"
-        "500":
-          $ref: "#/components/responses/ServerError"
+
 
   /users/{usrId}/conversations/{convId}/messages/{msgId}: 
     parameters:
@@ -802,7 +742,7 @@ paths:
       - $ref: "#/components/parameters/ConversationId"
       - $ref: "#/components/parameters/MessageId"
     post:
-      tags: ["message"]
+      tags: [message]
       summary: forwards a message
       description: |-
         takes one message from a conversation
@@ -825,42 +765,47 @@ paths:
                 $ref: "#/components/schemas/ConversationID"
       responses:
         "201":
-          $ref: "#/components/responses/ItemCreated"
+          description: Message forwarded succesfully.
           content:
             application/json:
               schema: 
                 type: array
+                minItems: 1
+                maxItems: 50
                 items:
-                  $ref: "#/components/schemas/Conversation/properties/preview"
+                  $ref: "#/components/schemas/Preview"
         "401":
           $ref: "#/components/responses/UnauthorizedError"
         "400":
           $ref: "#/components/responses/BadRequestError"
         "404":
-          description: one or more conversations couldn't be found or don't exist.
+          $ref: "#/components/responses/NotFoundError"
         "500":
           $ref: "#/components/responses/ServerError"
     put: 
-      tags: ["message"]
+      tags: [message]
       summary: comments a message
       description: |-
         given a message in the chat, the user can comment it
         (a.k.a react to it) by adding the desired emoji to the message's
         reactions pool.
-        if an emoji associated to your Id is already present in
+        If an emoji associated to your Id is already present in
         the message's reaction pool, the one in the pool will be replaced with the newly chosen one.
-        if everything goes well, the updated message (with the updated reaction pool) is returned.
+        If everything goes well, the updated message (with the updated reaction pool) is returned.
       operationId: commentMessage
       requestBody:
         content:
           application/json:
             schema:
               type: string
+              format: byte
+              minLength: 0
+              maxLength: 1
               pattern: "^[\u203C-\u3299\u1F004\u1F0CF\u1F9FF]{1}$"
               description: the chosen reaction given to the message
       responses:
         "200":
-          $ref: "#/components/responses/ItemUpdated"
+          description: Reaction sent or changed succesfully. 
           content:
             application/json:
               schema: 
@@ -874,24 +819,53 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
     delete:
-      tags: ["message"]
-      summary: uncomment a message
+      tags: [message]
+      summary: deletes the message.
       description: |-
-        deletes a comment from the message's reaction pool.
-        if no emoji associated to your id is found, nothing happens
-      operationId: uncommentMessage
+        deletes all messages that have their Ids in the list
+        passed in the requestbody (up to 10 messages at once)
+        if the operation succeeds, the chosen messages are cancelled
+        and removed from the conversation messages' list.
+        Afterwards the chat will be updated,
+        showing only the remaining messages
+      operationId: deleteMessage
       responses:
         "204": 
           $ref: "#/components/responses/ItemDeleted"
-        "404":
-          $ref: "#/components/responses/NotFoundError"
         "401":
           $ref: "#/components/responses/UnauthorizedError"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
         "500":
           $ref: "#/components/responses/ServerError"
 
 
-
+  /users/{usrId}/conversations/{convId}/messages/{msgId}/{sdrId}:
+    parameters:
+      - $ref: "#/components/parameters/UserId"
+      - $ref: "#/components/parameters/ConversationId"
+      - $ref: "#/components/parameters/MessageId"
+      - $ref: "#/components/parameters/SenderId"
+    delete:
+      tags: [message]
+      summary: removes a reaction.
+      description: |-
+        checks if the user id and sender id are the same,
+        in which case, the reaction sent by the user for that specific message will be removed.
+      operationId: uncommentMessage
+      responses:
+        "204": 
+          $ref: "#/components/responses/ItemDeleted"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/ServerError"
       
 
 
