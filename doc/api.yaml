@@ -221,11 +221,12 @@ components:
             no checkmark indicates that the messages hasn't been received by (all) the participants of the conversation.
             1 checkmark indicates that the message has been received by all the recipients of that conversation.
             2 checkmarks mean that the message has been read by all the recipients of the conversation.
-          type: integer
-          format: int32
-          example: 1
-          minimum: 0
-          maximum: 2
+          type: string
+          format: byte
+          enum:
+            - "unreceived"
+            - "received"
+            -  "read"
         content:
           $ref: "#/components/schemas/MessageContent"
         response:
@@ -355,7 +356,6 @@ components:
       scheme: bearer
       bearerFormat: JWT
 
-  
 
   responses:
 
