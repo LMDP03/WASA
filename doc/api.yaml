@@ -99,7 +99,7 @@ components:
         unique identifier of this chat, automatically generated when the conversation is started
         can't be changed, nor can be reused until the conversation exists
       type: integer
-      format: int64
+      format: uint64
       minimum: 1
       maximum: 10000
       example: 1
@@ -242,17 +242,15 @@ components:
           description: |-
             the list of all emojis put as reactions to a message.
             each person can put at most one emoji.
-          type: array
-          minItems: 0
-          maxItems: 100
-          items:
-            type: object
-            properties: 
-              emoji:
-                type: string
-                pattern: "^[\u203C-\u3299\u1F004\u1F0CF\u1F9FF]{1}$"
-              sender:
-                $ref: "#/components/schemas/UserID"
+            THe list is in thew form of a hashmap with (UserID: emoji) pairs
+          type: object
+          additionalProperties:
+            type: string
+            format: byte
+            pattern: "^[\u203C-\u3299\u1F004\u1F0CF\u1F9FF]{1}$"
+            minLength: 0
+            maxLength: 1
+
 
     Conversation:
       title: Conversation
@@ -273,29 +271,21 @@ components:
           example: true
         participants:
           description: |-
-            the list of participants in the Conversation/chat, stored in alphabetical order,
-            along with a boolean value indicating whether they are admins of that group (or not).
+            map with (UserId: bool) pairs, indicating whether each member of trhe groupis an admin of that group (or not).
             at the very least, there must be one participant in the chat, otherwise the conversation is automatically deleted.
             if there are exactly 2 participants in the conversation, their 'admin' values are set to false automatically.
             when someone creates a new group, or join an already existing one, a new entry will be added to the list, with its username,
             while the 'admin' flag will be automatically set to true if he's the creator, or to false otherwise.
             If all admins leave the conversation, the first person in chronological order among the remaining ones will be set to 'admin' automatically
-          type: array
-          minItems: 1
-          maxItems: 100
-          items:
-            type: object
-            properties:
-              participant:
-                $ref: "#/components/schemas/UserName"
-              admin:
-                description: |-
-                  the admin flag, indicating whether you're an admin or not.
-                  the only way to become an admin, is to be either the founder of the group,
-                  or to be made one by another admin.
-                type: boolean
-                default: false
-                example: false
+          type: object
+          additionalProperties:
+              description: |-
+                the admin flag, indicating whether you're an admin or not.
+                the only way to become an admin, is to be either the founder of the group,
+                or to be made one by another admin.
+              type: boolean
+              default: false
+              example: false
         messages:
           description: |-
             the list of messages sent by all users in the chat,
