@@ -149,6 +149,8 @@ components:
           $ref: "#/components/schemas/ConversationName"
         picture:
           $ref: "#/components/schemas/ConversationImage"
+        id:
+          $ref: "#/components/schemas/ConversationID"
         snippet:
           $ref: "#/components/schemas/Snippet"
 
@@ -190,7 +192,7 @@ components:
               minLength: 1
               maxLength: 30
         link:
-          $ref: "#/components/schemas/ConversationID"
+          $ref: "#/components/schemas/MessageID"
 
 
   
@@ -250,6 +252,7 @@ components:
             pattern: "^[\u203C-\u3299\u1F004\u1F0CF\u1F9FF]{1}$"
             minLength: 0
             maxLength: 1
+            default: ""
 
 
     Conversation:
