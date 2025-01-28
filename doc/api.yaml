@@ -211,7 +211,7 @@ components:
           minItems: 0
           maxItems: 1000
           items:
-            $ref: "#/components/schemas/Conversation"
+            $ref: "#/components/schemas/ConversationID"
 
     Message:
       title: Message
