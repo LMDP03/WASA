@@ -299,8 +299,6 @@ components:
           maxItems: 50
           items:
             $ref: "#/components/schemas/Message"
-        preview:
-          $ref: "#/components/schemas/Preview"
   
 
 
