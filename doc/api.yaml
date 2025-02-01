@@ -17,55 +17,42 @@ components:
   
 
   schemas:
+
     UserID:
-      description: The unique authorization id of a user, automatically generated when the account is created.
+      description: The unique id of a user, automatically generated when the account is created.
       type: integer
       format: int32
-      minLength: 1
-      maxLength: 100000
+      minimum: 1
+      maximum: 100000
       readOnly: true
 
     UserName:
-      description: Tthe username; it can be modified, but no 2 people can have the same one at the same time.
+      description: The username; it can be modified, but no 2 people can have the same one at the same time.
       type: string
-      format: byte
       pattern: 'ˆ.*?$'
       minLength: 3
       maxLength: 16
 
     Image:
-      description: The user's or a conversation's profile picture, used for requests.
+      description: The image object, made of its name and the actual image base64-encoded.
       type: string
-      format: binary
-      minLength: 0
+      format: byte
+      pattern: 'ˆ.*?$'
+      minLength: 1
       maxLength: 10000000
-      nullable: true
-
-    ImageID:
-      type: string
-      format: uuid
-      minLength: 32
-      maxLength: 32
-      readOnly: true
 
     MessageID:
       description: The unique identifier of a message, automatically generated when the message is first created and sent.
       type: integer
       format: int32
       minimum: 1
-      maximum: 1000000
+      maximum: 100000
       readOnly: true
 
     Text:
-      description: The content of a text messsage; can be either a simple text message, emoji, or a file/img/gif;
-        there must be at least a character/file/emoji and no more than 1000 chracters.
+      description: The content of a simple/plain text messsage.
       type: string
-      format: byte
-      anyOf:
-        - description: simple text
-          pattern: 'ˆ.*?$'
-        - description: emoji
-          pattern: "^[\u203C-\u3299\u1F004\u1F0CF\u1F9FF]$"
+      pattern: 'ˆ.*?$'
       minLength: 1
       maxLength: 10000
           
@@ -74,13 +61,12 @@ components:
       type: integer
       format: int32
       minimum: 1
-      maximum: 1000000
+      maximum: 100000
       readOnly: true
 
     ConversationName:
       description: The name of the conversation, which can be either the name of a group or of a person.
       type: string
-      format: byte
       pattern: 'ˆ.*?$'
       minLength: 1
       maxLength: 20
@@ -94,6 +80,21 @@ components:
       readOnly: true
       example: "2017-07-21T17:32:28Z"
 
+    MessageContent:
+      description: The content of the message, having a flag to describe whether the content is a plain text or an image
+        and the actual message
+      type: object
+      properties:
+        normal:
+          type: boolean
+          default: true
+          readOnly: true
+        content:
+          oneOf:
+            - $ref: "#/components/schemas/Text"
+            - $ref: "#/components/schemas/Image"
+        
+
     Snippet:
       description: The preview of a message in a specific conversation;
         if there is no message in the conversation, when used for a conversation's preview it will be blank (null) instead.
@@ -104,22 +105,9 @@ components:
         timestamp:
           $ref: "#/components/schemas/TimeStamp"
         content:
-          description: the preview of the actual Message (in case of an image/file, it will be simply an icon)
-          oneOf:
-            - description: text preview
-              type: string
-              format: byte
-              anyOf:
-                - description: simple text
-                  pattern: 'ˆ.*?$'
-                - description: emoji
-                  pattern: "^[\u203C-\u3299\u1F004\u1F0CF\u1F9FF]$"
-              minLength: 1
-              maxLength: 30
-            - $ref: "#/components/schemas/ImageID"
+          $ref: "#/components/schemas/MessageContent"
         link:
           $ref: "#/components/schemas/MessageID"
-      nullable: true
       readOnly: true
 
     Preview:
@@ -129,11 +117,25 @@ components:
         name:
           $ref: "#/components/schemas/ConversationName"
         image:
-          $ref: "#/components/schemas/ImageID"
+          $ref: "#/components/schemas/Image"
         id:
           $ref: "#/components/schemas/ConversationID"
         snippet:
           $ref: "#/components/schemas/Snippet"
+
+    Reaction: 
+      description: The reaction/emoji to a messsage; each person can put at most one emoji.
+      type: object
+      properties:
+        sender:
+          $ref: "#/components/schemas/UserID"
+        emoji:
+          type: string
+          pattern: "[\u203C-\u3299\u1F004\u1F0CF\u1F9FF]"
+          minLength: 0
+          maxLength: 1
+          default: ""
+
 
     User:
       type: object
@@ -143,13 +145,7 @@ components:
         name:
           $ref: "#/components/schemas/UserName"
         image:
-          $ref: "#/components/schemas/ImageID"
-        conversations:
-          type: array
-          minItems: 0
-          maxItems: 1000000
-          items:
-            $ref: "#/components/schemas/ConversationID"
+          $ref: "#/components/schemas/Image"
 
     Message:
       type: object
@@ -165,26 +161,20 @@ components:
           type: string
           format: byte
           enum:
-            - "unreceived"
+            - "sent"
             - "received"
             -  "read"
         content:
-          oneOf:
-            - $ref: "#/components/schemas/Text"
-            - $ref: "#/components/parameters/ImageId"
+          $ref: "#/components/schemas/MessageContent"
         responseTo:
           $ref: "#/components/schemas/MessageID"
         reactions:
-          description: The list of all emojis (reactions) to this message; each person can put at most one emoji;
-            the list is in the form of a hashmap with (UserID - emoji) pairs.
-          type: object
-          additionalProperties:
-            type: string
-            format: byte
-            pattern: "^[\u203C-\u3299\u1F004\u1F0CF\u1F9FF]$"
-            minLength: 0
-            maxLength: 1
-            default: ""
+          description: The list of all emojis (reactions) to this message.
+          type: array
+          minItems: 0
+          maxItems: 1000
+          items:
+            $ref: "#/components/schemas/Reaction"
 
     Conversation:
       type: object
@@ -194,12 +184,17 @@ components:
         name:
           $ref: "#/components/schemas/ConversationName"
         image:
-          $ref: "#/components/schemas/ImageID"
+          $ref: "#/components/schemas/Image"
+        group:
+          description: flag indicating whether the conversation is a group (true) or (false)
+          type: boolean
+          default: true
+          readOnly: true
         participants:
           description: List of all members of a group chat. 
           type: array
-          minItems: 1
-          maxItems: 1000000
+          minItems: 3
+          maxItems: 1000
           items:
             $ref: "#/components/schemas/UserID"
           nullable: true
@@ -207,7 +202,7 @@ components:
           description: The list of all messages sent of the chat.
           type: array
           minItems: 0
-          maxItems: 1000000
+          maxItems: 100000
           items:
             $ref: "#/components/schemas/Message"
 
@@ -229,7 +224,7 @@ components:
     
     UserId:
       description: The user identifier, which must be passed for any possible operation.
-      name: usrId
+      name: usr
       in: path
       required: true
       schema:
@@ -237,7 +232,7 @@ components:
 
     ConversationId:
       description: The identifer of a conversation, used for any kind of acess to that conversation.
-      name: cnvId
+      name: convId
       in: path
       required: true
       schema:
@@ -250,14 +245,6 @@ components:
       required: true
       schema: 
         $ref: "#/components/schemas/MessageID"
-
-    ImageId:
-      description: The unique identifier used to retrieve an image.
-      name: imgId
-      in: path
-      required: true
-      schema:
-        $ref: "#/components/schemas/ImageID"
 
 
 
@@ -323,7 +310,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UserName"
+              type: object
+              properties:
+                name:
+                  $ref: "#/components/schemas/UserID"
         required: true
       responses:
         '201':
@@ -334,35 +324,10 @@ paths:
                 type: object
                 properties:
                   identifier:
-                    $ref: "#/components/schemas/UserID"
+                    $ref: "#/components/schemas/User"
 
     
-  /images/{imgId}:
-    parameters:
-      - $ref: "#/components/parameters/ImageId"
-    get:
-      tags: [image]
-      summary: let you retrieve an image
-      description: uses the id of the image, to0 acess a local database and retrieve the associated picture.
-      operationId: getImage
-      responses:
-        "200":
-          description: Image found and returned.
-          content:
-            image/*:
-              schema:
-                $ref: "#/components/schemas/Image"
-        "400":
-          $ref: "#/components/responses/BadRequestError"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "404":
-          $ref: "#/components/responses/NotFoundError"
-        "500":
-          $ref: "#/components/responses/ServerError"
-        
-
-  /users/{usrId}:
+  /users/{usr}:
     parameters:
       - $ref: "#/components/parameters/UserId"
     get:
@@ -389,7 +354,7 @@ paths:
                     username:
                       $ref: "#/components/schemas/UserName"
                     image:
-                      $ref: "#/components/schemas/ImageID"
+                      $ref: "#/components/schemas/Image"
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":
@@ -398,27 +363,10 @@ paths:
           $ref: "#/components/responses/NotFoundError"
         "500":
           $ref: "#/components/responses/ServerError"
-    post:
-      tags: [user]
-      summary: modifies the username, if possible
-      description: |-
-        if the chosen username isn't taken, modifies it, with the one specified.
-        Then, it returns the updated profile of the user.
-      operationId: setMyUserName
-      requestBody:
-        content:
-          text/plain:
-            schema:
-              $ref: "#/components/schemas/UserName"
-      responses:
-        "201":
-          $ref: "#/components/responses/UserInfoUpdated"
-        "400":
-          $ref: "#/components/responses/BadRequestError"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "500":
-          $ref: "#/components/responses/ServerError"
+    
+  /users/{usr}/image:
+    parameters:
+      - $ref: "#/components/parameters/UserId"
     put:
       tags: [user]
       summary: modifies the profile picture
@@ -428,7 +376,7 @@ paths:
       operationId: setMyPhoto
       requestBody:
         content:
-          image/*:
+          application/json:
             schema:
               $ref: "#/components/schemas/Image"
       responses:
@@ -441,8 +389,32 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
 
+  /users/{usr}/name:
+    parameters:
+      - $ref: "#/components/parameters/UserId"
+    put:
+      tags: [user]
+      summary: modifies the username, if possible
+      description: |-
+        if the chosen username isn't taken, modifies it, with the one specified.
+        Then, it returns the updated profile of the user.
+      operationId: setMyUserName
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              $ref: "#/components/schemas/UserName"
+      responses:
+        "200":
+          $ref: "#/components/responses/UserInfoUpdated"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/ServerError"
 
-  /users/{usrId}/conversations:
+  /users/{usr}/conversations:
     parameters:
       - $ref: "#/components/parameters/UserId"
     get:
@@ -486,9 +458,6 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/Conversation"
-          image/*:
-            schema:
-              $ref: "#/components/schemas/Image"
       responses:
         "201":
           description: New group succesfully created.
@@ -508,7 +477,7 @@ paths:
           $ref: "#/components/responses/ServerError"
   
 
-  /users/{usrId}/conversations/{convId}:
+  /users/{usr}/conversations/{convId}:
     parameters:
       - $ref: "#/components/parameters/UserId"
       - $ref: "#/components/parameters/ConversationId"
@@ -539,11 +508,13 @@ paths:
         adds the chosen participant to the group chat, then returns the conversation,
         with the newly updated list of participants.
       operationId: addToGroup
-      requestBody:
-        content:
-          text/plain:
-            schema: 
-              $ref: "#/components/schemas/UserName"
+      parameters:
+        - name: id
+          in: query
+          required: true
+          description: the id of the user you want to add to the conversation
+          schema:
+            $ref: "#/components/schemas/UserID"
       responses:
         "200":
           $ref: "#/components/responses/ConversationUpdated"
@@ -570,7 +541,7 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
 
-  /users/{usrId}/conversations/{convId}/name:
+  /users/{usr}/conversations/{convId}/name:
     parameters:
       - $ref: "#/components/parameters/UserId"
       - $ref: "#/components/parameters/ConversationId"
@@ -597,7 +568,7 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
 
-  /users/{usrId}/conversations/{convId}/image:
+  /users/{usr}/conversations/{convId}/image:
     parameters:
       - $ref: "#/components/parameters/UserId"
       - $ref: "#/components/parameters/ConversationId"
@@ -611,7 +582,7 @@ paths:
       operationId: setGroupPhoto
       requestBody:
         content:
-          image/*:
+          image/jpeg:
             schema: 
               $ref: "#/components/schemas/Image"
       responses:
@@ -625,7 +596,7 @@ paths:
           $ref: "#/components/responses/ServerError"
 
 
-  /users/{usrId}/conversations/{convId}/messages:
+  /users/{usr}/conversations/{convId}/messages:
     parameters:
       - $ref: "#/components/parameters/UserId"
       - $ref: "#/components/parameters/ConversationId"
@@ -634,17 +605,14 @@ paths:
       summary: sends new message
       description: |-
         creates a new message and sends it to the conversation, adding it to the conversation's log upon success,
-        if the new message has the "responseTo" property != 0, it means
+        if the new message has the "responseTo" property != "", it means
         this new message is an answer to the message specified in the "response" property
       operationId: sendMessage
       requestBody:
         content:
           application/json:
             schema: 
-              $ref: "#/components/schemas/Message"
-          image/*:
-            schema:
-              $ref: "#/components/schemas/Image"
+              $ref: "#/components/schemas/MessageContent"
       responses:
         "201":
           description: New message sent succesfully.
@@ -660,7 +628,7 @@ paths:
           $ref: "#/components/responses/ServerError"
 
 
-  /users/{usrId}/conversations/{convId}/messages/{msgId}: 
+  /users/{usr}/conversations/{convId}/messages/{msgId}: 
     parameters:
       - $ref: "#/components/parameters/UserId"
       - $ref: "#/components/parameters/ConversationId"
@@ -672,11 +640,12 @@ paths:
         forwards the message to the conversation specified in the request.
         basically creating a copy of the message in the chosen conversation.
       operationId: forwardMessage
-      requestBody:
-        content:
-          text/plain:
-            schema:
-              $ref: "#/components/schemas/ConversationID"
+      parameters:
+        - name: destId
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/ConversationID"
       responses:
         "201":
           description: Message forwarded succesfully.
@@ -719,7 +688,7 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
 
-  /users/{usrId}/conversations/{convId}/messages/{msgId}/reactions:
+  /users/{usr}/conversations/{convId}/messages/{msgId}/reactions:
     parameters:
       - $ref: "#/components/parameters/UserId"
       - $ref: "#/components/parameters/ConversationId"
@@ -737,13 +706,9 @@ paths:
               schema:
                 type: array
                 minItems: 0
-                maxItems: 1000000
+                maxItems: 1000
                 items:
-                  type: string
-                  format: byte
-                  pattern: "^[\u203C-\u3299\u1F004\u1F0CF\u1F9FF]$"
-                  maxLength: 0
-                  minLength: 1
+                  $ref: "#/components/schemas/Reaction"
         "401":
           $ref: "#/components/responses/UnauthorizedError"
         "400":
@@ -763,14 +728,9 @@ paths:
       operationId: commentMessage
       requestBody:
         content:
-          text/plain:
+          application/json:
             schema:
-              type: string
-              format: byte
-              minLength: 0
-              maxLength: 1
-              pattern: "^[\u203C-\u3299\u1F004\u1F0CF\u1F9FF]{1}$"
-              description: the chosen reaction given to the message
+              $ref: "#/components/schemas/Reaction"
       responses:
         "201":
           description: Reaction sent or changed succesfully. 
