@@ -23,7 +23,7 @@ func (db *appdbimpl) CreateUser(username string) (User, error) {
 	}
 
 	// Creation of user folder
-	path := fmt.Sprintf(".storage/profiles/%d/conversations")
+	path := fmt.Sprintf("./storage/users/%d/conversations", user.Id)
 	if err := os.MkdirAll(path, os.ModePerm); err != nil {
 		return user, err
 	}

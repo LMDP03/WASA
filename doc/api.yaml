@@ -224,7 +224,7 @@ components:
     
     UserId:
       description: The user identifier, which must be passed for any possible operation.
-      name: usr
+      name: usrId
       in: path
       required: true
       schema:
@@ -321,13 +321,10 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  identifier:
-                    $ref: "#/components/schemas/User"
+                $ref: "#/components/schemas/User"
 
     
-  /users/{usr}:
+  /users/{usrId}/others:
     parameters:
       - $ref: "#/components/parameters/UserId"
     get:
@@ -349,12 +346,7 @@ paths:
                 minItems: 1
                 maxItems: 50
                 items:
-                  type: object
-                  properties:
-                    username:
-                      $ref: "#/components/schemas/UserName"
-                    image:
-                      $ref: "#/components/schemas/Image"
+                  $ref: "#/components/schemas/User"
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":
@@ -364,7 +356,7 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
     
-  /users/{usr}/image:
+  /users/{usrId}/image:
     parameters:
       - $ref: "#/components/parameters/UserId"
     put:
@@ -376,9 +368,12 @@ paths:
       operationId: setMyPhoto
       requestBody:
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: "#/components/schemas/Image"
+              type: object
+              properties:
+                image:
+                  $ref: "#/components/schemas/Image"
       responses:
         "200":
           $ref: "#/components/responses/UserInfoUpdated"
@@ -389,7 +384,7 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
 
-  /users/{usr}/name:
+  /users/{usrId}/name:
     parameters:
       - $ref: "#/components/parameters/UserId"
     put:
@@ -414,7 +409,7 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
 
-  /users/{usr}/conversations:
+  /users/{usrId}/conversations:
     parameters:
       - $ref: "#/components/parameters/UserId"
     get:
@@ -477,7 +472,7 @@ paths:
           $ref: "#/components/responses/ServerError"
   
 
-  /users/{usr}/conversations/{convId}:
+  /users/{usrId}/conversations/{convId}:
     parameters:
       - $ref: "#/components/parameters/UserId"
       - $ref: "#/components/parameters/ConversationId"
@@ -541,7 +536,7 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
 
-  /users/{usr}/conversations/{convId}/name:
+  /users/{usrId}/conversations/{convId}/name:
     parameters:
       - $ref: "#/components/parameters/UserId"
       - $ref: "#/components/parameters/ConversationId"
@@ -568,7 +563,7 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
 
-  /users/{usr}/conversations/{convId}/image:
+  /users/{usrId}/conversations/{convId}/image:
     parameters:
       - $ref: "#/components/parameters/UserId"
       - $ref: "#/components/parameters/ConversationId"
@@ -596,7 +591,7 @@ paths:
           $ref: "#/components/responses/ServerError"
 
 
-  /users/{usr}/conversations/{convId}/messages:
+  /users/{usrId}/conversations/{convId}/messages:
     parameters:
       - $ref: "#/components/parameters/UserId"
       - $ref: "#/components/parameters/ConversationId"
@@ -628,7 +623,7 @@ paths:
           $ref: "#/components/responses/ServerError"
 
 
-  /users/{usr}/conversations/{convId}/messages/{msgId}: 
+  /users/{usrId}/conversations/{convId}/messages/{msgId}: 
     parameters:
       - $ref: "#/components/parameters/UserId"
       - $ref: "#/components/parameters/ConversationId"
@@ -688,7 +683,7 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
 
-  /users/{usr}/conversations/{convId}/messages/{msgId}/reactions:
+  /users/{usrId}/conversations/{convId}/messages/{msgId}/reactions:
     parameters:
       - $ref: "#/components/parameters/UserId"
       - $ref: "#/components/parameters/ConversationId"

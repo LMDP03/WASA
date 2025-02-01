@@ -42,6 +42,7 @@ type AppDatabase interface {
 	CreateUser(username string) (User, error)
 	GetUserById(userid int32) (User, error)
 	GetUserByName(username string) (User, error)
+	GetUsersByName(username string, userid int) ([]User, error)
 	Ping() error
 }
 

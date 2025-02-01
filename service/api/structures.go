@@ -11,6 +11,7 @@ type User struct {
 	Image string `json: "image"`
 }
 
+// convert user from db structure to api structure
 func (u *User) ConvertUser(user database.User) error {
 	u.Id = user.Id
 	u.Name = user.Name

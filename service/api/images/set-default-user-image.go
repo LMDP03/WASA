@@ -5,5 +5,5 @@ import (
 )
 
 func SetDefaultUserImage(userId int) string {
-	return fmt.Sprintf("./storage/profiles/%d/profile_image.jpg", userId)
+	return fmt.Sprintf("./storage/users/%d/profile_image.jpg", userId)
 }
