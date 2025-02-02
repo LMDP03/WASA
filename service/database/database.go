@@ -38,11 +38,18 @@ import (
 
 // AppDatabase is the high level interface for the DB
 type AppDatabase interface {
+	AddParticipants(convid int, names []string) ([]User, error)
 	CheckUserByName(username string) (bool, error)
+	CreateConversation(name string, group bool) (Conversation, error)
 	CreateUser(username string) (User, error)
-	GetUserById(userid int32) (User, error)
+	GetConversationById(id int) (Conversation, error)
+	GetConversationsbyName(searchname string, userid int) ([]Conversation, error)
+	GetMessages(convId int, msgId int) ([]Message, error)
+	GetParticipants(convid int) ([]User, error)
+	GetUserById(userid int) (User, error)
 	GetUserByName(username string) (User, error)
 	GetUsersByName(username string, userid int) ([]User, error)
+	SetUserNameById(username string, userid int) error
 	Ping() error
 }
 

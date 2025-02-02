@@ -15,13 +15,15 @@ var sql_CONVERSATIONS = `CREATE TABLE IF NOT EXISTS Conversations
 	group BOOLEAN,
 	last_message INTEGER,
 	PRIMARY KEY (id)
+	CONSTRAINT fk_Conversations
+		FOREIGN KEY (last_message) REFERENCES Messages(msgId)
+			ON DELETE CASCADE
 )`
 
 var sql_PARTICIPANTS = `CREATE TABLE IF NOT EXISTS Participants
 (
 	convId INTEGER NOT NULL,
 	userId INTEGER NOT NULL,
-	group BOOLEAN,
 	PRIMARY KEY (convId, userId),
 	CONSTRAINT fk_Participants
 		FOREIGN KEY (convId) REFERENCES Conversation(id)
@@ -34,7 +36,7 @@ var sql_MESSAGES = `CREATE TABLE IF NOT EXISTS Messages
 (
 	convId INTEGER NOT NULL,
 	senderId INTEGER NOT NULL,
-	msgId INTEGER NOT NULL,
+	msgId INTEGER NOT NULL AUTO_INCREMENT,
 	normal BOOLEAN,
 	text TEXT,
 	image STRING,

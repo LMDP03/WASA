@@ -1,13 +1,12 @@
 package database
 
-import "strconv"
+var queryGetUsersByName = `SELECT id, name FROM Users WHERE name LIKE '%?%' AND NOT id = ? OREDR BY name;`
 
 func (db *appdbimpl) GetUsersByName(searchname string, userid int) ([]User, error) {
 
 	var users []User
 
-	queryGetUsersByName := `SELECT id, name FROM Users WHERE name LIKE '%` + searchname + `%' AND NOT id = ` + strconv.Itoa(userid)
-	rows, err := db.c.Query(queryGetUsersByName)
+	rows, err := db.c.Query(queryGetUsersByName, searchname, userid)
 	if err != nil {
 		return nil, err
 	}

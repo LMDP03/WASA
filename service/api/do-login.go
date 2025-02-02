@@ -12,14 +12,13 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 
 	var user User
 
-	err := json.NewDecoder(r.Body).Decode(&user)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		BadRequest(w, err, "Couldn't decode the request", ctx)
 		return
 	}
 
 	if len(user.Name) < 3 || len(user.Name) > 16 {
-		BadRequest(w, err, "Invalid username", ctx)
+		BadRequest(w, nil, "Invalid username", ctx)
 		return
 	}
 

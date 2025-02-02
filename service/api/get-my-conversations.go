@@ -9,16 +9,20 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-func (rt *_router) GetUsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+func (rt *_router) GetMyConversations(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 
-	userid, err := strconv.Atoi(ps.ByName("usrId"))
+	userId, err := strconv.Atoi(ps.ByName("usrId"))
 	if err != nil {
 		BadRequest(w, err, "Invalid userId", ctx)
+		return
+	}
+
+	if checkAuthorization(w, ctx, userId) != nil {
 		return
 	}
 
@@ -33,29 +37,29 @@ func (rt *_router) GetUsers(w http.ResponseWriter, r *http.Request, ps httproute
 		}
 	}
 
-	dbUsers, err := rt.db.GetUsersByName(searchName, userid)
+	dbConvs, err := rt.db.GetConversationsbyName(searchName, userId)
 	if err != nil {
-		ctx.Logger.Error("Couldn't find users", err)
-		http.Error(w, "Couldn't find users", http.StatusInternalServerError)
+		ctx.Logger.Error("Couldn't find conversations for this user", err)
+		http.Error(w, "Couldn't find conversations for this user", http.StatusInternalServerError)
 		return
 	}
 
-	users := make([]User, len(dbUsers))
+	conversations := make([]Conversation, len(dbConvs))
 
-	for i, dbUser := range dbUsers {
-		var user User
-		err := user.ConvertUser(dbUser)
+	for i, dbConv := range dbConvs {
+		var conv Conversation
+		err := conv.ConvertConversation(dbConv)
 		if err != nil {
-			ctx.Logger.Error("Couldn't load users properly", err)
-			http.Error(w, "Couldn't load users properly", http.StatusInternalServerError)
+			ctx.Logger.Error("Couldn't load conversations properly", err)
+			http.Error(w, "Couldn't load conversations properly", http.StatusInternalServerError)
 			return
 		}
-		users[i] = user
+		conversations[i] = conv
 	}
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(users); err != nil {
+	if err := json.NewEncoder(w).Encode(conversations); err != nil {
 		ctx.Logger.Error("Couldn't encode the response", err)
 		http.Error(w, "Couldn't encode the response", http.StatusInternalServerError)
 		return
