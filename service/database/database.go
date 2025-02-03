@@ -82,7 +82,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 	}
 
 	// Check if table exists. If not, the database is empty, and we need to create the structure
-	var tables int
+	var tables uint8
 	err := db.QueryRow(`SELECT COUNT(name) FROM sqlite_master WHERE type='table'`).Scan(&tables)
 	if err != nil {
 		return nil, fmt.Errorf("error checking if database is empty: %w", err)
