@@ -38,18 +38,35 @@ import (
 
 // AppDatabase is the high level interface for the DB
 type AppDatabase interface {
-	AddParticipants(convid int, names []string) ([]User, error)
+	AddParticipants(convid int, names []string) error
+	CheckConversationById(convid int) (bool, bool, error)
+	CheckMessageById(convid int, msgid int) (bool, error)
+	CheckReactionById(convid int, msgid int, senderid int) (bool, error)
+	CheckUserById(userid int) (bool, error)
 	CheckUserByName(username string) (bool, error)
-	CreateConversation(name string, group bool) (Conversation, error)
+	CreateConversation(name string, group bool, otherid int, participants []string) (Conversation, error)
+	CreateMessage(convid int, senderid int, responseto int, text string, image string) (Message, error)
+	CreateReaction(convId int, senderId int, msgId int, emoji string) (Reaction, error)
 	CreateUser(username string) (User, error)
-	GetConversationById(id int) (Conversation, error)
-	GetConversationsbyName(searchname string, userid int) ([]Conversation, error)
-	GetMessages(convId int, msgId int) ([]Message, error)
+	DeleteMessage(convid int, msgid int) error
+	DeleteParticipant(convid int, userid int) error
+	DeleteReaction(convid int, msgid int, senderid int) error
+	GetConversationById(convid int, userid int) (Conversation, error)
+	GetConversationsbyName(searchname string, userid int) ([]Preview, error)
+	GetMessageById(convId int, msgId int) (Message, error)
+	GetMessages(convId int) ([]Message, error)
+	GetOtherParticipant(convid int, userid int) (User, error)
 	GetParticipants(convid int) ([]User, error)
+	GetReactionById(convid int, msgid int, senderid int) (Reaction, error)
+	GetReactions(convid int, msgid int) ([]Reaction, error)
 	GetUserById(userid int) (User, error)
 	GetUserByName(username string) (User, error)
 	GetUsersByName(username string, userid int) ([]User, error)
+	IsParticipant(convid int, userid int) (bool, error)
+	SetGroupNameById(convid int, name string) error
 	SetUserNameById(username string, userid int) error
+	UpdateReaction(convId int, senderId int, msgId int, emoji string) (Reaction, error)
+	UpdateLastMessage(convid int, msgid int) error
 	Ping() error
 }
 

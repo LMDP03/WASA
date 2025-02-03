@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -9,9 +8,9 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-func (rt *_router) GetConversation(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+func (rt *_router) LeaveGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
-	if r.Method != http.MethodGet {
+	if r.Method != http.MethodDelete {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
@@ -42,25 +41,30 @@ func (rt *_router) GetConversation(w http.ResponseWriter, r *http.Request, ps ht
 		return
 	}
 
-	dbConv, err := rt.db.GetConversationById(convId, userId)
+	exists, _, err = rt.db.CheckConversationById(convId)
 	if err != nil {
-		InternalServerError(w, err, "Couldn't get the conversation from the database", ctx)
+		InternalServerError(w, err, "Error checking the conversation", ctx)
 		return
 	}
-
-	var conv Conversation
-	err = conv.ConvertConversation(dbConv)
+	if !exists {
+		BadRequest(w, err, "The conversation doesn't exists", ctx)
+		return
+	}
+	ok, err := rt.db.IsParticipant(convId, userId)
 	if err != nil {
-		InternalServerError(w, err, "Error while converting the conversation", ctx)
+		InternalServerError(w, err, "Couldn't check Group existance", ctx)
+		return
+	}
+	if !ok {
+		Forbidden(w, nil, "The user isn't a member of this conversation", ctx)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(conv); err != nil {
-		ctx.Logger.Error("Couldn't encode the response", err)
-		http.Error(w, "Couldn't encode the response", http.StatusInternalServerError)
+	err = rt.db.DeleteParticipant(convId, userId)
+	if err != nil {
+		InternalServerError(w, err, "Error while leaving the group", ctx)
 		return
 	}
 
+	w.WriteHeader(http.StatusNoContent)
 }

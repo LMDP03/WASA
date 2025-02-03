@@ -80,36 +80,6 @@ components:
       readOnly: true
       example: "2017-07-21T17:32:28Z"
 
-    MessageContent:
-      description: The content of the message, having a flag to describe whether the content is a plain text or an image
-        and the actual message
-      type: object
-      properties:
-        normal:
-          type: boolean
-          default: true
-          readOnly: true
-        content:
-          oneOf:
-            - $ref: "#/components/schemas/Text"
-            - $ref: "#/components/schemas/Image"
-        
-
-    Snippet:
-      description: The preview of a message in a specific conversation;
-        if there is no message in the conversation, when used for a conversation's preview it will be blank (null) instead.
-      type: object
-      properties:
-        sender:
-          $ref: "#/components/schemas/UserID"
-        timestamp:
-          $ref: "#/components/schemas/TimeStamp"
-        content:
-          $ref: "#/components/schemas/MessageContent"
-        id:
-          $ref: "#/components/schemas/MessageID"
-      readOnly: true
-
     Preview:
       description: The preview of a conversation.
       type: object
@@ -120,8 +90,16 @@ components:
           $ref: "#/components/schemas/Image"
         id:
           $ref: "#/components/schemas/ConversationID"
-        snippet:
-          $ref: "#/components/schemas/Snippet"
+        lastmessage:
+          $ref: "#/components/schemas/Message"
+
+    Emoji:
+      description: an emoji
+      type: string
+      pattern: "[\u203C-\u3299\u1F004\u1F0CF\u1F9FF]"
+      minLength: 0
+      maxLength: 1
+      default: ""
 
     Reaction: 
       description: The reaction/emoji to a messsage; each person can put at most one emoji.
@@ -130,12 +108,8 @@ components:
         sender:
           $ref: "#/components/schemas/UserID"
         emoji:
-          type: string
-          pattern: "[\u203C-\u3299\u1F004\u1F0CF\u1F9FF]"
-          minLength: 0
-          maxLength: 1
-          default: ""
-
+          $ref: "#/components/schemas/Emoji"
+          
 
     User:
       type: object
@@ -147,6 +121,14 @@ components:
         image:
           $ref: "#/components/schemas/Image"
 
+    MessageContent:
+      type: object
+      properties:
+        text:
+          $ref: "#/components/schemas/Text"
+        image:
+          $ref: "#/components/schemas/Image"
+        
     Message:
       type: object
       properties:
@@ -166,8 +148,10 @@ components:
             - "sent"
             - "received"
             -  "read"
-        content:
-          $ref: "#/components/schemas/MessageContent"
+        text:
+          $ref: "#/components/schemas/Text"
+        image:
+          $ref: "#/components/schemas/Image"
         responseTo:
           $ref: "#/components/schemas/MessageID"
         reactions:
@@ -346,11 +330,14 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                minItems: 1
-                maxItems: 50
-                items:
-                  $ref: "#/components/schemas/User"
+                type: object
+                properties:
+                  users:
+                    type: array
+                    minItems: 1
+                    maxItems: 50
+                    items:
+                      $ref: "#/components/schemas/User"
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":
@@ -372,7 +359,7 @@ paths:
       operationId: setMyPhoto
       requestBody:
         content:
-          multipart/form-data:
+          application/json:
             schema:
               type: object
               properties:
@@ -442,11 +429,14 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                minItems: 1
-                maxItems: 50
-                items:
-                  $ref: "#/components/schemas/Preview"
+                type: object
+                properties:
+                  conversations:
+                    type: array
+                    minItems: 1
+                    maxItems: 50
+                    items:
+                      $ref: "#/components/schemas/Preview"
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":
@@ -455,6 +445,46 @@ paths:
           $ref: "#/components/responses/NotFoundError"
         "500":
           $ref: "#/components/responses/ServerError"
+    
+  /users/{usrId}/conversations/private:
+    parameters:
+      - $ref: "#/components/parameters/UserId"
+    post: 
+      tags: [conversation]
+      summary: starts a new private conversation
+      description: |-
+        if the operation is successful, creates a new group and add it to the list of the user's conversations.
+        when creating a group, the user must specify the group's name, and at least one other member.
+        if None is given, the image will be absent.
+      operationId: startConversation
+      parameters:
+        - name: rcvId
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/UserID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageContent"
+      responses:
+        "201":
+          description: New conversation succesfully started.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Conversation"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  
+  /users/{usrId}/conversations/group:
+    parameters:
+      - $ref: "#/components/parameters/UserId"
     post: 
       tags: [group]
       summary: creates a new group
@@ -471,10 +501,6 @@ paths:
               properties:
                 name:
                   $ref: "#/components/schemas/ConversationName"
-                group:
-                  description: flag indicating whether the conversation is a group (true) or (false)
-                  type: boolean
-                  default: true
                 participants:
                   type: array
                   minItems: 3
@@ -495,6 +521,7 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
   
+
 
   /users/{usrId}/conversations/{convId}:
     parameters:
@@ -527,16 +554,32 @@ paths:
         adds the chosen participant to the group chat, then returns the conversation,
         with the newly updated list of participants.
       operationId: addToGroup
-      parameters:
-        - name: id
-          in: query
-          required: true
-          description: the id of the user you want to add to the conversation
-          schema:
-            $ref: "#/components/schemas/UserID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                participants:
+                  type: array
+                  minItems: 3
+                  maxItems: 1000
+                  items:
+                    $ref: "#/components/schemas/UserName"
       responses:
-        "200":
-          $ref: "#/components/responses/ConversationUpdated"
+        "201":
+          description: New members succesfully added.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  participants:
+                    type: array
+                    minItems: 3
+                    maxItems: 1000
+                    items:
+                      $ref: "#/components/schemas/User"
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":
@@ -579,7 +622,11 @@ paths:
               $ref: "#/components/schemas/ConversationName"
       responses:
         "200":
-          $ref: "#/components/responses/ConversationUpdated"
+          description: Group name modified successfully
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ConversationName"
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":
@@ -601,12 +648,22 @@ paths:
       operationId: setGroupPhoto
       requestBody:
         content:
-          image/jpeg:
-            schema: 
-              $ref: "#/components/schemas/Image"
+          application/json:
+              schema:
+                type: object
+                properties:
+                  image:
+                    $ref: "#/components/schemas/Image"
       responses:
         "200":
-          $ref: "#/components/responses/ConversationUpdated"
+          description: User image modified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  image:
+                    $ref: "#/components/schemas/Image"
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":
@@ -627,6 +684,12 @@ paths:
         if the new message has the "responseTo" property != "", it means
         this new message is an answer to the message specified in the "response" property
       operationId: sendMessage
+      parameters:
+      - name: responseTo
+        in: query
+        required: false
+        schema:
+          $ref: "#/components/schemas/MessageID"
       requestBody:
         content:
           application/json:
@@ -638,7 +701,7 @@ paths:
           content:
             application/json:
               schema: 
-                  $ref: "#/components/schemas/Conversation"
+                  $ref: "#/components/schemas/Message"
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":
@@ -671,11 +734,7 @@ paths:
           content:
             application/json:
               schema: 
-                type: array
-                minItems: 1
-                maxItems: 50
-                items:
-                  $ref: "#/components/schemas/Preview"
+                $ref: "#/components/schemas/Conversation"
         "401":
           $ref: "#/components/responses/UnauthorizedError"
         "400":
@@ -712,28 +771,6 @@ paths:
       - $ref: "#/components/parameters/UserId"
       - $ref: "#/components/parameters/ConversationId"
       - $ref: "#/components/parameters/MessageId"
-    get:
-      tags: [message]
-      summary: show the reactions
-      description: show all the present reactions of the message
-      operationId: getReactions
-      responses:
-        "200":
-          description: reactions succesfully loaded.
-          content:
-            application/json:
-              schema:
-                type: array
-                minItems: 0
-                maxItems: 1000
-                items:
-                  $ref: "#/components/schemas/Reaction"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "400":
-          $ref: "#/components/responses/BadRequestError"
-        "500":
-          $ref: "#/components/responses/ServerError"
     post: 
       tags: [message]
       summary: comments a message
@@ -747,16 +784,16 @@ paths:
       operationId: commentMessage
       requestBody:
         content:
-          application/json:
+          text/plain:
             schema:
-              $ref: "#/components/schemas/Reaction"
+              $ref: "#/components/schemas/Emoji"
       responses:
         "201":
           description: Reaction sent or changed succesfully. 
           content:
             application/json:
               schema: 
-                $ref: "#/components/schemas/Message"
+                $ref: "#/components/schemas/Reaction"
         "404":
           $ref: "#/components/responses/NotFoundError"
         "400":

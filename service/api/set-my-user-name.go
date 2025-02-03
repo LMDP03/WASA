@@ -26,6 +26,16 @@ func (rt *_router) SetMyUserName(w http.ResponseWriter, r *http.Request, ps http
 		return
 	}
 
+	exists, err := rt.db.CheckUserById(userId)
+	if err != nil {
+		InternalServerError(w, err, "Error while checking the user", ctx)
+		return
+	}
+	if !exists {
+		BadRequest(w, err, "User doesn't exists", ctx)
+		return
+	}
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		BadRequest(w, err, "Couldn't read the body", ctx)

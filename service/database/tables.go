@@ -37,11 +37,10 @@ var sql_MESSAGES = `CREATE TABLE IF NOT EXISTS Messages
 	convId INTEGER NOT NULL,
 	senderId INTEGER NOT NULL,
 	msgId INTEGER NOT NULL AUTO_INCREMENT,
-	normal BOOLEAN,
 	text TEXT,
 	image STRING,
 	timeStamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-	response_to INTEGER NOT NULL.const,
+	responseTo INTEGER NOT NULL.const,
 	checkMark ENUM("sent", "received", "read"),
 	PRIMARY KEY (convId, msgId),
 	CONSTRAINT fk_Messages

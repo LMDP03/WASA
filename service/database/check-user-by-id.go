@@ -5,9 +5,9 @@ import (
 	"errors"
 )
 
-func (db *appdbimpl) CheckUserByName(username string) (bool, error) {
+func (db *appdbimpl) CheckUserById(userid int) (bool, error) {
 	var user User
-	err := db.c.QueryRow(queryGetUserByName, username).Scan(&user.Id, &user.Name)
+	err := db.c.QueryRow(queryGetUserById, userid).Scan(&user.Id, &user.Name)
 	if err != nil && errors.Is(err, sql.ErrNoRows) {
 		return false, nil
 	}

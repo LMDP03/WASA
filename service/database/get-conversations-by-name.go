@@ -1,12 +1,14 @@
 package database
 
-var queryGetConversationsByName = `SELECT id, name, group, last_message FROM Conversations, Participants WHERE id = convId AND name LIKE '%?%' AND  userId = ? ORDER BY last_message DESC;`
+import "strings"
 
-func (db *appdbimpl) GetConversationsbyName(searchname string, userid int) ([]Conversation, error) {
+var queryGetConversationsByName = `SELECT id, name, group, last_message FROM Conversations, Participants WHERE id = convId AND userId = ? ORDER BY last_message DESC;`
 
-	var conversations []Conversation
+func (db *appdbimpl) GetConversationsbyName(searchname string, userid int) ([]Preview, error) {
 
-	rows, err := db.c.Query(queryGetConversationsByName, searchname, userid)
+	var previews []Preview
+
+	rows, err := db.c.Query(queryGetConversationsByName, userid)
 	if err != nil {
 		return nil, err
 	}
@@ -14,12 +16,30 @@ func (db *appdbimpl) GetConversationsbyName(searchname string, userid int) ([]Co
 		if rows.Err() != nil {
 			return nil, err
 		}
-		var conv Conversation
-		if err := rows.Scan(&conv.Id, &conv.Name, &conv.Group, &conv.LastMessage); err != nil {
+		var prev Preview
+		var lastmsg int
+		if err := rows.Scan(&prev.Id, &prev.Name, &prev.Group, &lastmsg); err != nil {
 			return nil, err
 		}
-		conversations = append(conversations, conv)
+		if lastmsg != 0 {
+			message, err := db.GetMessageById(prev.Id, lastmsg)
+			if err != nil {
+				return nil, err
+			}
+			prev.LastMessage = message
+		}
+		if !prev.Group {
+			other, err := db.GetOtherParticipant(prev.Id, userid)
+			if err != nil {
+				return nil, err
+			}
+			prev.Name = other.Name
+			prev.UserId = other.Id
+		}
+		if strings.Contains(prev.Name, searchname) {
+			previews = append(previews, prev)
+		}
 	}
 	defer func() { err = rows.Close() }()
-	return conversations, err
+	return previews, err
 }

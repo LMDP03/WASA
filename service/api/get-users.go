@@ -21,6 +21,19 @@ func (rt *_router) GetUsers(w http.ResponseWriter, r *http.Request, ps httproute
 		BadRequest(w, err, "Invalid userId", ctx)
 		return
 	}
+	if checkAuthorization(w, ctx, userid) != nil {
+		return
+	}
+
+	exists, err := rt.db.CheckUserById(userid)
+	if err != nil {
+		InternalServerError(w, err, "Error while checking the user", ctx)
+		return
+	}
+	if !exists {
+		BadRequest(w, err, "User doesn't exists", ctx)
+		return
+	}
 
 	var searchName string
 	if !r.URL.Query().Has("srcName") {
@@ -53,9 +66,16 @@ func (rt *_router) GetUsers(w http.ResponseWriter, r *http.Request, ps httproute
 		users[i] = user
 	}
 
+	type Response struct {
+		users []User `json: "users"`
+	}
+
+	var res = Response{
+		users: users,
+	}
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(users); err != nil {
+	if err := json.NewEncoder(w).Encode(res); err != nil {
 		ctx.Logger.Error("Couldn't encode the response", err)
 		http.Error(w, "Couldn't encode the response", http.StatusInternalServerError)
 		return

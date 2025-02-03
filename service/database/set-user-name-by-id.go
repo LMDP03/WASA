@@ -1,6 +1,6 @@
 package database
 
-var querySetUserNameById = `UPDATE Users set name = ? WHERE id = ?;`
+var querySetUserNameById = `UPDATE Users SET name = ? WHERE id = ?;`
 
 func (db *appdbimpl) SetUserNameById(username string, userid int) error {
 

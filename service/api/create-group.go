@@ -11,7 +11,7 @@ import (
 
 func (rt *_router) CreateGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
-	if r.Method != http.MethodGet {
+	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
@@ -26,9 +26,18 @@ func (rt *_router) CreateGroup(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
+	exists, err := rt.db.CheckUserById(userId)
+	if err != nil {
+		InternalServerError(w, err, "Error while checking the user", ctx)
+		return
+	}
+	if !exists {
+		BadRequest(w, err, "User doesn't exists", ctx)
+		return
+	}
+
 	type RequestConv struct {
-		Name         string `json: "name"`
-		Group        bool   `json: "group"`
+		Name         string   `json: "name"`
 		participants []string `json: "participants"`
 	}
 
@@ -38,15 +47,7 @@ func (rt *_router) CreateGroup(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	if !conv.Group {
-		if len(conv.Name) < 3 || len(conv.Name) > 16 || len(conv.participants) != 2 {
-			BadRequest(w, nil, "Invalid username", ctx)
-			return
-		} 
-	}
-
-	if conv.Group{
-		if len(conv.Name) < 1 || len(conv.Name) > 20 ||  len(conv.participants) < 3 || len(conv.participants) > 50  {
+	if len(conv.Name) < 1 || len(conv.Name) > 20 || len(conv.participants) < 3 || len(conv.participants) > 50 {
 		BadRequest(w, nil, "Invalid username", ctx)
 		return
 	}
@@ -58,7 +59,7 @@ func (rt *_router) CreateGroup(w http.ResponseWriter, r *http.Request, ps httpro
 		}
 	}
 
-	dbConv, err := rt.db.CreateConversation(conv.Name, conv.Group)
+	dbConv, err := rt.db.CreateConversation(conv.Name, true, 0, conv.participants)
 	if err != nil {
 		InternalServerError(w, err, "Error while creating the conversation", ctx)
 		return
@@ -70,13 +71,6 @@ func (rt *_router) CreateGroup(w http.ResponseWriter, r *http.Request, ps httpro
 		InternalServerError(w, err, "Error while converting the conversation", ctx)
 		return
 	}
-	dbParticipants, err := rt.db.AddParticipants(dbConv.Id, conv.participants)
-	if err != nil {
-		InternalServerError(w, err, "Error while getting the participants", ctx)
-		return
-	}
-	conversation.Participants = dbParticipants
-	
 
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json")
@@ -85,6 +79,5 @@ func (rt *_router) CreateGroup(w http.ResponseWriter, r *http.Request, ps httpro
 		http.Error(w, "Couldn't encode the response", http.StatusInternalServerError)
 		return
 	}
-	
 
 }
