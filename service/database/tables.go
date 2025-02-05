@@ -5,8 +5,7 @@ var sql_USERS = `CREATE TABLE IF NOT EXISTS Users
 	id INTEGER NOT NULL UNIQUE,
 	name STRING NOT NULL UNIQUE,
 	PRIMARY KEY(id)
-)
-`
+);`
 
 var sql_CONVERSATIONS = `CREATE TABLE IF NOT EXISTS Conversations
 (
@@ -14,11 +13,11 @@ var sql_CONVERSATIONS = `CREATE TABLE IF NOT EXISTS Conversations
 	name STRING NOT NULL,
 	groupFlag INTEGER NOT NULL,
 	last_message INTEGER,
-	PRIMARY KEY (id)
+	PRIMARY KEY (id),
 	CONSTRAINT fk_Conversations
 		FOREIGN KEY (last_message) REFERENCES Messages(msgId)
 			ON DELETE CASCADE
-)`
+);`
 
 var sql_PARTICIPANTS = `CREATE TABLE IF NOT EXISTS Participants
 (
@@ -26,11 +25,11 @@ var sql_PARTICIPANTS = `CREATE TABLE IF NOT EXISTS Participants
 	userId INTEGER NOT NULL,
 	PRIMARY KEY (convId, userId),
 	CONSTRAINT fk_Participants
-		FOREIGN KEY (convId) REFERENCES Conversation(id)
+		FOREIGN KEY (convId) REFERENCES Conversations(id)
 			ON DELETE CASCADE
-		FOREIGN KEY (userId) REFERNCES User(id)
+		FOREIGN KEY (userId) REFERENCES Users(id)
 			ON DELETE CASCADE
-)`
+);`
 
 var sql_MESSAGES = `CREATE TABLE IF NOT EXISTS Messages
 (
@@ -40,15 +39,15 @@ var sql_MESSAGES = `CREATE TABLE IF NOT EXISTS Messages
 	text TEXT,
 	image STRING,
 	timeStamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-	responseTo INTEGER NOT NULL.const,
+	responseTo INTEGER NOT NULL,
 	checkMark STRING NOT NULL,
 	PRIMARY KEY (convId, msgId),
 	CONSTRAINT fk_Messages
-		FOREIGN KEY (ConvId) REFERENCES Conversations(id)
+		FOREIGN KEY (convId) REFERENCES Conversations(id)
 			ON DELETE CASCADE
-		FOREIGN KEY (senderId) REFERNCES User(id)
+		FOREIGN KEY (senderId) REFERENCES User(id)
 			ON DELETE CASCADE
-)`
+);`
 
 var sql_REACTIONS = `CREATE TABLE IF NOT EXISTS Reactions
 (
@@ -62,4 +61,4 @@ var sql_REACTIONS = `CREATE TABLE IF NOT EXISTS Reactions
 			ON DELETE CASCADE
     	FOREIGN KEY (SenderId) REFERENCES Users(id)
       		ON DELETE CASCADE
-	) `
+); `
