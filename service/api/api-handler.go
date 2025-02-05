@@ -15,24 +15,26 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.PUT("/users/:usrId/image", rt.wrap(rt.SetMyPhoto, true))
 	rt.router.PUT("/users/:usrId/name", rt.wrap(rt.SetMyUserName, true))
 
-	// Conversations routes
+	// General conversations routes
 	rt.router.GET("/users/:usrId/conversations", rt.wrap(rt.GetMyConversations, true))
 	rt.router.POST("/users/:usrId/conversations/private", rt.wrap(rt.StartConversation, true))
 	rt.router.POST("/users/:usrId/conversations/group", rt.wrap(rt.CreateGroup, true))
-	rt.router.GET("/users/:usrId/conversations/:convId", rt.wrap(rt.GetConversation, true))
-	rt.router.POST("/users/:usrId/conversations/:convId", rt.wrap(rt.AddToGroup, true))
-	rt.router.DELETE("/users/:usrId/conversations/:convId", rt.wrap(rt.LeaveGroup, true))
-	rt.router.PUT("/users/:usrId/conversations/:convId/name", rt.wrap(rt.SetGroupName, true))
-	rt.router.PUT("/users/:usrId/conversations/:convId/image", rt.wrap(rt.SetGroupPhoto, true))
+
+	// Specific conversation routes
+	rt.router.GET("/users/:usrId/conversation/:convId", rt.wrap(rt.GetConversation, true))
+	rt.router.POST("/users/:usrId/conversation/:convId", rt.wrap(rt.AddToGroup, true))
+	rt.router.DELETE("/users/:usrId/conversation/:convId", rt.wrap(rt.LeaveGroup, true))
+	rt.router.PUT("/users/:usrId/conversation/:convId/name", rt.wrap(rt.SetGroupName, true))
+	rt.router.PUT("/users/:usrId/conversation/:convId/image", rt.wrap(rt.SetGroupPhoto, true))
 
 	// Messages routes
-	rt.router.POST("/users/:usrId/conversations/:convId/messages", rt.wrap(rt.SendMessage, true))
-	rt.router.POST("/users/:usrId/conversations/:convId/messages/:msgId", rt.wrap(rt.ForwardMessage, true))
-	rt.router.DELETE("/users/:usrId/conversations/:convId/messages/:msgId", rt.wrap(rt.DeleteMessage, true))
+	rt.router.POST("/users/:usrId/conversation/:convId/messages", rt.wrap(rt.SendMessage, true))
+	rt.router.POST("/users/:usrId/conversation/:convId/messages/:msgId", rt.wrap(rt.ForwardMessage, true))
+	rt.router.DELETE("/users/:usrId/conversation/:convId/messages/:msgId", rt.wrap(rt.DeleteMessage, true))
 
 	// Reactions routes
-	rt.router.POST("/users/:usrId/conversations/:convId/messages/:msgId/reactions", rt.wrap(rt.CommentMessage, true))
-	rt.router.DELETE("/users/:usrId/conversations/:convId/messages/:msgId/reactions", rt.wrap(rt.UncommentMessage, true))
+	rt.router.POST("/users/:usrId/conversation/:convId/messages/:msgId/reactions", rt.wrap(rt.CommentMessage, true))
+	rt.router.DELETE("/users/:usrId/conversation/:convId/messages/:msgId/reactions", rt.wrap(rt.UncommentMessage, true))
 
 	// Special routes
 	rt.router.GET("/liveness", rt.liveness)
