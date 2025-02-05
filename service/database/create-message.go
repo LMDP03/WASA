@@ -1,6 +1,6 @@
 package database
 
-var queryAddMessage = `INSERT INTO Messages (convId, senderId, msgId, text, image, responseTo, checkMark) VALUES (?, ?, ?, ?, ?, ?, "sent");`
+var queryAddMessage = `INSERT INTO Messages (convId, senderId, msgId, text, image, responseTo, checkMark) VALUES (?, ?, ?, ?, ?, ?, "received");`
 
 var queryGetMessageId = `SELECT MAX(id) AS new_id FROM Messages;`
 
@@ -9,7 +9,7 @@ func (db *appdbimpl) CreateMessage(convid int, senderid int, responseto int, tex
 	var msg Message
 
 	var new_id int
-	
+
 	err := db.c.QueryRow(queryGetMessageId).Scan(&new_id)
 	if err != nil {
 		return msg, err

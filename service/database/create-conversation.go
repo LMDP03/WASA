@@ -8,7 +8,7 @@ import (
 	"git.sapienzaapps.it/fantasticcoffee/fantastic-coffee-decaffeinated/service/api/images"
 )
 
-var queryAddConversation = `INSERT INTO Conversations (id, name, group, last_message) VALUES (?, ?, ?, 0);`
+var queryAddConversation = `INSERT INTO Conversations (id, name, groupFlag, last_message) VALUES (?, ?, ?, 0);`
 
 var queryGetConversationId = `SELECT MAX(id) AS new_id FROM Conversations;`
 

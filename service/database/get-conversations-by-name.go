@@ -2,7 +2,7 @@ package database
 
 import "strings"
 
-var queryGetConversationsByName = `SELECT id, name, group, last_message FROM Conversations, Participants WHERE id = convId AND userId = ? ORDER BY last_message DESC;`
+var queryGetConversationsByName = `SELECT id, name, groupFlag, last_message FROM Conversations, Participants WHERE id = convId AND userId = ? ORDER BY last_message DESC;`
 
 func (db *appdbimpl) GetConversationsbyName(searchname string, userid int) ([]Preview, error) {
 

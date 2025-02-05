@@ -75,7 +75,7 @@ func (rt *_router) DeleteMessage(w http.ResponseWriter, r *http.Request, ps http
 		return
 	}
 
-	err = rt.db.DeleteMessage(convId, msgId)
+	err = rt.db.DeleteMessage(convId, msgId, userId)
 	if err != nil {
 		InternalServerError(w, err, "Error while deleting the message", ctx)
 		return

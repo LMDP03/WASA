@@ -1,6 +1,6 @@
 package database
 
-var queryGetConversationById = `SELECT id, name, group, last_message FROM Conversations WHERE id = ?;`
+var queryGetConversationById = `SELECT id, name, groupFlag, last_message FROM Conversations WHERE id = ?;`
 
 func (db *appdbimpl) GetConversationById(convid int, userid int) (Conversation, error) {
 

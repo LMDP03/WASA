@@ -48,7 +48,7 @@ type AppDatabase interface {
 	CreateMessage(convid int, senderid int, responseto int, text string, image string) (Message, error)
 	CreateReaction(convId int, senderId int, msgId int, emoji string) (Reaction, error)
 	CreateUser(username string) (User, error)
-	DeleteMessage(convid int, msgid int) error
+	DeleteMessage(convid int, msgid int, senderid int) error
 	DeleteParticipant(convid int, userid int) error
 	DeleteReaction(convid int, msgid int, senderid int) error
 	GetConversationById(convid int, userid int) (Conversation, error)

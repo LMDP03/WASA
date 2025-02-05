@@ -12,7 +12,7 @@ var sql_CONVERSATIONS = `CREATE TABLE IF NOT EXISTS Conversations
 (
 	id INTEGER NOT NULL UNIQUE,
 	name STRING NOT NULL,
-	group INTEGER NOT NULL,
+	groupFlag INTEGER NOT NULL,
 	last_message INTEGER,
 	PRIMARY KEY (id)
 	CONSTRAINT fk_Conversations
