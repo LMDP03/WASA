@@ -7,8 +7,9 @@ import (
 	"os"
 	"strconv"
 
-	"git.sapienzaapps.it/fantasticcoffee/fantastic-coffee-decaffeinated/service/api/images"
-	"git.sapienzaapps.it/fantasticcoffee/fantastic-coffee-decaffeinated/service/api/reqcontext"
+	"wasatext/service/api/reqcontext"
+	"wasatext/service/images"
+
 	"github.com/julienschmidt/httprouter"
 )
 

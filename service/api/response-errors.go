@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	"git.sapienzaapps.it/fantasticcoffee/fantastic-coffee-decaffeinated/service/api/reqcontext"
+	"wasatext/service/api/reqcontext"
 )
 
 func InternalServerError(w http.ResponseWriter, err error, msg string, ctx reqcontext.RequestContext) {

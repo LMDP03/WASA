@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"git.sapienzaapps.it/fantasticcoffee/fantastic-coffee-decaffeinated/service/api/reqcontext"
+	"wasatext/service/api/reqcontext"
 )
 
 func checkAuthorization(w http.ResponseWriter, ctx reqcontext.RequestContext, userId int) error {

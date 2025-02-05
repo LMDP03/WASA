@@ -4,8 +4,8 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"git.sapienzaapps.it/fantasticcoffee/fantastic-coffee-decaffeinated/service/api/images"
-	"git.sapienzaapps.it/fantasticcoffee/fantastic-coffee-decaffeinated/service/database"
+	"wasatext/service/database"
+	"wasatext/service/images"
 )
 
 type User struct {

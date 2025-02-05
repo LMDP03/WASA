@@ -523,7 +523,7 @@ paths:
   
 
 
-  /users/{usrId}/conversations/{convId}:
+  /users/{usrId}/conversation/{convId}:
     parameters:
       - $ref: "#/components/parameters/UserId"
       - $ref: "#/components/parameters/ConversationId"
@@ -593,7 +593,7 @@ paths:
       summary: leaves the group
       description: |-
         makes you leave a conversation, completely removing you from the group participants' list.
-        the group will also be removed from your list of conversations and its messages deleted.
+        the group will also be removed from your list of conversation and its messages deleted.
       operationId: leaveGroup
       responses:
         "204":
@@ -603,7 +603,7 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
 
-  /users/{usrId}/conversations/{convId}/name:
+  /users/{usrId}/conversation/{convId}/name:
     parameters:
       - $ref: "#/components/parameters/UserId"
       - $ref: "#/components/parameters/ConversationId"
@@ -634,7 +634,7 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
 
-  /users/{usrId}/conversations/{convId}/image:
+  /users/{usrId}/conversation/{convId}/image:
     parameters:
       - $ref: "#/components/parameters/UserId"
       - $ref: "#/components/parameters/ConversationId"
@@ -672,7 +672,7 @@ paths:
           $ref: "#/components/responses/ServerError"
 
 
-  /users/{usrId}/conversations/{convId}/messages:
+  /users/{usrId}/conversation/{convId}/messages:
     parameters:
       - $ref: "#/components/parameters/UserId"
       - $ref: "#/components/parameters/ConversationId"
@@ -710,7 +710,7 @@ paths:
           $ref: "#/components/responses/ServerError"
 
 
-  /users/{usrId}/conversations/{convId}/messages/{msgId}: 
+  /users/{usrId}/conversation/{convId}/messages/{msgId}: 
     parameters:
       - $ref: "#/components/parameters/UserId"
       - $ref: "#/components/parameters/ConversationId"
@@ -766,7 +766,7 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
 
-  /users/{usrId}/conversations/{convId}/messages/{msgId}/reactions:
+  /users/{usrId}/conversation/{convId}/messages/{msgId}/reactions:
     parameters:
       - $ref: "#/components/parameters/UserId"
       - $ref: "#/components/parameters/ConversationId"

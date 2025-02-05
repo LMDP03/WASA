@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"git.sapienzaapps.it/fantasticcoffee/fantastic-coffee-decaffeinated/service/api/images"
+	"wasatext/service/images"
 )
 
 var queryAddUser = `INSERT INTO Users (id, name) VALUES (?, ?);`
