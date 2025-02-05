@@ -18,7 +18,11 @@ func (db *appdbimpl) CreateConversation(name string, group bool, otherid int, pa
 
 	var new_id int
 
+	var flag int
+
 	if group {
+
+		flag = 1
 
 		err := db.c.QueryRow(queryGetConversationId).Scan(&new_id)
 		if err != nil {
@@ -27,7 +31,7 @@ func (db *appdbimpl) CreateConversation(name string, group bool, otherid int, pa
 
 		new_id += 1
 
-		_, err = db.c.Exec(queryAddConversation, new_id, name, group)
+		_, err = db.c.Exec(queryAddConversation, new_id, name, flag)
 		if err != nil {
 			return conv, err
 		}
@@ -60,6 +64,8 @@ func (db *appdbimpl) CreateConversation(name string, group bool, otherid int, pa
 		conv, err = db.GetConversationById(new_id, 0)
 
 	} else {
+		flag = 0
+
 		err := db.c.QueryRow(queryGetConversationId).Scan(&new_id)
 		if err != nil {
 			return conv, err
@@ -67,7 +73,7 @@ func (db *appdbimpl) CreateConversation(name string, group bool, otherid int, pa
 
 		new_id += 1
 
-		_, err = db.c.Exec(queryAddConversation, new_id, "", group)
+		_, err = db.c.Exec(queryAddConversation, new_id, "", flag)
 		if err != nil {
 			return conv, err
 		}

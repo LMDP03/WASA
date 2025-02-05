@@ -6,10 +6,17 @@ func (db *appdbimpl) GetConversationById(convid int, userid int) (Conversation, 
 
 	var conv Conversation
 	var lastmsg int
+	var flag int
 
-	err := db.c.QueryRow(queryGetConversationById, convid).Scan(&conv.Id, &conv.Name, &conv.Group, &lastmsg)
+	err := db.c.QueryRow(queryGetConversationById, convid).Scan(&conv.Id, &conv.Name, &flag, &lastmsg)
 	if err != nil {
 		return conv, err
+	}
+
+	if flag == 0 {
+		conv.Group = false
+	} else {
+		conv.Group = true
 	}
 
 	participants, err := db.GetParticipants(convid)

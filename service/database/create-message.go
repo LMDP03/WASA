@@ -9,6 +9,7 @@ func (db *appdbimpl) CreateMessage(convid int, senderid int, responseto int, tex
 	var msg Message
 
 	var new_id int
+	
 	err := db.c.QueryRow(queryGetMessageId).Scan(&new_id)
 	if err != nil {
 		return msg, err

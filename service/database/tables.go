@@ -2,7 +2,7 @@ package database
 
 var sql_USERS = `CREATE TABLE IF NOT EXISTS Users
 (
-	id INTEGER NOT NULL,
+	id INTEGER NOT NULL UNIQUE,
 	name STRING NOT NULL UNIQUE,
 	PRIMARY KEY(id)
 )
@@ -10,9 +10,9 @@ var sql_USERS = `CREATE TABLE IF NOT EXISTS Users
 
 var sql_CONVERSATIONS = `CREATE TABLE IF NOT EXISTS Conversations
 (
-	id INTEGER NOT NULL,
+	id INTEGER NOT NULL UNIQUE,
 	name STRING NOT NULL,
-	group BOOLEAN,
+	group INTEGER NOT NULL,
 	last_message INTEGER,
 	PRIMARY KEY (id)
 	CONSTRAINT fk_Conversations
@@ -36,12 +36,12 @@ var sql_MESSAGES = `CREATE TABLE IF NOT EXISTS Messages
 (
 	convId INTEGER NOT NULL,
 	senderId INTEGER NOT NULL,
-	msgId INTEGER NOT NULL,
+	msgId INTEGER NOT NULL UNIQUE,
 	text TEXT,
 	image STRING,
 	timeStamp DATETIME DEFAULT CURRENT_TIMESTAMP,
 	responseTo INTEGER NOT NULL.const,
-	checkMark ENUM("sent", "received", "read"),
+	checkMark STRING NOT NULL,
 	PRIMARY KEY (convId, msgId),
 	CONSTRAINT fk_Messages
 		FOREIGN KEY (ConvId) REFERENCES Conversations(id)

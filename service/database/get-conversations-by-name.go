@@ -18,8 +18,14 @@ func (db *appdbimpl) GetConversationsbyName(searchname string, userid int) ([]Pr
 		}
 		var prev Preview
 		var lastmsg int
-		if err := rows.Scan(&prev.Id, &prev.Name, &prev.Group, &lastmsg); err != nil {
+		var flag int
+		if err := rows.Scan(&prev.Id, &prev.Name, &flag, &lastmsg); err != nil {
 			return nil, err
+		}
+		if flag == 0 {
+			prev.Group = false
+		} else {
+			prev.Group = true
 		}
 		if lastmsg != 0 {
 			message, err := db.GetMessageById(prev.Id, lastmsg)
