@@ -8,12 +8,21 @@ import (
 	"git.sapienzaapps.it/fantasticcoffee/fantastic-coffee-decaffeinated/service/api/images"
 )
 
-var queryAddUser = `INSERT INTO Users (name) VALUES ?;`
+var queryAddUser = `INSERT INTO Users (id, name) VALUES (?, ?);`
+
+var queryGetUserId = `SELECT MAX(id) AS new_id FROM Messages;`
 
 func (db *appdbimpl) CreateUser(username string) (User, error) {
 
 	var user User
-	_, err := db.c.Exec(queryAddUser, username)
+
+	var new_id int
+	err := db.c.QueryRow(queryGetUserId).Scan(&new_id)
+	if err != nil {
+		return user, err
+	}
+
+	_, err = db.c.Exec(queryAddUser, new_id+1, username)
 	if err != nil {
 		return user, err
 	}

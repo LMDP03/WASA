@@ -8,7 +8,7 @@ import (
 	"git.sapienzaapps.it/fantasticcoffee/fantastic-coffee-decaffeinated/service/api/images"
 )
 
-var queryAddConversation = `INSERT INTO Conversations (name, group, last_message) VALUES (?, ?, 0);`
+var queryAddConversation = `INSERT INTO Conversations (id, name, group, last_message) VALUES (?, ?, ?, 0);`
 
 var queryGetConversationId = `SELECT MAX(id) AS new_id FROM Conversations;`
 
@@ -20,12 +20,14 @@ func (db *appdbimpl) CreateConversation(name string, group bool, otherid int, pa
 
 	if group {
 
-		_, err := db.c.Exec(queryAddConversation, name, group)
+		err := db.c.QueryRow(queryGetConversationId).Scan(&new_id)
 		if err != nil {
 			return conv, err
 		}
 
-		err = db.c.QueryRow(queryGetConversationId).Scan(&new_id)
+		new_id += 1
+
+		_, err = db.c.Exec(queryAddConversation, new_id, name, group)
 		if err != nil {
 			return conv, err
 		}
@@ -58,11 +60,14 @@ func (db *appdbimpl) CreateConversation(name string, group bool, otherid int, pa
 		conv, err = db.GetConversationById(new_id, 0)
 
 	} else {
-		_, err := db.c.Exec(queryAddConversation, "", group)
+		err := db.c.QueryRow(queryGetConversationId).Scan(&new_id)
 		if err != nil {
 			return conv, err
 		}
-		err = db.c.QueryRow(queryGetConversationId).Scan(&new_id)
+
+		new_id += 1
+
+		_, err = db.c.Exec(queryAddConversation, new_id, "", group)
 		if err != nil {
 			return conv, err
 		}
