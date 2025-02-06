@@ -60,6 +60,12 @@ func (rt *_router) CreateGroup(w http.ResponseWriter, r *http.Request, ps httpro
 		}
 	}
 
+	u, err := rt.db.GetUserById(userId)
+	if err != nil {
+		InternalServerError(w, err, "Couldn't add user to the conversation", ctx)
+	}
+	conv.participants = append(conv.participants, u.Name)
+
 	dbConv, err := rt.db.CreateConversation(conv.Name, true, 0, conv.participants)
 	if err != nil {
 		InternalServerError(w, err, "Error while creating the conversation", ctx)

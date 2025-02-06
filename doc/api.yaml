@@ -330,14 +330,11 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  users:
-                    type: array
-                    minItems: 1
-                    maxItems: 50
-                    items:
-                      $ref: "#/components/schemas/User"
+                type: array
+                minItems: 1
+                maxItems: 50
+                items:
+                  $ref: "#/components/schemas/User"
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":
@@ -429,14 +426,11 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  conversations:
-                    type: array
-                    minItems: 1
-                    maxItems: 50
-                    items:
-                      $ref: "#/components/schemas/Preview"
+                type: array
+                minItems: 1
+                maxItems: 50
+                items:
+                  $ref: "#/components/schemas/Preview"
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":

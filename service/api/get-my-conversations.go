@@ -68,16 +68,9 @@ func (rt *_router) GetMyConversations(w http.ResponseWriter, r *http.Request, ps
 		previews[i] = prev
 	}
 
-	type Response struct {
-		conversations []Preview `json: "conversations"`
-	}
-	var res = Response{
-		conversations: previews,
-	}
-
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(res); err != nil {
+	if err := json.NewEncoder(w).Encode(previews); err != nil {
 		ctx.Logger.Error("Couldn't encode the response", err)
 		http.Error(w, "Couldn't encode the response", http.StatusInternalServerError)
 		return

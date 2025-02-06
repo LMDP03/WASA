@@ -31,7 +31,7 @@ export default {
             }
             if (this.title == "search") {
                 try {
-                    const url =  `users/${sessionStorage.userId}/others?srcName=${this.searchname}`
+                    const url =  `users/${sessionStorage.userId}/others?srcName=${this.searchName}`
                     let response = await this.$axios.get(url, { headers: { 'Authorization': `${sessionStorage.token}` } });
                     if (response.data == null) {
                         this.filteredUsers = [];
