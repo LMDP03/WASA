@@ -1,6 +1,8 @@
 package database
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -10,16 +12,21 @@ import (
 
 var queryAddUser = `INSERT INTO Users (id, name) VALUES (?, ?);`
 
-var queryGetUserId = `SELECT MAX(id) AS new_id FROM Messages;`
+var queryGetUserId = `SELECT MAX(id) AS new_id FROM Users;`
 
 func (db *appdbimpl) CreateUser(username string) (User, error) {
 
 	var user User
-
 	var new_id int
-	err := db.c.QueryRow(queryGetUserId).Scan(&new_id)
-	if err != nil {
+	var max_id = sql.NullInt64{Int64: 0, Valid: false}
+	err := db.c.QueryRow(queryGetUserId).Scan(&max_id)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return user, err
+	}
+	if !max_id.Valid {
+		new_id = 0
+	} else {
+		new_id = int(max_id.Int64)
 	}
 
 	_, err = db.c.Exec(queryAddUser, new_id+1, username)
