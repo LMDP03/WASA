@@ -1,0 +1,23 @@
+curl -H 'Content-Type: application/json' -d '{ "name":"livio"}' -X POST http://localhost:3000/session
+
+curl -H 'Content-Type: application/json' -d '{ "name":"Li"}' -X POST http://localhost:3000/session
+    Invalid username
+
+curl -H 'Content-Type: text/plain' -H 'Authorization: 2' -d 'Livio' -X PUT http://localhost:3000/users/2/name
+    Username already exists: UNIQUE constraint failed: Users.name
+
+curl -H 'Content-Type: text/plain' -H 'Authorization: 2' -d 'Li' -X PUT http://localhost:3000/users/2/name
+    Invalid username
+
+curl -H 'Content-Type: application/json' -d '{ "Name":"marzio"}' -X POST http://localhost:3000/session
+
+curl -H 'Content-Type: text/plain' -H 'Authorization: 2' -d 'della' -X PUT http://localhost:3000/users/2/name
+
+curl -H 'Content-Type: text/plain' -H 'Authorization: 1' -d 'della' -X PUT http://localhost:3000/users/2/name
+    Unauthorized user
+
+curl -H 'Content-Type: application/json' -H 'Authorization: 2' -d '{"text":"come va amico?"}' -X PUT http://localhost:3000/users/2/conversation/private?rcvId=1
+    Method Not Allowed
+
+curl -H 'Content-Type: application/json' -H 'Authorization: 2' -d '{"text":"come va amico?"}' -X POST http://localhost:3000/users/2/conversations/private?rcvId=1
+    The file is too big: request Content-Type isn't multipart/form-data
