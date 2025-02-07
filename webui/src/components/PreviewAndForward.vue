@@ -11,7 +11,7 @@ export default {
             conv: [],
             filteredConvs: [],
             convId: parseInt(this.$route.params.convId),
-            searchName = "",
+            searchName: "",
         };
     },
     methods: {

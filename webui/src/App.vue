@@ -127,7 +127,7 @@ export default {
 					</Modal>
 
 					<!--Username update Modal-->
-					<Modal v-show="nameModalVisible" @close="updateName", title="Change Name">
+					<ModalUsers v-show="nameModalVisible" @close="updateName", title="Change Name">
 						<template v-slot:header>
 							<h3>Change Username</h3>
 						</template>
@@ -138,10 +138,10 @@ export default {
 								<button type="submit" @click.prevent="setMyUserName">Update</button>
 							</form>
 						</template>
-					</Modal>
+					</ModalUsers>
 
 					<!--User picture update Modal-->
-					<Modal v-show="imageModalVisible" @close="updateImage", title="Change Picture">
+					<ModalUsers v-show="imageModalVisible" @close="updateImage", title="Change Picture">
 						<template v-slot:header>
 							<h3>Change Profile Picture</h3>
 						</template>
@@ -152,7 +152,7 @@ export default {
 								<button type="submit" @click.prevent="setMyPhoto">Update</button>
 							</form>
 						</template>
-					</Modal>
+					</ModalUsers>
 
 
 					<!--Navigation Bar Title-->

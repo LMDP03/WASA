@@ -64,7 +64,11 @@ export default  {
                 let response = await this.$axios.post(url, {
                     name: this.groupName,
                     participants: newMembers,
-                }, {headers: { 'Authorization': `${sessionStorage.userId}`}});
+                }, {headers: { 'Authorization': `${sessionStorage.token}`}});
+                if (response.data == null) {
+                    this.filteredUsers = [];
+                    return;
+                }
                 localStorage.clear();
                 localStorage.userId = response.data.id;
                 localStorage.userName = response.data.name;
@@ -73,6 +77,7 @@ export default  {
                 this.$router.push(`/conversations/${response.data.id}`)
             } catch (e) {
                 this.errorMsg = e.toString();
+                this.filteredUsers = [];
             }
         },
         selectUser(user) {

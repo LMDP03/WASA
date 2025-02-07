@@ -106,7 +106,7 @@ components:
       type: object
       properties:
         sender:
-          $ref: "#/components/schemas/UserID"
+          $ref: "#/components/schemas/UserName"
         emoji:
           $ref: "#/components/schemas/Emoji"
           
@@ -137,7 +137,7 @@ components:
         conversation:
           $ref: "#/components/schemas/ConversationID"
         sender:
-          $ref: "#/components/schemas/UserID"
+          $ref: "#/components/schemas/User"
         timestamp:
           $ref: "#/components/schemas/TimeStamp"
         checkmark:
@@ -176,8 +176,6 @@ components:
           type: boolean
           default: true
           readOnly: true
-        lastmessage:
-          $ref: "#/components/schemas/MessageID"
         participants:
           description: List of all members of a group chat. 
           type: array

@@ -63,9 +63,9 @@ export default  {
                 }
                 let response = await this.$axios.post(url, {
                     participants: newMembers,
-                }, {headers: { 'Authorization': `${sessionStorage.userId}`}});
+                }, {headers: { 'Authorization': `${sessionStorage.token}`}});
                 localStorage.clear();
-                localStorage.users = JSON.stringify(response.data.participants);
+                _ = localStorage.users.push(JSON.stringify(response.data.participants));
                 this.close();
                 this.$router.push(`/conversations/${response.data.id}`)
             } catch (e) {
