@@ -37,7 +37,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 		}
 		err = user.ConvertUser(dbUser)
 		if err != nil {
-			InternalServerError(w, err, "Couldn't create user", ctx)
+			InternalServerError(w, err, "Couldn't convert user", ctx)
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
