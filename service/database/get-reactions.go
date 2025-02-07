@@ -20,11 +20,10 @@ func (db *appdbimpl) GetReactions(convid int, msgid int) ([]Reaction, error) {
 		if err != nil {
 			return nil, err
 		}
-		u, err := db.GetUserById(senderid)
+		reac.Sender, err = db.GetUserById(senderid)
 		if err != nil {
 			return nil, err
 		}
-		reac.SenderName = u.Name
 		reactions = append(reactions, reac)
 	}
 	return reactions, nil

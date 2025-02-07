@@ -17,7 +17,12 @@ func (db *appdbimpl) GetMessages(convId int) ([]Message, error) {
 		}
 		var msg Message
 		msg.ConvId = convId
-		err = rows.Scan(&msg.SenderId, &msg.MsgId, &msg.Text, &msg.Image, &msg.Timestamp, &msg.ResponseTo, &msg.Checkmark)
+		var senderId int
+		err = rows.Scan(&senderId, &msg.MsgId, &msg.Text, &msg.Image, &msg.Timestamp, &msg.ResponseTo, &msg.Checkmark)
+		if err != nil {
+			return nil, err
+		}
+		msg.Sender, err = db.GetUserById(senderId)
 		if err != nil {
 			return nil, err
 		}

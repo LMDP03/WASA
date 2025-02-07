@@ -27,14 +27,14 @@ func (u *User) ConvertUser(user database.User) error {
 }
 
 type Reaction struct {
-	SenderName string `json: "sender"`
-	Emoji      string `json: "emoji"`
+	Sender User   `json: "sender"`
+	Emoji  string `json: "emoji"`
 }
 
-func (r *Reaction) ConvertReaction(reac database.Reaction) {
-	r.SenderName = reac.SenderName
+func (r *Reaction) ConvertReaction(reac database.Reaction) error {
+	err := r.Sender.ConvertUser(reac.Sender)
 	r.Emoji = reac.Emoji
-
+	return err
 }
 
 func CheckEmoji(emoji string) bool {
@@ -54,11 +54,29 @@ func CheckEmoji(emoji string) bool {
 		(e >= 0x1F1E6 && e <= 0x1F1FF) // Bandiere (regioni)
 }
 
+type Response struct {
+	Sender User
+	MsgId  int
+	Text   string
+	Image  string
+}
+
+func (r *Response) ConvertResponse(res database.Response) error {
+	err := r.Sender.ConvertUser(res.Sender)
+	if err != nil {
+		return err
+	}
+	r.MsgId = res.MsgId
+	r.Text = res.Text
+	r.Image = res.Image
+	return nil
+}
+
 type Message struct {
 	ConvId     int        `json: "conversation"`
-	SenderId   int        `json: "sender"`
+	Sender     User       `json: "sender"`
 	msgId      int        `json: "id"`
-	ResponseTo int        `json: "responseTo"`
+	ResponseTo Response   `json: "responseTo"`
 	Text       string     `json: "text"`
 	Image      string     `json: "image"`
 	Timestamp  time.Time  `json: "timestamp"`
@@ -66,22 +84,32 @@ type Message struct {
 	Reactions  []Reaction `json: "reactions"`
 }
 
-func (m *Message) ConvertMessage(msg database.Message) {
+func (m *Message) ConvertMessage(msg database.Message) error {
 	m.ConvId = msg.ConvId
-	m.SenderId = msg.SenderId
+	err := m.Sender.ConvertUser(msg.Sender)
+	if err != nil {
+		return err
+	}
 	m.msgId = msg.MsgId
-	m.ResponseTo = m.ResponseTo
+	err = m.ResponseTo.ConvertResponse(msg.ResponseTo)
+	if err != nil {
+		return err
+	}
 	m.Text = msg.Text
 	m.Image = msg.Image
 	m.Timestamp = msg.Timestamp
 	m.Checkmark = msg.Checkmark
+	m.Reactions = make([]Reaction, len(msg.Reactions))
 
 	for i := range msg.Reactions {
 		var reac Reaction
-		reac.ConvertReaction(msg.Reactions[i])
-		m.Reactions = append(m.Reactions, reac)
+		err = reac.ConvertReaction(msg.Reactions[i])
+		if err != nil {
+			return err
+		}
+		m.Reactions[i] = reac
 	}
-
+	return nil
 }
 
 type Conversation struct {
@@ -97,6 +125,8 @@ func (c *Conversation) ConvertConversation(conv database.Conversation) error {
 	c.Id = conv.Id
 	c.Name = conv.Name
 	c.Group = conv.Group
+	c.Participants = make([]User, len(conv.Participants))
+	c.Messages = make([]Message, len(conv.Messages))
 
 	for i := range conv.Participants {
 		var u User
@@ -104,13 +134,13 @@ func (c *Conversation) ConvertConversation(conv database.Conversation) error {
 		if err != nil {
 			return err
 		}
-		c.Participants = append(c.Participants, u)
+		c.Participants[i] = u
 	}
 
 	for i := range conv.Messages {
 		var m Message
 		m.ConvertMessage(conv.Messages[i])
-		c.Messages = append(c.Messages, m)
+		c.Messages[i] = m
 	}
 
 	if c.Group {

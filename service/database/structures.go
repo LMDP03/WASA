@@ -10,21 +10,28 @@ type User struct {
 type Preview struct {
 	Id          int
 	Name        string
-	UserId      int
 	Group       bool
 	LastMessage Message
+	UserId      int
 }
 
 type Message struct {
 	ConvId     int
-	SenderId   int
+	Sender     User
 	MsgId      int
-	ResponseTo int
+	ResponseTo Response
 	Text       string
 	Image      string
 	Timestamp  time.Time
 	Checkmark  string
 	Reactions  []Reaction
+}
+
+type Response struct {
+	Sender User
+	MsgId  int
+	Text   string
+	Image  string
 }
 
 type Conversation struct {
@@ -37,6 +44,6 @@ type Conversation struct {
 }
 
 type Reaction struct {
-	SenderName string
-	Emoji      string
+	Sender User
+	Emoji  string
 }

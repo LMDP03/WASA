@@ -17,10 +17,10 @@ export default {
                     name: this.username
                 }, {headers: {'Content-Type': 'application/json'}});
 
-                sessionStorage.userId = response.data.id;
-                sessionStorage.userName = response.data.name;
-                sessionStorage.token = response.data.id;
-                sessionStorage.userImage = response.data.image;
+                sessionStorage.setItem(userId, response.data.id);
+                sessionStorage.setItem(userName, response.data.name);
+                sessionStorage.setItem(token, response.data.id);
+                sessionStorage.setItem(userImage, response.data.image);
 
                 this.$router.push("/home");
                 this.$emit('successful-login');
@@ -32,19 +32,19 @@ export default {
         }
     },
     mounted() {
-        if (sessionStorage.token) {
+        if (sessionStorage.getItem(token)) {
             this.$router.push("/home");
             return;
         }
         sessionStorage.clear();
-    },
+    }
 }
 </script>
 
 <template>
     <ErrorMsg v-if="errorMsg" :msg="errorMsg" ></ErrorMsg>
-    <div class="container">
-        <form v-on:submit="doLogin">
+    <div class="login-container">
+        <form @submit.prevent="doLogin">
             <h1>Welcome to WASA-Text!</h1>
             <input type="text" v-model="username" placeholder="Enter your username">
             <button type="submit">Login</button>
@@ -53,36 +53,36 @@ export default {
 </template>
 
 <style>
-.container {
+.login-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 50vh;
+    height: 400%;
+    width: 80%
 }
-
-.container form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+.login-container form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
-
-.container input {
-    margin: 15px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+.login-container input {
+  margin: 10px;
+  padding: 7px;
+  border: 1px solid black;
+  border-radius: 20px;
+  justify-items: center;
 }
-
-.container button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    background-color: blue;
-    color: white;
-    cursor: pointer;
+.login-container button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  background-color: black;
+  color: white;
+  cursor: pointer;
+  border: 1px solid black
 }
-
-.container button:hover {
-    background-color: rgb(0, 102, 255);
+.login-container button:hover {
+  background-color: white;
+  color: black;
 }
 </style>

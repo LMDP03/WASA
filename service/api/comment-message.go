@@ -97,26 +97,29 @@ func (rt *_router) CommentMessage(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	var reac Reaction
 	if !exists {
-		dbReac, err := rt.db.CreateReaction(convId, userId, msgId, emoji)
+		_, err := rt.db.CreateReaction(convId, userId, msgId, emoji)
 		if err != nil {
 			InternalServerError(w, err, "Couldn't comment the message", ctx)
 			return
 		}
-		reac.ConvertReaction(dbReac)
 		w.WriteHeader(http.StatusCreated)
 	} else {
-		dbReac, err := rt.db.UpdateReaction(convId, userId, msgId, emoji)
+		_, err := rt.db.UpdateReaction(convId, userId, msgId, emoji)
 		if err != nil {
 			InternalServerError(w, err, "Couldn't update the comment", ctx)
 			return
 		}
-		reac.ConvertReaction(dbReac)
 		w.WriteHeader(http.StatusOK)
 	}
+
+	reactions, err := rt.db.GetReactions(convId, msgId)
+	if err != nil {
+		InternalServerError(w, err, "Couldn't retireve the comments", ctx)
+		return
+	}
 	w.Header().Set("content-type", "application/json")
-	if err := json.NewEncoder(w).Encode(reac); err != nil {
+	if err := json.NewEncoder(w).Encode(reactions); err != nil {
 		InternalServerError(w, err, "Error encoding response", ctx)
 		return
 	}

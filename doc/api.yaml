@@ -784,8 +784,12 @@ paths:
           description: Reaction sent or changed succesfully. 
           content:
             application/json:
-              schema: 
-                $ref: "#/components/schemas/Reaction"
+              schema:
+                type: array
+                minItems: 0
+                maxItems: 100
+                items:
+                  $ref: "#/components/schemas/Reaction"
         "404":
           $ref: "#/components/responses/NotFoundError"
         "400":

@@ -102,22 +102,23 @@ func (rt *_router) SetGroupPhoto(w http.ResponseWriter, r *http.Request, ps http
 	err = images.SaveImage(path, 250, 250)
 	if err != nil {
 		InternalServerError(w, err, "Couldn't save the image", ctx)
-	}
-
-	type Response struct {
-		image string `json: "image"`
-	}
-	var response Response
-	img, err := images.ConvertToBase64(path)
-	if err != nil {
-		BadRequest(w, err, "Error taking image from storage", ctx)
 		return
 	}
-	response.image = img
 
+	dbConv, err := rt.db.GetConversationById(convId, userId)
+	if err != nil {
+		InternalServerError(w, err, "Error changing group name", ctx)
+		return
+	}
+	var conv Conversation
+	err = conv.ConvertConversation(dbConv)
+	if err != nil {
+		InternalServerError(w, err, "Error converting group from DB", ctx)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(response); err != nil {
+	if err := json.NewEncoder(w).Encode(conv); err != nil {
 		InternalServerError(w, err, "Couldn't encode the response", ctx)
 		return
 	}

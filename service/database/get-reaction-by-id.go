@@ -9,10 +9,9 @@ func (db *appdbimpl) GetReactionById(convid int, msgid int, senderid int) (React
 	if err != nil {
 		return reac, err
 	}
-	u, err := db.GetUserById(senderid)
+	reac.Sender, err = db.GetUserById(senderid)
 	if err != nil {
 		return reac, err
 	}
-	reac.SenderName = u.Name
 	return reac, nil
 }

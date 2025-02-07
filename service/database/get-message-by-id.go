@@ -1,12 +1,34 @@
 package database
 
 var queryGetMessageById = `SELECT senderId, text, COALESCE(image, ""), timeStamp, responseTo, checkMark FROM Messages WHERE convId = ? AND msgId = ?;`
+var queryGetResponse = `SELECT senderId, text, COALESCE(IMAGE, "") from Messages WHERE convId = ? AND msgId = ?;`
 
 func (db *appdbimpl) GetMessageById(convId int, msgId int) (Message, error) {
 	var msg Message
 	msg.ConvId = convId
 	msg.MsgId = msgId
-	err := db.c.QueryRow(queryGetMessageById, convId, msgId).Scan(&msg.SenderId, &msg.Text, &msg.Image, &msg.Timestamp, &msg.ResponseTo, &msg.Checkmark)
+	var senderId int
+	var responseTo int
+	err := db.c.QueryRow(queryGetMessageById, convId, msgId).Scan(&senderId, &msg.Text, &msg.Image, &msg.Timestamp, &responseTo, &msg.Checkmark)
+	if err != nil {
+		return msg, err
+	}
+	msg.Sender, err = db.GetUserById(senderId)
+	if err != nil {
+		return msg, err
+	}
+	msg.ResponseTo.MsgId = responseTo
+	if responseTo != 0 {
+		var responseSender int
+		err = db.c.QueryRow(queryGetResponse, convId, responseTo).Scan(responseSender, msg.ResponseTo.Text, msg.ResponseTo.Image)
+		if err != nil {
+			return msg, err
+		}
+		msg.ResponseTo.Sender, err = db.GetUserById(responseSender)
+		if err != nil {
+			return msg, err
+		}
+	}
 	msg.Reactions, err = db.GetReactions(convId, msgId)
 	return msg, err
 }

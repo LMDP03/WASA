@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 	"strconv"
@@ -56,10 +57,21 @@ func (rt *_router) SetMyUserName(w http.ResponseWriter, r *http.Request, ps http
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "plain/text")
-	_, err = w.Write([]byte(userName))
+	dbUser, err := rt.db.GetUserById(userId)
 	if err != nil {
+		InternalServerError(w, err, "Couldn't get the user", ctx)
+		return
+	}
+	var user User
+	err = user.ConvertUser(dbUser)
+	if err != nil {
+		InternalServerError(w, err, "Couldn't convert the user", ctx)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(user); err != nil {
 		InternalServerError(w, err, "Couldn't encode the response", ctx)
 		return
 	}

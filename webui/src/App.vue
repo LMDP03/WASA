@@ -105,8 +105,8 @@ export default {
 
 <template>
 
-	<header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
-		<a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="#/">WASA-Text</a>
+	<header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow" v-show="logged">
+		<a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="#/">WASA TEXT</a>
 		<button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
 			<span class="navbar-toggler-icon"></span>
 		</button>
@@ -116,8 +116,8 @@ export default {
 		<div class="row">
 
 			<!-- Navigation bar -->
-			<nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse" v-show="logged">
-				<div class="position-sticky pt-3 sidebar-sticky">
+			<nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse" v-if="logged">
+				<div class="position-sticky pt-3 sidebar-sticky" >
 
 					<!--User search Modal-->
 					<Modal v-show="searchModalVisible" @close="updateSearchModal" title="Search Users">
@@ -180,7 +180,7 @@ export default {
 									Search
 								</a>
 							</li>
-							<!-- If the user is logged in, logs them out-->
+						<!-- If the user is logged in, logs them out-->
 						<li class="nav-item m-2" v-if="logged">
 							<a class="nav-link" @click="logout">
 								<!-- Icona Logout -->

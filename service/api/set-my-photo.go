@@ -76,22 +76,24 @@ func (rt *_router) SetMyPhoto(w http.ResponseWriter, r *http.Request, ps httprou
 	err = images.SaveImage(path, 250, 250)
 	if err != nil {
 		InternalServerError(w, err, "Couldn't save the image", ctx)
-	}
-
-	type Response struct {
-		image string `json: "image"`
-	}
-	var response Response
-	img, err := images.ConvertToBase64(path)
-	if err != nil {
-		BadRequest(w, err, "Error taking image from storage", ctx)
 		return
 	}
-	response.image = img
+
+	dbUser, err := rt.db.GetUserById(userId)
+	if err != nil {
+		InternalServerError(w, err, "Couldn't get the user", ctx)
+		return
+	}
+	var user User
+	err = user.ConvertUser(dbUser)
+	if err != nil {
+		InternalServerError(w, err, "Couldn't convert the user", ctx)
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(response); err != nil {
+	if err := json.NewEncoder(w).Encode(user); err != nil {
 		InternalServerError(w, err, "Couldn't encode the response", ctx)
 		return
 	}

@@ -86,7 +86,7 @@ func (rt *_router) AddToGroup(w http.ResponseWriter, r *http.Request, ps httprou
 	}
 
 	dbMembers, err := rt.db.GetParticipants(convId)
-	var members []User
+	var members = make([]User, len(dbMembers))
 	for i := range dbMembers {
 		var u User
 		err := u.ConvertUser(dbMembers[i])
@@ -94,17 +94,12 @@ func (rt *_router) AddToGroup(w http.ResponseWriter, r *http.Request, ps httprou
 			InternalServerError(w, err, "Error converting users", ctx)
 			return
 		}
-		members = append(members, u)
+		members[i] = u
 	}
 
-	type Response struct {
-		participants []User
-	}
-	var res Response
-	res.participants = members
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(res); err != nil {
+	if err := json.NewEncoder(w).Encode(members); err != nil {
 		ctx.Logger.Error("Couldn't encode the response", err)
 		http.Error(w, "Couldn't encode the response", http.StatusInternalServerError)
 		return
