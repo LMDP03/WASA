@@ -4,6 +4,6 @@ var queryDeleteReaction = `DELETE FROM Reactions WHERE convId = ? AND senderId =
 
 func (db *appdbimpl) DeleteReaction(convid int, msgid int, senderid int) error {
 
-	_, err := db.c.Exec(queryDeleteMessage, convid, senderid, msgid)
+	_, err := db.c.Exec(queryDeleteReaction, convid, senderid, msgid)
 	return err
 }
