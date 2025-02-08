@@ -65,11 +65,11 @@ export default {
 				</template>
 			</Group>
 			<!-- Modale utilzzato per la ricerca degli utenti con cui aprire una nuova conversazione -->
-			<ModalUsers :show="searchModalIsVisible" @close="handleSearchMod" title="search">
+			<Private :show="searchModalIsVisible" @close="handleSearchMod" title="search">
 				<template v-slot:header>
 					<h3>Select User</h3>
 				</template>
-			</ModalUsers>
+			</Private>
 	
 			<!-- Pulsanti per aggiornare la lista delle conversazioni, creare un nuovo gruppo e cercare nuovi utenti -->
 			<div class="btn-toolbar mb-2 mb-md-0">
