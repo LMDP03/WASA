@@ -1,6 +1,8 @@
 package database
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -75,7 +77,7 @@ func (db *appdbimpl) CreateConversation(name string, group bool, otherid int, pa
 		var max_id = sql.NullInt64{Int64: 0, Valid: false}
 		err := db.c.QueryRow(queryGetUserId).Scan(&max_id)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return user, err
+			return conv, err
 		}
 		if !max_id.Valid {
 			new_id = 0
