@@ -17,10 +17,10 @@ export default {
                     name: this.username
                 }, {headers: {'Content-Type': 'application/json'}});
 
-                sessionStorage.setItem(userId, response.data.id);
-                sessionStorage.setItem(userName, response.data.name);
-                sessionStorage.setItem(token, response.data.id);
-                sessionStorage.setItem(userImage, response.data.image);
+                sessionStorage.setItem(userId, response.data.Id);
+                sessionStorage.setItem(userName, response.data.Name);
+                sessionStorage.setItem(token, response.data.Id);
+                sessionStorage.setItem(userImage, response.data.Id);
 
                 this.$router.push("/home");
                 this.$emit('successful-login');
@@ -32,7 +32,7 @@ export default {
         }
     },
     mounted() {
-        if (sessionStorage.getItem(token)) {
+        if (sessionStorage.getItem(token) != null) {
             this.$router.push("/home");
             return;
         }
@@ -42,7 +42,7 @@ export default {
 </script>
 
 <template>
-    <ErrorMsg v-if="errorMsg" :msg="errorMsg" ></ErrorMsg>
+    <ErrorMsg v-if="errorMsg != ''" :msg="errorMsg" ></ErrorMsg>
     <div class="login-container">
         <form @submit.prevent="doLogin">
             <h1>Welcome to WASA-Text!</h1>
@@ -74,7 +74,6 @@ export default {
 }
 .login-container button {
   padding: 10px 20px;
-  border: none;
   border-radius: 5px;
   background-color: black;
   color: white;

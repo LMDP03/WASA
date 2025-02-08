@@ -1,10 +1,8 @@
 package database
 
-import "strings"
-
 var queryGetConversationsByName = `SELECT id, name, groupFlag, last_message FROM Conversations, Participants WHERE id = convId AND userId = ? ORDER BY last_message DESC;`
 
-func (db *appdbimpl) GetConversationsbyName(searchname string, userid int) ([]Preview, error) {
+func (db *appdbimpl) GetConversations(userid int) ([]Preview, error) {
 
 	var previews []Preview
 
@@ -42,9 +40,8 @@ func (db *appdbimpl) GetConversationsbyName(searchname string, userid int) ([]Pr
 			prev.Name = other.Name
 			prev.UserId = other.Id
 		}
-		if strings.Contains(prev.Name, searchname) {
-			previews = append(previews, prev)
-		}
+		previews = append(previews, prev)
+
 	}
 	defer func() { err = rows.Close() }()
 	return previews, err

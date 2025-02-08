@@ -7,34 +7,29 @@ export default {
     },
     data() {
         return {
-            userId: sessionStorage.userId,
+            userId: sessionStorage.getItem(userId),
             convId: parseInt(this.$route.params.convId),
             emojis: ["😀", "😂", "😍", "😎", "😭", "😡", "🎉", "❤️", "👍", "🔥"],
         };
     },
     methods: {
-        close() {
+        closeMod() {
             window.location.reload();
             this.$emit('close');
         },
         async commentMessage(emoji) {
             this.errorMsg = "";
-            try {
-                const url = `/users/${sessionStorage.userId}/conversation/${this.convId}/messages/${this.msg.id}/reactions`;
-                let response = await this.$axios.post(url, emoji, {headers: { 'Authorization': `${sessionStorage.token}`, 'Content-Type': 'text/plain'}});
-                if (response.data == null) {
-                    return;
-                }
-                _ = this.msg.reactions.push(response.data)
-                this.close()
-            } catch (e) {
-                this.errorMsg = e.toString();
-            }
+            const url = `/users/${sessionStorage.getItem(userId)}/conversation/${this.convId}/messages/${this.msg.Id}/reactions`;
+            this.$axios.post(url, emoji, {headers: { 'Authorization': `${sessionStorage.getItem(token)}`, 'Content-Type': 'text/plain'}}).then(() => {
+                this.closeMod();
+            }).catch(e => {this.errorMsg = e.toString()})
         },
         async uncommentMessage() {
             this.errorMsg = "";
-            const url = `/users/${sessionStorage.userId}/conversation/${this.convId}/messages/${this.msg.id}/reactions`;
-            this.$axios.delete(url, { headers: { 'Authorization': sessionStorage.token } }).then(() => {this.close();}).catch(e => {this.errormsg = e.toString();});
+            const url = `/users/${sessionStorage.getItem(userId)}/conversation/${this.convId}/messages/${this.msg.Id}/reactions`;
+            this.$axios.delete(url, { headers: {'Authorization': `${sessionStorage.getItem(token)}` }}).then(() => {
+                this.closeMod();
+            }).catch(e => {this.errorMsg = e.toString();});
         },
     },
 };
@@ -46,33 +41,35 @@ export default {
         <div v-if="show" class="modal-mask">
             <div class="modal-wrapper">
                 <div class="modal-container">
-                    <div class="modal-header">
-                        <h3>Choose an Emoticon</h3>
-                        <button class="like-btn" @click="close">
+
+
+                    <h3>
+                        Comment Message
+                        <button class="like-btn" @click="closeMod">
                             <svg class="feather">
-                            <use href="/feather-sprite-v4.29.0.svg#x" />
+                                <use href="/feather-sprite-v4.29.0.svg#x" />
                             </svg>
                         </button>
-                    </div>
+                    </h3>
         
-                    <div class="modal-body">
+                    <body>
                         <div class="search-results">
-                            <div v-for="cmt in comments" :key="cmt.sender">
+                            <div v-for="cmt in comments" :key="cmt.Sender.Id">
                                 <div class="user">
-                                    <p>{{ cmt.sender }} : {{ cmt.emoji }}</p>
-                                    <button v-if="cmt.sender == userName" type="button" class="btn btn-sm btn-outline-secondary"
-                                    @click="uncommentMessage()">
+                                    <p>{{ cmt.Sender.Name }} : {{ cmt.Emoji }}</p>
+                                    <button v-if="cmt.Sender.Id == userId" type="button" class="btn btn-sm btn-outline-secondary" @click="uncommentMessage()">
                                     Remove Comment
                                     </button>
                                 </div>
                             </div>
                         </div>
-                    <div class="emoji-grid">
-                        <div v-for="emoji in emojis" :key="emoji" class="emoji" @click="commentMessage(emoji)">
-                        {{ emoji }}
+                    
+                        <div class="emoji-grid">
+                            <div v-for="emoji in emojis" :key="emoji" class="emoji" @click="commentMessage(emoji)">
+                                {{ emoji }}
+                            </div>
                         </div>
-                    </div>
-                    </div>
+                    </body>
                 </div>
             </div>
         </div>
@@ -100,9 +97,9 @@ export default {
 .modal-container {
     width: 350px;
     margin: 0px auto;
-    background-color: #fff;
+    background-color: white;
     border-radius: 2px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
+    box-shadow: 0 2px 8px black;
     transition: all 0.3s ease;
 }
 
@@ -117,11 +114,11 @@ export default {
 .modal-header h3 {
     margin: 0;
     font-size: 20px;
-    color: #42b983;
+    color: black;
 }
 
 .modal-header button {
-    color: rgb(86, 86, 86);
+    color: gray;
     background: none;
     border: none;
     padding: 5px;

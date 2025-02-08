@@ -37,18 +37,7 @@ func (rt *_router) GetMyConversations(w http.ResponseWriter, r *http.Request, ps
 		return
 	}
 
-	var searchName string
-	if !r.URL.Query().Has("srcName") {
-		searchName = ""
-	} else {
-		searchName = r.URL.Query().Get("srcName")
-		if len(searchName) > 20 {
-			http.Error(w, "Bad Request", http.StatusBadRequest)
-			return
-		}
-	}
-
-	dbPrevs, err := rt.db.GetConversationsbyName(searchName, userId)
+	dbPrevs, err := rt.db.GetConversations(userId)
 	if err != nil {
 		ctx.Logger.Error("Couldn't find conversations for this user", err)
 		http.Error(w, "Couldn't find conversations for this user", http.StatusInternalServerError)
