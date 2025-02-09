@@ -1,4 +1,5 @@
 curl -H 'Content-Type: application/json' -d '{ "name":"livio"}' -X POST http://localhost:3000/session
+{"Id":1,"Name":"livio","Image":"..."}
 
 curl -H 'Content-Type: application/json' -d '{ "name":"Li"}' -X POST http://localhost:3000/session
     Invalid username
@@ -21,3 +22,10 @@ curl -H 'Content-Type: application/json' -H 'Authorization: 2' -d '{"text":"come
 
 curl -H 'Content-Type: application/json' -H 'Authorization: 2' -d '{"text":"come va amico?"}' -X POST http://localhost:3000/users/2/conversations/private?rcvId=1
     The file is too big: request Content-Type isn't multipart/form-data
+
+
+curl -H 'Content-Type: application/json' -H 'Authorization: 2' -d '{ "name":"prova", "participants":["livio"]}' -X POST http://localhost:3000/users/2/conversations/group
+
+curl -H 'Content-Type: application/json' -H 'Authorization: 6' -X GET http://localhost:3000/users/6/others
+
+curl -H 'Content-Type: application/json' -H 'Authorization: 6' -X GET http://localhost:3000/users/6/others?srcName=io
