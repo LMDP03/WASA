@@ -1,23 +1,24 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
-import ModalUsers from './components/StartConversation.vue';
+import Search from './components/SearchUsers.vue';
+import SearchUsers from './components/SearchUsers.vue';
 </script>
 <script>
 export default {
 	data() {
 		return {
-			searchModalVisible: false,
+			showSearch: false,
 
-			logged: sessionStorage.getItem(token) > 0 ? true : false,
+			logged: sessionStorage.token > 0 ? true : false,
 
 			userId: sessionStorage.userId,
 			userName: sessionStorage.userName,
 			userImage: sessionStorage.userImage,
 
-			nameModalVisible: false,
+			showNameUpdate: false,
 			newName: "",
 
-			imageModalVisible: false,
+			showImageUpdate: false,
 			newImage: null,
 
 		}
@@ -37,9 +38,9 @@ export default {
 			}
 			this.newImage = file;
 		},
-		updateImage() {
+		handleImageUpdate() {
 			sessionStorage.userImage = this.userImage;
-			this.imageModalVisible = !this.imageModalVisible;
+			this.showImageUpdate = !this.showImageUpdate;
 			this.newImage = "";
 			this.errorMsg = "";
 		},
@@ -48,17 +49,16 @@ export default {
 
 			const formData = new FormData();
 			formData.append('image', this.newImage);
-			try {
-				let response = await this.$axios.put(`/users/${this.userId}/image`, formData, {headers: { 'Authorization': `${sessionStorage.token}`, 'Content-Type': 'application/json'}});
-				this.userImage = response.data.image;
-				this.updateImage();
-			} catch (e) {
+			this.$axios.put(`/users/${this.userId}/image`, formData, {headers: { 'Authorization': `${sessionStorage.token}`}}).then(response => {
+				this.userImage = response.data.Image;
+				this.handleImageUpdate();
+			}).catch(e => {
 				this.errorMsg = e.toString();
-			}
+			});
 		},
-		async updateName() {
+		async handleNameUpdate() {
 			sessionStorage.userName = this.userName;
-			this.nameModalVisible = !this.nameModalVisible;
+			this.showNameUpdate = !this.showNameUpdate;
 			this.newName = "";
 			this.errorMsg = "";
 		},
@@ -69,7 +69,7 @@ export default {
 				this.errorMsg = "Choose a new name different from the current one.";
 				return
 			}
-			if (this.newUsername.length < 3 || this.newUsername.length > 16) {
+			if (this.newName.length < 1 || this.newName.length > 20) {
 				this.errorMsg = "Invalid username, it must contains min 3 characters and max 16 characters";
 				return
 			}
@@ -85,15 +85,15 @@ export default {
 				}
 			}
 		},
-		updateSearchModal() {
-			this.searchModalVisible = !this.searchModalVisible;
+		handleSearch() {
+			this.showSearch = !this.showSearch;
 		},
 		logout() {
 			sessionStorage.clear();
 			this.logged = false;
 			this.$router.push("/");
 		},
-		login() {
+		handleLogin() {
 			this.logged = true;
 			this.userName = sessionStorage.userName;
 			this.userImage = sessionStorage.userImage;
@@ -106,133 +106,122 @@ export default {
 <template>
 
 	<header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
-		<a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="#/">WASA TEXT</a>
-		<button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
-			<span class="navbar-toggler-icon"></span>
-		</button>
+		<a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="#/">Wasa Text</a>
 	</header>
 
 	<div class="container-fluid">
 		<div class="row">
+		<!-- Navigation bar -->
+			<nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse" v-show="logged">
+				<div class="position-sticky pt-3 sidebar-sticky">
 
-			<!-- Navigation bar -->
-			<nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
-				<div class="position-sticky pt-3 sidebar-sticky" >
+				<!-- Modale utilizzato per la ricerca di un utente con cui aprire una conversazione -->
+				<Search :show="showSearch" @close="handleSearch" title="search">
+					<template v-slot:header>
+						<h3>Users</h3>
+					</template>
+				</Search>
 
-					<!--User search Modal-->
-					<Modal v-show="searchModalVisible" @close="updateSearchModal" title="Search Users">
-						<template v-slot:header>
-							<h3>Search Users</h3>
-						</template>
-					</Modal>
+				<!-- Modale utilizzato per l'aggiornamento dell'username dell'utente -->
+				<Search :show="showNameUpdate" @close="handleNameUpdate" title="username">
+					<template v-slot:header>
+						<h3>Update Username</h3>
+					</template>
+					<template v-slot:body>
+					<!-- Input in cui viene inserito il nuovo nome dell'utente -->
+						<form class="username-form">
+							<ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
+							<input type="text" v-model="newName" placeholder="New username" />
+							<button type="submit" @click.prevent="setMyUserName">Update</button>
+						</form>
+					</template>
+				</Search>
 
-					<!--Username update Modal-->
-					<ModalUsers v-show="nameModalVisible" @close="updateName", title="Change Name">
-						<template v-slot:header>
-							<h3>Change Username</h3>
-						</template>
-						<template v-slot:body>
-							<form class="username-form">
-								<ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
-								<input type="text" v-model="newName" placeholder="Insert new username" />
-								<button type="submit" @click.prevent="setMyUserName">Update</button>
-							</form>
-						</template>
-					</ModalUsers>
+				<!-- Modale utilizzato per l'aggiornamento della foto profilo dell'utente -->
+				<Search :show="updateProPicIsVisible" @close="handleUpdateProPicToggle" title="photo">
+					<template v-slot:header>
+						<h3>Update Profile Picture</h3>
+					</template>
+					<template v-slot:body>
+						<!-- Input in cui viene inserita la nuova immagine del profilo dell'utente -->
+						<form class="username-form">
+							<ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
+							<input type="file" ref="file" accept=".jpg,.jpeg" @change="checkFile" />
+							<button type="submit" @click.prevent="setMyPhoto">Update</button>
+						</form>
+					</template>
+				</Search>
 
-					<!--User picture update Modal-->
-					<ModalUsers v-show="imageModalVisible" @close="updateImage", title="Change Picture">
-						<template v-slot:header>
-							<h3>Change Profile Picture</h3>
-						</template>
-						<template v-slot:body>
-							<form class="username-form">
-								<ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
-								<input type="file" ref="file" accept=".jpg, .jpeg" @change="checkFile" placeholder="Upload new picture" />
-								<button type="submit" @click.prevent="setMyPhoto">Update</button>
-							</form>
-						</template>
-					</ModalUsers>
+				<!-- Titolo della NavBar -->
+				<h6
+					class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
+				</h6>
 
-
-					<!--Navigation Bar Title-->
-					<h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
-						<span>General</span>
-					</h6>
-
-					<!--Navigation Bar Links-->
-					<ul class="nav flex-column">
-						<li class="nav-item">
-							<!-- Link alla pagina Home -->
-							<RouterLink to="/home" class="nav-link m-2">
-								<!--Home Icon-->
-								<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#home"/></svg>
-								Home
-							</RouterLink>
-						</li>
-						<!--Opens user search modal (only if user is logged in)-->
-						<li class="nav-item m-2" v-if="logged">
-								<a class="nav-link" @click="updateSearchModal">
-									<!-- Search Icon-->
-									<svg class="feather">
-									<use href="/feather-sprite-v4.29.0.svg#search" />
-									</svg>
-									Search
-								</a>
-							</li>
-						<!-- If the user is logged in, logs them out-->
-						<li class="nav-item m-2" v-if="logged">
-							<a class="nav-link" @click="logout">
-								<!-- Icona Logout -->
-								<svg class="feather">
-									<use href="/feather-sprite-v4.29.0.svg#log-out" />
-								</svg>
-								Logout
-							</a>
-						</li>
-						<!--If the user isn't logged opens the login page-->
-						<li class="nav-item" v-else>
-							<RouterLink to="/session" class="nav-link m-2">
-								<!-- Icona Login -->
-								<svg class="feather">
-									<use href="/feather-sprite-v4.29.0.svg#key" />
-								</svg>
-								Login
-							</RouterLink>
-						</li>
-						<!--Opens the Modal for the username change-->
-						<li class="nav-item m-2" v-if="logged">
-							<button @click="updateName">
-								<!--Edit Icon-->
-								<svg class="feather">
-									<use href="/feather-sprite-v4.29.0.svg#edit" />
-								</svg>
-							</button>
-							Set new username
-						</li>
-						<!--Opens the Modal for the profile picture change-->
-						<li class="nav-item m-2" v-if="logged">
-							<button @click="updateImage">
-								<!--Edit Icon-->
-								<svg class="feather">
-									<use href="/feather-sprite-v4.29.0.svg#edit" />
-								</svg>
-							</button>
-							Set new profile picture
-						</li>
-						<!-- Mostra l'immagine del profilo e l'username dell'utente loggato -->
-						<li class="nav-item m-2" v-if="logged">
-							<!-- Immagine del profilo che viene convertito da base64 -->
-							<img :src="`data:image/jpg;base64,${userImage}`" alt="Profile Picture" class="profile-picture" />
-						<span class="username">{{ userName }}</span>
-						</li>
-
-					</ul>
+				<!-- Lista dei link della NavBar -->
+				<ul class="nav flex-column">
+					<li class="nav-item">
+						<!-- Link alla pagina Home -->
+						<RouterLink to="/home" class="nav-link m-2">
+							<!-- Icona Home -->
+							<svg class="feather">
+								<use href="/feather-sprite-v4.29.0.svg#home" />
+							</svg>
+							Home
+						</RouterLink>
+					</li>
+					<!-- Apre il modale (solo se l'utente è loggato) per la ricerca di un utente con cui aprire una conversazione -->
+					<li class="nav-item m-2" v-if="logged">
+						<a class="nav-link" @click="handleSearch">
+							<!-- Icona Search -->
+							<svg class="feather">
+								<use href="/feather-sprite-v4.29.0.svg#search" />
+							</svg>
+							Search
+						</a>
+					</li>
+					<!-- Esegue il logout (solo se l'utente è loggato) ritornando alla pagina di login -->
+					<li class="nav-item m-2" v-if="logged">
+						<a class="nav-link" @click="logout">
+							<!-- Icona Logout -->
+							<svg class="feather">
+								<use href="/feather-sprite-v4.29.0.svg#log-out" />
+							</svg>
+							Logout
+						</a>
+					</li>
+					<!-- Apre il modale per l'inserimento di un nuovo username (Mostato solo se l'utente è loggato) -->
+					<li class="nav-item m-2" v-if="logged">
+						<button @click="handleNameUpdate">
+							<!-- Icona Edit -->
+							<svg class="feather">
+								<use href="/feather-sprite-v4.29.0.svg#edit" />
+							</svg>
+						</button>
+						Set new username
+					</li>
+					<!-- Apre il modale per l'inserimento di una nuova immagine del profilo (Mostato solo se l'utente è loggato) -->
+					<li class="nav-item m-2" v-if="logged">
+					<button @click="handleImageUpdate">
+						<!-- Icona Edit -->
+						<svg class="feather">
+							<use href="/feather-sprite-v4.29.0.svg#edit" />
+						</svg>
+					</button>
+					Set new profile picture
+					</li>
+					<!-- Mostra l'immagine del profilo e l'username dell'utente loggato -->
+					<li class="nav-item m-2" v-if="logged">
+					<!-- Immagine del profilo che viene convertito da base64 -->
+					<img :src="`data:image/jpg;base64,${userImage}`" alt="Profile Picture" class="profile-picture" />
+					<span class="username">{{ userName }}</span>
+					</li>
+				</ul>
 				</div>
 			</nav>
 
+			<!-- Contenuto principale della pagina -->
 			<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-				<RouterView @successful-login="login" />
+				<RouterView @successful-login="handleLogin" />
 			</main>
 		</div>
 	</div>

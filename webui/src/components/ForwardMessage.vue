@@ -21,12 +21,13 @@ export default {
         },
         async forwardMessage(destId, user) {
             this.errorMsg = "";
-            const url = `users/${sessionStorage.getItem(userId)}/conversation/${this.convId}/messages/${this.msg.Id}?destId=${destId}`;
-            this.$axios.post(url, {}, { headers: { 'Authorization': `${sessionStorage.getItem(token)}` } }).then(() => {
+            const url = `users/${sessionStorage.userId}/conversation/${this.convId}/messages/${this.msg.Id}?destId=${destId}`;
+            this.$axios.post(url, {}, { headers: { 'Authorization': `${sessionStorage.token}` } }).then(() => {
                 localStorage.clear();
-                localStorage.setItem(userId, user.Id);
-                localStorage.setItem(userName, user.Name);
-                localStorage.setItem(userImage, user.Image);
+                localStorage.userId = user.Id;
+                localStorage.userName = user.Name;
+                localStorage.userImage = user.Image;
+                localStorage.isGroup = response.data.Group;
                 this.closeMod();
             }).catch(e => {
                 this.errorMsg = e.toString();
@@ -35,8 +36,8 @@ export default {
         async getMyConversations() {
             this.errorMsg = "";
             try {
-                const url = `users/${sessionStorage.getItem(userId)}/conversation`
-                let response = await this.$axios.get(url, { headers: { 'Authorization': `${sessionStorage.getItem(token)}` } });
+                const url = `users/${sessionStorage.userId}/conversation`
+                let response = await this.$axios.get(url, { headers: { 'Authorization': `${sessionStorage.token}` } });
                 this.convs = response.data;
             } catch (e) {
                 this.errorMsg = e.toString();

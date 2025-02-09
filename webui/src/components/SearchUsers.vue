@@ -26,14 +26,14 @@ export default {
             this.filteredUsers = this.users;
             if (this.searchText.length > 0) {
                 if (this.searchText.length > 16) {
-                    this.errorMsg = "A username can hav at most 16 characters.";
+                    this.errorMsg = "A username can have at most 16 characters.";
                     this.filteredUsers = [];
                     return;
                 }
                 if (this.title === "search") {
                     try {
-                        const url = `/users/${sessionStorage.getItem(userId)}/others?srcName=${this.searchText}`;
-                        let response = await this.$axios.get(url, { headers: { 'Authorization': `${sessionStorage.getItem(token)}` } });
+                        const url = `/users/${sessionStorage.userId}/others?srcName=${this.searchText}`;
+                        let response = await this.$axios.get(url, { headers: { 'Authorization': `${sessionStorage.token}` } });
                         if (response.data == null) {
                             this.filteredUsers = [];
                             return;
@@ -50,9 +50,10 @@ export default {
         },
         async selectUser(receiver) {
             localStorage.clear();
-            localStorage.setItem(userId, receiver.Id);
-            localStorage.setItem(userName, receiver.Name);
-            localStorage.setItem(userImage, receiver.Img);
+            localStorage.userId = receiver.Id;
+            localStorage.userName = receiver.Name;
+            localStorage.userImage = receiver.Img;
+            localStorage.isGroup = false;
             this.closeMod(); 
         }
     },

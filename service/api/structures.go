@@ -139,7 +139,10 @@ func (c *Conversation) ConvertConversation(conv database.Conversation) error {
 
 	for i := range conv.Messages {
 		var m Message
-		m.ConvertMessage(conv.Messages[i])
+		err := m.ConvertMessage(conv.Messages[i])
+		if err != nil {
+			return err
+		}
 		c.Messages[i] = m
 	}
 
@@ -173,7 +176,10 @@ func (p *Preview) ConvertPreview(prev database.Preview) error {
 	p.Name = prev.Name
 	p.Group = prev.Group
 	var msg Message
-	msg.ConvertMessage(prev.LastMessage)
+	err := msg.ConvertMessage(prev.LastMessage)
+	if err != nil {
+		return err
+	}
 	p.LastMessage = msg
 
 	if p.Group {

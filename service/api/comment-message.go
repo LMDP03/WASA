@@ -113,10 +113,21 @@ func (rt *_router) CommentMessage(w http.ResponseWriter, r *http.Request, ps htt
 		w.WriteHeader(http.StatusOK)
 	}
 
-	reactions, err := rt.db.GetReactions(convId, msgId)
+	dbReactions, err := rt.db.GetReactions(convId, msgId)
 	if err != nil {
 		InternalServerError(w, err, "Couldn't retireve the comments", ctx)
 		return
+	}
+	reactions := make([]Reaction, len(dbReactions))
+
+	for i := range dbReactions {
+		var reac Reaction
+		err = reac.ConvertReaction(dbReactions[i])
+		if err != nil {
+			InternalServerError(w, err, "Couldn't convert the comments", ctx)
+			return
+		}
+		reactions[i] = reac
 	}
 	w.Header().Set("content-type", "application/json")
 	if err := json.NewEncoder(w).Encode(reactions); err != nil {

@@ -1,5 +1,5 @@
 <script>
-import Private from '../components/StartConversation.vue';
+import Private from '../components/SearchUsers.vue';
 import Group from '../components/CreateGroup.vue';
 export default {
 	data: function() {
@@ -16,24 +16,20 @@ export default {
 		async getMyConversations() {
             this.errorMsg = "";
             try {
-                const url = `users/${sessionStorage.getItem(userId)}/conversations`
-                let response = await this.$axios.get(url, { headers: { 'Authorization': `${sessionStorage.getItem(token)}` } });
+                const url = `users/${sessionStorage.userId}/conversations`
+                let response = await this.$axios.get(url, { headers: { 'Authorization': `${sessionStorage.token}` } });
                 this.some_data = response.data;
             } catch (e) {
                 this.errorMsg = e.toString();
             }
         },
-		async getConversation(convId) {
+		async goToConversation(conv) {
 			localStorage.clear();
-			const url = `users/${sessionStorage.getItem(userId)}/conversation/${convId}`;
-			this.$axios.get(url, { headers: { 'Authorization': `${sessionStorage.getItem(token)}` } }).then(() => {
-				localStorage.setItem(userId, response.data.Id);
-				localStorage.setItem(userName, response.data.Name);
-				localStorage.setItem(userImage, response.data.Image)
-			}).catch(e => {
-				this.errorMsg = e.toString();
-			});
-			this.$router.push(`/conversation/${convId}`);
+			localStorage.userId = conv.Id;
+			localStorage.userName = conv.Name;
+			localStorage.userImage = conv.Image;
+			localStorage.isGroup = conv.Group;
+			this.$router.push(`/conversation/${conv.Id}`);
 		},
 		handleSearchMod() {
 			this.showUserSearh = !this.showUserSearh;
@@ -44,7 +40,7 @@ export default {
 		}
 	},
 	mounted() {
-		if (sessionStorage.getItem(token) != 0) {
+		if (!sessionStorage.token) {
 			this.$router.push("/");
 			return;
 		}
@@ -100,12 +96,12 @@ export default {
 			<div class="conversations" v-for="response in some_data" :key="response.Id">
 				<!-- Mostra il nome dell'utente con cui si sta conversando, l'ultimo messaggio e chi lo ha inviato -->
 				<!-- Se il messaggio è un testo, mostra il contenuto -->
-				<button v-if="response.Image== ''" type="button" class="btn btn-sm btn-outline-primary" @click="getConversation(response.Id)">
-					{{ response.Name }} <br> {{ response.LastMessage.Sender.Name }}: {{ response.LastMessage.Text }}
+				<button v-if="response.Image== ''" type="button" class="btn btn-sm btn-outline-primary" @click="goToConversation(response)">
+					{{ response.Image }} {{ response.Name }} <br> {{ response.LastMessage.Sender.Name }}: {{ response.LastMessage.Text }}
 				</button>
 					<!-- Altrimenti mostra "Photo" -->
-				<button v-else type="button" class="btn btn-sm btn-outline-primary" @click="getConversation(response.Id)">
-					{{ response.Name }} <br> {{ response.LastMessage.Sender.Name }}: Photo
+				<button v-else type="button" class="btn btn-sm btn-outline-primary" @click="goToConversation(response)">
+					{{ response.Image }} {{ response.Name }} <br> {{ response.LastMessage.Sender.Name }}: Photo
 				</button>
 			</div>
 		</div>

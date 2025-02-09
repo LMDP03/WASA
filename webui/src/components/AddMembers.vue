@@ -12,8 +12,8 @@ export default  {
             groupName: "",
             filteredUsers: [],
             selectedUsers: [],
-            owner: sessionStorage.getItem(userName),
-            groupId: localStorage.getItem(userId),
+            owner: sessionStorage.userName,
+            groupId: localStorage.userId,
 
         };
     },
@@ -36,8 +36,8 @@ export default  {
                 
                 if (this.title === "search") {
                     try {
-                        const url =  `users/${sessionStorage.getItem(userId)}/others?srcName=${this.searchText}`
-                        let response = await this.$axios.get(url, { headers: { 'Authorization': `${sessionStorage.getItem(token)}` } });
+                        const url =  `users/${sessionStorage.userId}/others?srcName=${this.searchText}`
+                        let response = await this.$axios.get(url, { headers: { 'Authorization': `${sessionStorage.token}` } });
                         if (response.data == null) {
                             this.filteredUsers = [];
                             return;
@@ -54,12 +54,12 @@ export default  {
         },
         async addToGroup() {
             try {
-                const url = `users/${sessionStorage.getItem(userId)}/conversation/${this.groupId}`;
+                const url = `users/${sessionStorage.userId}/conversation/${this.groupId}`;
                 var newMembers = [];
                 for (let i in this.selectedUsers) {
                     newMembers[i] = this.selectedUsers[i].Name;
                 }
-                let response = await this.$axios.post(url, {participants: newMembers,}, {headers: { 'Authorization': `${sessionStorage.getItem(token)}`}});
+                let response = await this.$axios.post(url, {participants: newMembers,}, {headers: { 'Authorization': `${sessionStorage.token}`, 'Content-Type': 'application/json'}});
                 localStorage.clear();
                 localStorage.users = JSON.stringify(response.data)
                 this.closeMod();

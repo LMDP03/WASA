@@ -123,7 +123,11 @@ func (rt *_router) SendMessage(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	var msg Message
-	msg.ConvertMessage(dbMsg)
+	err = msg.ConvertMessage(dbMsg)
+	if err != nil {
+		InternalServerError(w, err, "Couldn't convert the message", ctx)
+		return
+	}
 
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("content-type", "application/json")

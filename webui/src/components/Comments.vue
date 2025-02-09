@@ -7,7 +7,7 @@ export default {
     },
     data() {
         return {
-            userId: sessionStorage.getItem(userId),
+            userId: sessionStorage.userId,
             convId: parseInt(this.$route.params.convId),
             emojis: ["😀", "😂", "😍", "😎", "😭", "😡", "🎉", "❤️", "👍", "🔥"],
         };
@@ -19,15 +19,15 @@ export default {
         },
         async commentMessage(emoji) {
             this.errorMsg = "";
-            const url = `/users/${sessionStorage.getItem(userId)}/conversation/${this.convId}/messages/${this.msg.Id}/reactions`;
-            this.$axios.post(url, emoji, {headers: { 'Authorization': `${sessionStorage.getItem(token)}`, 'Content-Type': 'text/plain'}}).then(() => {
+            const url = `/users/${sessionStorage.userId}/conversation/${this.convId}/messages/${this.msg.Id}/reactions`;
+            this.$axios.post(url, emoji, {headers: { 'Authorization': `${sessionStorage.token}`, 'Content-Type': 'text/plain'}}).then(() => {
                 this.closeMod();
             }).catch(e => {this.errorMsg = e.toString()})
         },
         async uncommentMessage() {
             this.errorMsg = "";
-            const url = `/users/${sessionStorage.getItem(userId)}/conversation/${this.convId}/messages/${this.msg.Id}/reactions`;
-            this.$axios.delete(url, { headers: {'Authorization': `${sessionStorage.getItem(token)}` }}).then(() => {
+            const url = `/users/${sessionStorage.userId}/conversation/${this.convId}/messages/${this.msg.Id}/reactions`;
+            this.$axios.delete(url, { headers: {'Authorization': `${sessionStorage.token}` }}).then(() => {
                 this.closeMod();
             }).catch(e => {this.errorMsg = e.toString();});
         },

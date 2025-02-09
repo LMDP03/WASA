@@ -12,7 +12,7 @@ export default  {
             groupName: "",
             filteredUsers: [],
             selectedUsers: [],
-            owner: sessionStorage.getItem(userName),
+            owner: sessionStorage.userName,
 
         };
     },
@@ -38,8 +38,8 @@ export default  {
 
             if (this.title === "search") {
                 try {
-                    const url =  `users/${sessionStorage.getItem(userId)}/others?srcName=${this.searchText}`
-                    let response = await this.$axios.get(url, { headers: { 'Authorization': `${sessionStorage.getItem(token)}` } });
+                    const url =  `users/${sessionStorage.userId}/others?srcName=${this.searchText}`
+                    let response = await this.$axios.get(url, { headers: { 'Authorization': `${sessionStorage.token}` } });
                     if (response.data == null) {
                         this.filteredUsers = [];
                         return;
@@ -59,7 +59,7 @@ export default  {
                 return;
             }
             try {
-                const url = `users/${sessionStorage.getItem(userId)}/conversations/group`;
+                const url = `users/${sessionStorage.userId}/conversations/group`;
                 var newMembers = [];
                 for (let i in this.selectedUsers) {
                     newMembers[i] = this.selectedUsers[i].Name;
@@ -67,11 +67,12 @@ export default  {
                 let response = await this.$axios.post(url, {
                     name: this.groupName,
                     participants: newMembers,
-                }, {headers: { 'Authorization': `${sessionStorage.getItem(token)}`}});
+                }, {headers: { 'Authorization': `${sessionStorage.token}`, 'Content-Type': 'application/json'}});
                 localStorage.clear();
                 localStorage.userId = response.data.Id;
                 localStorage.userName = response.data.Name;
                 localStorage.userImage = response.data.Image;
+                localStorage.isGroup = response.data.Group;
                 this.closeMod();
                 this.$router.push(`/conversations/${response.data.Id}`)
             } catch (e) {

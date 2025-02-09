@@ -17,10 +17,10 @@ export default {
                     name: this.username
                 }, {headers: {'Content-Type': 'application/json'}});
 
-                sessionStorage.setItem(userId, response.data.Id);
-                sessionStorage.setItem(userName, response.data.Name);
-                sessionStorage.setItem(token, response.data.Id);
-                sessionStorage.setItem(userImage, response.data.Id);
+                sessionStorage.userId = response.data.Id;
+                sessionStorage.userName = response.data.Name;
+                sessionStorage.token =  response.data.Id;
+                sessionStorage.userImage = response.data.Id;
 
                 this.$router.push("/home");
                 this.$emit('successful-login');
@@ -32,7 +32,7 @@ export default {
         }
     },
     mounted() {
-        if (sessionStorage.getItem(token) != null) {
+        if (sessionStorage.token) {
             this.$router.push("/home");
             return;
         }
