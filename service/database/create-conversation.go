@@ -22,22 +22,20 @@ func (db *appdbimpl) CreateConversation(name string, group bool, otherid int, pa
 
 	var flag int
 
+	var max_id = sql.NullInt64{Int64: 0, Valid: false}
+	err := db.c.QueryRow(queryGetConversationId).Scan(&max_id)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return conv, err
+	}
+	if !max_id.Valid {
+		new_id = 1
+	} else {
+		new_id = int(max_id.Int64) + 1
+	}
+
 	if group {
 
 		flag = 1
-
-		var max_id = sql.NullInt64{Int64: 0, Valid: false}
-		err := db.c.QueryRow(queryGetUserId).Scan(&max_id)
-		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return conv, err
-		}
-		if !max_id.Valid {
-			new_id = 0
-		} else {
-			new_id = int(max_id.Int64)
-		}
-
-		new_id += 1
 
 		_, err = db.c.Exec(queryAddConversation, new_id, name, flag)
 		if err != nil {
@@ -73,19 +71,6 @@ func (db *appdbimpl) CreateConversation(name string, group bool, otherid int, pa
 
 	} else {
 		flag = 0
-
-		var max_id = sql.NullInt64{Int64: 0, Valid: false}
-		err := db.c.QueryRow(queryGetUserId).Scan(&max_id)
-		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return conv, err
-		}
-		if !max_id.Valid {
-			new_id = 0
-		} else {
-			new_id = int(max_id.Int64)
-		}
-
-		new_id += 1
 
 		_, err = db.c.Exec(queryAddConversation, new_id, "", flag)
 		if err != nil {

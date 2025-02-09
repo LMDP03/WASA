@@ -1,12 +1,14 @@
 package database
 
-var queryGetUsersByName = `SELECT id, name FROM Users WHERE name LIKE '%?%' AND NOT id = ? OREDR BY name;`
+import "strings"
+
+var queryGetUsersByName = `SELECT id, name FROM Users WHERE NOT id = ? ORDER BY name;`
 
 func (db *appdbimpl) GetUsersByName(searchname string, userid int) ([]User, error) {
 
 	var users []User
 
-	rows, err := db.c.Query(queryGetUsersByName, searchname, userid)
+	rows, err := db.c.Query(queryGetUsersByName, userid)
 	if err != nil {
 		return nil, err
 	}
@@ -19,7 +21,10 @@ func (db *appdbimpl) GetUsersByName(searchname string, userid int) ([]User, erro
 		if err := rows.Scan(&user.Id, &user.Name); err != nil {
 			return nil, err
 		}
-		users = append(users, user)
+		if strings.Contains(user.Name, searchname) {
+			users = append(users, user)
+		}
+		
 	}
 	defer func() { err = rows.Close() }()
 	return users, err

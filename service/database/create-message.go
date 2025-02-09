@@ -15,7 +15,7 @@ func (db *appdbimpl) CreateMessage(convid int, senderid int, responseto int, tex
 
 	var new_id int
 	var max_id = sql.NullInt64{Int64: 0, Valid: false}
-	err := db.c.QueryRow(queryGetUserId).Scan(&max_id)
+	err := db.c.QueryRow(queryGetMessageId).Scan(&max_id)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return msg, err
 	}
