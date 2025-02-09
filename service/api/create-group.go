@@ -48,7 +48,7 @@ func (rt *_router) CreateGroup(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	if len(conv.Name) < 1 || len(conv.Name) > 20 || len(conv.participants) < 3 || len(conv.participants) > 50 {
+	if len(conv.Name) < 1 || len(conv.Name) > 20 {
 		BadRequest(w, nil, "Invalid username", ctx)
 		return
 	}
