@@ -27,12 +27,12 @@ export default {
 		async checkFile(event) {
 			this.errorMsg = "";
 			const file = event.target.files[0]; // Prende il file inserito dall'utente
-			if (file.type != "image/jpeg") {
+			if (file.type !== "image/jpeg") {
 				this.errorMsg = "Unsupported image type: only jpg or jpeg images allowed.";
 				return
 			}
 			if (file.size > 5242880) {
-				this.errorMsg = "File size exceeded: MAX size 5MB."
+				this.errorMsg = "File size exceeded: MAX size 5MB.";
 				return
 			}
 			this.newImage = file;

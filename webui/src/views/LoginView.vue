@@ -14,7 +14,7 @@ export default {
                     throw "Invalid username: must be between 3 and 16 characters."
                 }
                 let response = await this.$axios.post('/session', {
-                    name: this.username
+                    name: this.username,
                 });
 
                 sessionStorage.userId = response.data.Id;
@@ -57,7 +57,7 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 400%;
+    height: 40vh;
     width: 80%
 }
 .login-container form {
