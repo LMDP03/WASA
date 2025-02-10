@@ -1,8 +1,6 @@
 <script>
 import AddGroup from '../components/AddMembers.vue'
 import SearchUsers from '../components/SearchUsers.vue';
-import SearchUsers from '../components/SearchUsers.vue';
-import SearchUsers from '../components/SearchUsers.vue';
 
 export default {
     data() {

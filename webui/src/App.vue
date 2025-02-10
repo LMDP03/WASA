@@ -1,7 +1,6 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
 import Search from './components/SearchUsers.vue';
-import SearchUsers from './components/SearchUsers.vue';
 </script>
 <script>
 export default {
