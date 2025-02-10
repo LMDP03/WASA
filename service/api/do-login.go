@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"wasatext/service/api/reqcontext"
@@ -55,7 +56,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 		}
 		w.WriteHeader(http.StatusOK)
 	}
-
+	fmt.Printf("new user is: %d", user.Id)
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(user); err != nil {
 		InternalServerError(w, err, "Couldn't encode the response", ctx)

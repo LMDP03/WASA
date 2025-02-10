@@ -42,17 +42,16 @@ export default {
             <div class="modal-wrapper">
                 <div class="modal-container">
 
-
-                    <h3>
-                        Comment Message
+                    <div class="modal-header">
+                        <h3>Comment Message</h3>
                         <button class="like-btn" @click="closeMod">
                             <svg class="feather">
                                 <use href="/feather-sprite-v4.29.0.svg#x" />
                             </svg>
                         </button>
-                    </h3>
+                    </div>
         
-                    <body>
+                    <div class="modal-body">
                         <div class="search-results">
                             <div v-for="cmt in comments" :key="cmt.Sender.Id">
                                 <div class="user">
@@ -69,7 +68,7 @@ export default {
                                 {{ emoji }}
                             </div>
                         </div>
-                    </body>
+                    </div>
                 </div>
             </div>
         </div>

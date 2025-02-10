@@ -15,12 +15,12 @@ export default {
                 }
                 let response = await this.$axios.post('/session', {
                     name: this.username
-                }, {headers: {'Content-Type': 'application/json'}});
+                });
 
                 sessionStorage.userId = response.data.Id;
                 sessionStorage.userName = response.data.Name;
                 sessionStorage.token =  response.data.Id;
-                sessionStorage.userImage = response.data.Id;
+                sessionStorage.userImage = response.data.Image;
 
                 this.$router.push("/home");
                 this.$emit('successful-login');
@@ -37,12 +37,12 @@ export default {
             return;
         }
         sessionStorage.clear();
-    }
+    },
 }
 </script>
 
 <template>
-    <ErrorMsg v-if="errorMsg != ''" :msg="errorMsg" ></ErrorMsg>
+    <ErrorMsg v-if="errorMsg" :msg="errorMsg" ></ErrorMsg>
     <div class="login-container">
         <form @submit.prevent="doLogin">
             <h1>Welcome to WASA-Text!</h1>

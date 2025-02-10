@@ -8,7 +8,7 @@ export default {
 		return {
 			showSearch: false,
 
-			logged: sessionStorage.token > 0 ? true : false,
+			logged: sessionStorage.token ? true : false,
 
 			userId: sessionStorage.userId,
 			userName: sessionStorage.userName,
@@ -111,7 +111,7 @@ export default {
 	<div class="container-fluid">
 		<div class="row">
 		<!-- Navigation bar -->
-			<nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse" v-show="logged">
+			<nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse" v-if="logged">
 				<div class="position-sticky pt-3 sidebar-sticky">
 
 				<!-- Modale utilizzato per la ricerca di un utente con cui aprire una conversazione -->
