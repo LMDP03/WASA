@@ -13,4 +13,4 @@ RUN yarn run build-prod
 FROM nginx:stable
 
 ### Copy the (built) app from the builder image
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /app/webui/dist /usr/share/nginx/html
