@@ -74,7 +74,7 @@ export default  {
                 localStorage.userImage = response.data.Image;
                 localStorage.isGroup = response.data.Group;
                 this.closeMod();
-                this.$router.push(`/conversation`)
+                this.$router.push(`/conversation/${response.data.Id}`)
             } catch (e) {
                 this.errorMsg = e.toString();
             }
@@ -123,7 +123,7 @@ export default  {
                             </div>
                             <!-- Campo di ricerca -->
                             <div class="input">
-                                <input type="text" v-model="searchText" placeholder="search" />
+                                <input type="text" v-model="searchText" placeholder="Search" />
                             </div>
                             <div class="btn-group me-2">
                                 <button class="btn btn-sm btn-outline-primary" @click="createGroup">Create Group</button>
@@ -148,6 +148,7 @@ export default  {
                                     </button>
                                 </div>
                             </div>
+
                         </slot>
                     </div>
                 </div>
