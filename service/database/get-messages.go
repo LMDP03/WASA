@@ -10,6 +10,7 @@ func (db *appdbimpl) GetMessages(convId int) ([]Message, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer func() { rows.Close() }()
 
 	for rows.Next() {
 		if rows.Err() != nil {

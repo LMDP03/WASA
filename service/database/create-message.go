@@ -20,11 +20,10 @@ func (db *appdbimpl) CreateMessage(convid int, senderid int, responseto int, tex
 		return msg, err
 	}
 	if !max_id.Valid {
-		new_id = 0
+		new_id = 1
 	} else {
-		new_id = int(max_id.Int64)
+		new_id = int(max_id.Int64) + 1
 	}
-	new_id += 1
 
 	_, err = db.c.Exec(queryAddMessage, convid, senderid, new_id, text, image, responseto)
 	if err != nil {

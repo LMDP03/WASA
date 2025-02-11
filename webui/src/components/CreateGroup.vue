@@ -36,7 +36,7 @@ export default  {
 
             } 
 
-            if (this.title === "search") {
+            if (this.title === "Search") {
                 try {
                     const url =  `users/${sessionStorage.userId}/others?srcName=${this.searchText}`
                     let response = await this.$axios.get(url, { headers: { 'Authorization': `${sessionStorage.token}` } });
@@ -74,7 +74,7 @@ export default  {
                 localStorage.userImage = response.data.Image;
                 localStorage.isGroup = response.data.Group;
                 this.closeMod();
-                this.$router.push(`/conversations/${response.data.Id}`)
+                this.$router.push(`/conversation`)
             } catch (e) {
                 this.errorMsg = e.toString();
             }
@@ -102,54 +102,54 @@ export default  {
 
 <template>
     <Transition name="modal">
-        <div v-if="show" class="modal-mask">
-            <div class="modal-wrapper">
-                <div class="modal-container">
+        <div v-if="show" class="mask">
+            <div class="wrapper">
+                <div class="container">
 
-                    <div class="modal-header">
-                        <h4>default header</h4>
+                    <div class="header">
                         <button class="like-btn" @click="closeMod">
                             <svg class="feather">
                                 <use href="/feather-sprite-v4.29.0.svg#x" />
                             </svg>
                         </button>
                     </div>
-        
-                    <body>
-                        <!-- Selezione del nome del gruppo -->
-                        <div class="search-input">
-                            <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
-                            <input type="text" v-model="groupName" placeholder="Select group name" />
-                        </div>
-                        <!-- Campo di ricerca -->
-                        <div class="search-input">
-                            <input type="text" v-model="searchText" placeholder="search" />
-                        </div>
-                        <div class="btn-group me-2">
-                            <button class="btn btn-sm btn-outline-primary" @click="createGroup">Create Group</button>
-                        </div>
-        
-                        <!-- Risultati della ricerca -->
-                        <div class="search-results">
-                            <div v-for="user in filteredUsers" :key="user.Id" @click="selectUser(user)" class="user">
-                                <p>{{ user.Name }}</p>
+                    
+                    <div class="body">
+                        <slot name="body">
+                            <!-- Selezione del nome del gruppo -->
+                            <div class="input">
+                                <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
+                                <input type="text" v-model="groupName" placeholder="Select group name" />
                             </div>
-                        </div>
-        
-                        <!-- Lista di utenti selezionati -->
-                        <div class="selected-users">
-                            <h4>Selected Users:</h4>
-                            <span class="selected-user">{{ owner }}</span>
-                            <div v-for="user in selectedUsers" :key="user.id" class="selected-user">
-                                <span>{{ user.name }}</span>
-                                <button v-if="user.name !== owner" @click="removeUser(user.name)">
-                                    <svg class="feather">
-                                        <use href="/feather-sprite-v4.29.0.svg#x" />
-                                    </svg>
-                                </button>
+                            <!-- Campo di ricerca -->
+                            <div class="input">
+                                <input type="text" v-model="searchText" placeholder="search" />
                             </div>
-                        </div>
-                    </body>
+                            <div class="btn-group me-2">
+                                <button class="btn btn-sm btn-outline-primary" @click="createGroup">Create Group</button>
+                            </div>
+            
+                            <!-- Risultati della ricerca -->
+                            <div class="results">
+                                <div v-for="user in filteredUsers" :key="user.Id" @click="selectUser(user)" class="user">
+                                    <p>{{ user.Name }}</p>
+                                </div>
+                            </div>
+            
+                            <!-- Lista di utenti selezionati -->
+                            <div class="selected">
+                                <span class="selected-user">{{ owner }}</span>
+                                <div v-for="user in selectedUsers" :key="user.id" class="selected-user">
+                                    <span>{{ user.name }}</span>
+                                    <button v-if="user.name !== owner" @click="removeUser(user.name)">
+                                        <svg class="feather">
+                                            <use href="/feather-sprite-v4.29.0.svg#x" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </slot>
+                    </div>
                 </div>
             </div>
         </div>
@@ -158,25 +158,25 @@ export default  {
   
   
 <style>
-.selected-users {
+.selected {
     margin-top: 20px;
     padding: 10px;
     border-top: 1px solid gray;
 }
   
-.selected-user {
+.selected {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 10px;
 }
   
-.selected-user span {
+.selected span {
     font-size: 14px;
     font-weight: bold;
 }
   
-.selected-user button {
+.selected button {
     background: white;
     color: grey;
     border: none;
@@ -184,11 +184,11 @@ export default  {
     padding: 5px 10px;
     cursor: pointer;
 }
-.modal-header button svg {
+.header button svg {
     width: 20px;
     height: 20px;
 }
-.selected-user button:hover {
+.selected button:hover {
     color: red;
 }
 </style>

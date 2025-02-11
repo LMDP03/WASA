@@ -13,10 +13,7 @@ var sql_CONVERSATIONS = `CREATE TABLE IF NOT EXISTS Conversations
 	name STRING NOT NULL,
 	groupFlag INTEGER NOT NULL,
 	last_message INTEGER,
-	PRIMARY KEY (id),
-	CONSTRAINT fk_Conversations
-		FOREIGN KEY (last_message) REFERENCES Messages(msgId)
-			ON DELETE CASCADE
+	PRIMARY KEY (id)
 );`
 
 var sql_PARTICIPANTS = `CREATE TABLE IF NOT EXISTS Participants

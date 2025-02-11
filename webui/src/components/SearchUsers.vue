@@ -1,5 +1,4 @@
 <script>
-import { RouterLink } from 'vue-router';
 
 export default {
   // Props passati al componente
@@ -30,7 +29,7 @@ export default {
                     this.filteredUsers = [];
                     return;
                 }
-                if (this.title === "search") {
+                if (this.title === "Search") {
                     try {
                         const url = `/users/${sessionStorage.userId}/others?srcName=${this.searchText}`;
                         let response = await this.$axios.get(url, { headers: { 'Authorization': `${sessionStorage.token}` } });
@@ -54,6 +53,7 @@ export default {
             localStorage.userName = receiver.Name;
             localStorage.userImage = receiver.Img;
             localStorage.isGroup = false;
+            this.$router.push('/conversation');
             this.closeMod(); 
         }
     },
@@ -65,18 +65,16 @@ export default {
             this.filteredUsers = this.users;
         }
     },
-    components: {RouterLink}
 }
 </script>
 
 <template>
     <Transition name="modal">
-        <div v-if="show" class="modal-mask">
-            <div class="modal-wrapper">
-                <div class="modal-container">
+        <div v-if="show" class="mask">
+            <div class="wrapper">
+                <div class="container">
 
-                    <div class="modal-header">
-                        <h4>header</h4>
+                    <div class="header">
                         <button class="like-btn" @click="closeMod">
                             <svg class="feather">
                                 <use href="/feather-sprite-v4.29.0.svg#x" />
@@ -84,20 +82,18 @@ export default {
                         </button>
                     </div>
                     
-                    <body>
-                        <div class="search-input">
+                    <div class="body">
+                        <div class="input">
                             <ErrorMsg v-if="errorMsg != ''" :msg="errorMsg"></ErrorMsg>
                             <input type="text" v-model="searchText" placeholder="Search"/>
                         </div>
                         
-                        <div class="search-results">
+                        <div class="results">
                             <div v-for="user in filterUsers" :key="user.Id" @click="selectUser(user)">
-                                <RouterLink to="/conversation" class="custom-link" replace force>
-                                    <p>{{ user.Name }}</p>
-                                </RouterLink>
+                                <p v-if="user.Name != sessionStorage.userName">{{ user.Name }}</p>
                             </div>
                         </div>
-                    </body>
+                    </div>
 
                     
                 </div>
@@ -107,65 +103,105 @@ export default {
 </template>
 
 <style>
-.modal-mask {
+.custom-link {
+    color: inherit;
+    /* This will make the link have the same color as the surrounding text */
+    text-decoration: none;
+    /* This will remove the underline */
+}
+
+.mask {
     position: fixed;
-    z-index: 99;
+    z-index: 9998;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
     display: table;
-}
-.modal-wrapper {
+    transition: opacity 0.3s ease;
+    }
+
+.wrapper {
     display: table-cell;
     vertical-align: middle;
 }
-.modal-container {
+
+.container {
     width: 350px;
-    height: 700px;
     margin: 0px auto;
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px black;
-}
-.modal-header h4 {
-  margin-top: 0;
-  font-size: 25px;
-  color: black;
-}
-.modal-header button {
-  color: gray;
-  padding: 5px;
-  line-height: 12px;
-  font-size: 15px;
-  cursor: pointer;
-}
-.modal-header button:hover {
-  color: rgb(74, 74, 74);
-}
-.modal-header button svg {
-  width: 20px;
-  height: 20px;
+    background-color: #fff;
+    border-radius: 2px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
+    transition: all 0.3s ease;
 }
 
-.search-input {
-  padding: 0 15px;
+.header {
+    height: 70px;
+    padding: 20px 15px 10px 15px;
 }
 
-.search-input input {
-    margin: 10px;
-    padding: 7px;
-    border: 1px solid black;
-    border-radius: 20px;
-    justify-items: center;
+.header h3 {
+    margin-top: 0;
+    font-size: 25px;
+    color: #42b983;
 }
 
-.search-results {
-  font-size: 15px;
-  padding: 10px 15px;
-  border-bottom: 1px solid white;
-  cursor: pointer;
-  max-height: 200px;
-  overflow-y: scroll;
+.header button {
+    color: rgb(86, 86, 86);
+    background: none;
+    border: none;
+    padding: 5px;
+    line-height: 12px;
+    font-size: 15px;
+}
+
+.header button svg {
+    width: 20px;
+    height: 20px;
+}
+
+
+.input {
+    padding: 0 15px;
+}
+
+.input input {
+    height: 30px;
+    width: 100%;
+    outline: none;
+    border-radius: 3px;
+    border: 1px solid rgb(179, 179, 179)
+}
+
+.results {
+    font-size: 15px;
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    max-height: 200px;
+    overflow-y: scroll;
+}
+
+.modal-default-button {
+    float: right;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    padding: 0 15px;
+}
+
+.form input {
+    margin-bottom: 10px;
+    margin-top: 5px;
+    outline: none;
+    border-radius: 3px;
+    border: 1px solid rgb(179, 179, 179)
+}
+
+.form button {
+    margin-bottom: 15px;
 }
 </style>

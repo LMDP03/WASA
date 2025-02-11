@@ -115,7 +115,7 @@ export default {
 				<div class="position-sticky pt-3 sidebar-sticky">
 
 				<!-- Modale utilizzato per la ricerca di un utente con cui aprire una conversazione -->
-				<Search :show="showSearch" @close="handleSearch" title="search">
+				<Search :show="showSearch" @close="handleSearch" title="Search">
 					<template v-slot:header>
 						<h3>Users</h3>
 					</template>

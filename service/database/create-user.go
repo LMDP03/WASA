@@ -24,12 +24,12 @@ func (db *appdbimpl) CreateUser(username string) (User, error) {
 		return user, err
 	}
 	if !max_id.Valid {
-		new_id = 0
+		new_id = 1
 	} else {
-		new_id = int(max_id.Int64)
+		new_id = int(max_id.Int64) + 1
 	}
 
-	_, err = db.c.Exec(queryAddUser, new_id+1, username)
+	_, err = db.c.Exec(queryAddUser, new_id, username)
 	if err != nil {
 		return user, err
 	}

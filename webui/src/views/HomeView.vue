@@ -72,19 +72,19 @@ export default {
 				<div class="btn-group me-2">
 					<!-- Pulsante per aggiornare la lista delle conversazioni -->
 					<button type="button" class="btn btn-sm btn-outline-secondary" @click="getMyConversations">
-					Refresh
+						Refresh
 					</button>
 				</div>
 				<!-- Pulsante per creare un nuovo gruppo -->
 				<div class="btn-group me-2">
 					<button type="button" class="btn btn-sm btn-outline-primary" @click="handleGroupMod">
-					New Group
+						New Group
 					</button>
 				</div>
 				<!-- Pulsante per cercare nuovi utenti e aprire un nuova conversazione -->
 				<div class="btn-group me-2">
 					<button type="button" class="btn btn-sm btn-outline-primary" @click="handleSearchMod">
-					New Chat
+						Start Conversation
 					</button>
 				</div>
 			</div>
@@ -96,7 +96,7 @@ export default {
 			<div class="conversations" v-for="response in some_data" :key="response.Id">
 				<!-- Mostra il nome dell'utente con cui si sta conversando, l'ultimo messaggio e chi lo ha inviato -->
 				<!-- Se il messaggio è un testo, mostra il contenuto -->
-				<button v-if="response.Image== ''" type="button" class="btn btn-sm btn-outline-primary" @click="goToConversation(response)">
+				<button v-if="response.LastMessage.Image== ''" type="button" class="btn btn-sm btn-outline-primary" @click="goToConversation(response)">
 					{{ response.Image }} {{ response.Name }} <br> {{ response.LastMessage.Sender.Name }}: {{ response.LastMessage.Text }}
 				</button>
 					<!-- Altrimenti mostra "Photo" -->
