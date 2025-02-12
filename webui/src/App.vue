@@ -93,8 +93,8 @@ export default {
 						</li>
 
 						<!-- Apre il modale (solo se l'utente è loggato) per la ricerca di un utente con cui aprire una conversazione -->
-						<li class="nav-item m-2" v-if="logged">
-							<a class="nav-link" @click="handleSearch">
+						<li class="nav-item" v-if="logged">
+							<a class="nav-link m-2" @click="handleSearch">
 								<!-- Icona Search -->
 								<svg class="feather">
 									<use href="/feather-sprite-v4.29.0.svg#user" />
@@ -104,8 +104,8 @@ export default {
 						</li>
 
 						<!-- Apre il modale (solo se l'utente è loggato) per la creazione di un nuovo gruppo -->
-						<li class="nav-item m-2" v-if="logged">
-							<a class="nav-link" @click="handleGroup">
+						<li class="nav-item" v-if="logged">
+							<a class="nav-link m-2" @click="handleGroup">
 								<!-- Icona Search -->
 								<svg class="feather">
 									<use href="/feather-sprite-v4.29.0.svg#users" />
@@ -115,8 +115,8 @@ export default {
 						</li>
 
 						<!-- Esegue il logout (solo se l'utente è loggato) ritornando alla pagina di login -->
-						<li class="nav-item m-2" v-if="logged">
-							<a class="nav-link" @click="logout">
+						<li class="nav-item" v-if="logged">
+							<a class="nav-link m-2" @click="logout">
 								<!-- Icona Logout -->
 								<svg class="feather">
 									<use href="/feather-sprite-v4.29.0.svg#power" />

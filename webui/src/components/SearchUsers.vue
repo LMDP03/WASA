@@ -85,19 +85,20 @@ export default {
                     </div>
                     
                     <div class="modal-body">
-                        <div class="search-input">
-                            <ErrorMsg v-if="errorMsg != ''" :msg="errorMsg"></ErrorMsg>
-                            <input type="text" v-model="searchText" placeholder="Search"/>
-                        </div>
-                        
-                        <div class="search-results">
-                            <div v-for="user in filterUsers" :key="user.Id" @click="selectUser(user)">
-                                <p v-if="user.Name != userName">{{ user.Name }}</p>
+                        <slot name="body">
+                            <div class="search-input">
+                                <ErrorMsg v-if="errorMsg != ''" :msg="errorMsg"></ErrorMsg>
+                                <input type="text" v-model="searchText" placeholder="Search"/>
                             </div>
-                        </div>
+
+                            <div class="search-results">
+                                <div v-for="user in filteredUsers" :key="user.Id" @click="selectUser(user)">
+                                    <p v-if="user.Name != userName">{{ user.Name }}</p>
+                                </div>
+                            </div>
+                        </slot>
                     </div>
 
-                    
                 </div>
             </div>
         </div>
