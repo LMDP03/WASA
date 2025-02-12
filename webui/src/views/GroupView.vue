@@ -33,7 +33,7 @@ export default {
                 return;
             }
             if (file.size > 5242880) {
-                this.errorMsg = "Image is too big, max size allowed is 5 MB"
+                this.errorMsg = "Image is too big, max size allowed is 5 MB";
                 return;
             }
             this.newGroupImg = file;

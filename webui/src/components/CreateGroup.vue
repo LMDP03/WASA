@@ -37,7 +37,7 @@ export default  {
                 if (this.title === "Search") {
                     try {
                         const url =  `users/${sessionStorage.userId}/others?srcName=${this.searchText}`
-                        let response = await this.$axios.get(url, { headers: { 'Authorization': sessionStorage.token } });
+                        let response = await this.$axios.get(url, { headers: { 'Authorization': `${sessionStorage.token}` } });
                         if (response.data == null) {
                             this.filteredUsers = [];
                             return;
@@ -64,12 +64,12 @@ export default  {
                     participants: this.selectedUsers,
                 }, {headers: { 'Authorization': sessionStorage.token}});
                 localStorage.clear();
-                localStorage.userId = response.data.Id;
-                localStorage.userName = response.data.Name;
-                localStorage.userImage = response.data.Image;
+                localStorage.convId = response.data.Id;
+                localStorage.convName = response.data.Name;
+                localStorage.convImage = response.data.Image;
                 localStorage.isGroup = response.data.Group;
                 this.closeMod();
-                this.$router.push(`/conversation/${response.data.Id}`)
+                this.$router.push(`/conversation`)
             } catch (e) {
                 this.errorMsg = e.toString();
             }
@@ -117,9 +117,10 @@ export default  {
                                 <input type="text" v-model="groupName" placeholder="Select group name" />
                             </div>
                             <!-- Campo di ricerca -->
-                            <div class="input">
+                            <div class="search-input">
                                 <input type="text" v-model="searchText" placeholder="Search" />
                             </div>
+                            <p></p>
                             <div class="btn-group me-2">
                                 <button class="btn btn-sm btn-outline-primary" @click="createGroup">Create Group</button>
                             </div>
@@ -136,12 +137,8 @@ export default  {
                                 <h4>Selected Users:</h4>
                                 <span class="selected-user">{{ owner }}</span>
                                 <div v-for="user in selectedUsers" :key="user.Id" class="selected-user">
-                                    <span>{{ user.name }}</span>
-                                    <button v-if="user.Name !== owner" @click="removeUser(user.Name)">
-                                        <svg class="feather">
-                                            <use href="/feather-sprite-v4.29.0.svg#x" />
-                                        </svg>
-                                    </button>
+                                    <span>{{ user.Name }}</span>
+                                    <button v-if="user.Name !== owner" @click="removeUser(user.Name)">Remove</button>
                                 </div>
                             </div>
 

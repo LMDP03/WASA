@@ -30,8 +30,8 @@ export default {
                 return;
             }
             if (file.size > 5242880) {
-                this.errorMsg = "Image is too big, max size allowed is 5 MB"
-                return;
+                this.errorMsg = "Image is too big, max size allowed is 5 MB";
+                return;;
             }
             this.newGroupImg = file;
         },
@@ -49,11 +49,14 @@ export default {
         },
         async setMyPhoto() {
             this.errorMsg = "";
+
             const formData = new FormData();
             formData.append('image', this.newImg);
-            this.$axios.put(`/users/${sessionStorage.userId}/image`, formData, { headers: { 'Authorization': sessionStorage.token}}).then(response => {
-                this.userImage = response.data.Image;
-                this.handleImageUpdate();
+
+            // Effettua una richiesta PUT al server per l'aggiornamento della foto profilo
+            this.$axios.put(`/users/${sessionStorage.userId}/image`, formData, { headers: { 'Authorization': `${sessionStorage.token}` } }).then(response => {
+                this.userImage = response.data.image; // Assegna la nuova immagine del profilo alla variabile photo per l'aggiornamento della pagina
+                this.handleImageUpdate(); // Nasconde il modale di aggiornamento dell'immagine del profilo e aggiorna l'immagine del profilo della sessione
             }).catch(e => {
                 this.errorMsg = e.toString();
             });
@@ -124,12 +127,12 @@ export default {
                     <h3>Change Photo</h3>
                 </template>
                 <template v-slot:body>
-                <!-- Input per l'inserimento della nuova foto per il gruppo -->
-                <form class="username-form">
-                    <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
-                    <input type="file" ref="file" accept=".jpg,.jpeg" @change="checkFile" />
-                    <button type="submit" @click.prevent="setMyPhoto">Update</button>
-                </form>
+                    <!-- Input per l'inserimento della nuova foto per il gruppo -->
+                    <form class="username-form">
+                        <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
+                        <input type="file" ref="file" accept=".jpg,.jpeg" @change="checkFile" />
+                        <button type="submit" @click.prevent="setMyPhoto">Update</button>
+                    </form>
                 </template>
             </Search>
 

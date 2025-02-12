@@ -354,7 +354,7 @@ paths:
       operationId: setMyPhoto
       requestBody:
         content:
-          application/json:
+          multipart/form-data:
             schema:
               type: object
               properties:
@@ -366,10 +366,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  image:
-                    $ref: "#/components/schemas/Image"
+                $ref: "#/components/schemas/User"
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":
@@ -396,9 +393,9 @@ paths:
         "200":
           description: User name modified successfully
           content:
-            text/plain:
+            application/json:
               schema:
-                $ref: "#/components/schemas/UserName"
+                $ref: "#/components/schemas/User"
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":

@@ -40,7 +40,7 @@ export default {
 				return
 			}
 			if (file.size > 5242880) {
-				this.errorMsg = "File size exceeded: MAX size 5MB."
+				this.errorMsg = "File size exceeded: MAX size 5MB.";
 				return
 			}
 			this.image = file;
@@ -49,7 +49,11 @@ export default {
             this.errorMsg = "";
 			localStorage.clear();
 			const url = `users/${sessionStorage.userId}/conversation/${this.convId}`;
-			await this.$axios.get(url, { headers: { 'Authorization': `${sessionStorage.token}` } }).then(response => {
+			this.$axios.get(url, { headers: { 'Authorization': sessionStorage.token } }).then(response => {
+                this.convName = response.data.Name;
+                this.convImg = response.data.Image;
+                this.convId = response.data.Id;
+                this.isGroup = response.data.Group;
 				this.messages = response.data.Messages;
                 localStorage.members = response.data.Participants;
 			}).catch(e => {
@@ -57,11 +61,13 @@ export default {
 			});
 		},
         checkType() {
-            if (isNaN(this.convId) || this.convId == undefined) {
+            if (isNaN(this.convId) || this.convId == undefined|| this.receiverId !== 0) {
                 this.startConversation();
+                this.receiverId = 0;
             }
             else {
                 this.sendMessage();
+                this.getConversation();
             }
         },
         async startConversation() {
@@ -72,8 +78,8 @@ export default {
                 formData.append('image', this.image);
             }
             const url = `/users/${this.userId}/conversations/private?rcvId=${this.receiverId}`;
-            await this.$axios.post(url, formData, { headers: { 'Authorization': sessionStorage.token, 'Content-type': 'multipart/form-data'}}).then(response => {
-                this.convId = response.data.Id;
+            this.$axios.post(url, formData, { headers: { 'Authorization': sessionStorage.token, 'Content-type': 'multipart/form-data'}}).then(response => {
+                localStorage.convId = response.data.Id;
                 this.receiverId = 0;
                 this.messages = response.data.Messages;
             }).catch( e => {
@@ -83,7 +89,7 @@ export default {
         async deleteMessage(msgId) {
             this.errorMsg = "";
             const url = `/users/${this.userId}/conversation/${this.convId}/messages/${msgId}`;
-            await this.$axios.delete(url, { headers: { 'Authorization': sessionStorage.token } }).then(() => {
+            this.$axios.delete(url, { headers: { 'Authorization': sessionStorage.token } }).then(() => {
             }).catch(e => {
                 this.errorMsg = e.toString()
             });
@@ -96,10 +102,9 @@ export default {
                 formData.append('image', this.image);
             }
             const url = `/users/${this.userId}/conversation/${this.convId}/messages`;
-            await this.$axios.post(url, formData, { headers: { 'Authorization': sessionStorage.token}}).then(response => {
+            this.$axios.post(url, formData, { headers: { 'Authorization': sessionStorage.token}}).then(() => {
                 this.text = "";
                 this.image = null;
-                this.getConversation();
             }).catch(e => {
                 this.errorMsg = e.toString();
             });
@@ -137,34 +142,47 @@ export default {
     <div>
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
             
-
-            <!-- Controlla se la conversazione è con un gruppo o con un utente -->
-            <div v-if="isGroup" class="top-profile-container">
-                <!-- Se è un gruppo mostra il nome del gruppo -->
-                <img :src="`data:image/jpg;base64,${this.convImg}`">
-                <h1 class="h1 clickable" @click="goToGroupInfo">{{ this.convName}}</h1>
+            <div class="top-profile-container">
+                <img :src="`data:image/jpg;base64,${convImg}`">
             </div>
-            <div v-else class="top-profile-container">
-                <!-- Se è un utente mostra il nome dell'utente -->
-                <img :src="`data:image/jpg;base64,${this.convImg}`">
-                <h1 class="h1">{{ this.convName }}</h1>
+            <!-- Controlla se la conversazione è con un gruppo o con un utente -->
+            <div v-if="isGroup">
+                <h1 class="h1 clickable" @click="goToGroupInfo">{{ convName }}</h1>
+            </div>
+            <div v-else>
+                <h1 class="h1">{{ convName }}</h1>
             </div>
   
             <!-- Modali della pagina -->
     
             <!-- Modale utilizzato per lasciare un commento a un messaggio -->
-            <Comment :show="showComments" :comments="comments" :msg="messageToComment" @close="handleComment" title="comments">
+            <Comment :show="showComments" :msg="messageToComment" @close="handleComment" title="comments">
                 <template>
                     <h3>Comments</h3>
                 </template>
             </Comment>
             <!-- Modale utilizzato per selezionare una conversazione in cui inoltrare un messaggio -->
-            <Forward :show="showForward" :msg="messageToFordward" @close="handleForward" title="forward">
+            <Forward :show="showForward" :msg="messageToFordward" @close="handleForward" title="conversations">
                 <template v-slot:header>
                     <h3>Forward To</h3>
                 </template>
             </Forward>
 
+            <div class="btn-toolbar mb-2 mb-md-0">
+                <!-- Form per inviare una foto -->
+                <div class="btn-group me-2">
+                    <form @submit.prevent="sendMessage">
+                        <input type="file" ref="file" accept=".jpg,.jpeg" @change="checkFile" />
+                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                            Send Message
+                        </button>
+                    </form>
+                </div>
+                <div class="input-group">
+                    <input type="text" class="form-control" v-model="text" placeholder="Type your message here">
+                    <button class="btn btn-outline-primary" @click="check">Send</button>
+                </div>
+            </div>     
         </div>
 
         <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
@@ -175,7 +193,7 @@ export default {
             <p v-if="message.Text !== '' || message.Image !== ''">
                 {{ message.Sender.Name }}
             </p>
-            <br>
+            <p></p>
             <div v-if="message.ResponseTo.MsgId != 0">
                 <p v-if="message.ResponseTo.Image == ''" >
 					{{ message.ResponseTo.Sender.Name }}: {{ message.ResponseTo.Text }}
@@ -194,6 +212,7 @@ export default {
             <p v-if="message.text !== '' || message.Image !== ''">
                 {{ message.TimeStamp }}
             </p>
+            
             <div class="btn-group me-2">
                 <!-- Pulsante per commentare il messaggio -->
                 <div v-for="cmt in message.Reactions" :key="cmt.Sender.Id">
@@ -217,22 +236,7 @@ export default {
             </div>
             <hr v-if="message.text !== '' && message.photo !== ''">
         </div>
-
-
-            <!-- Body della pagina -->
-        <div class="btn-toolbar mb-2 mb-md-0">
-            <!-- Form per inviare una foto -->
-            <div class="btn-group me-2">
-                <form @submit.prevent="checkType">
-                    <input type="file" ref="file" accept=".jpg,.jpeg" @change="checkFile" />
-                    <input type="text" class="form-control" v-model="text" placeholder="New Message">
-                    <!-- Pulsante per inviare il messaggio -->
-                    <button type="submit" class="btn btn-sm btn-outline-primary">
-                        Send Message
-                    </button>
-                </form>
-            </div>
-        </div>
+        
     </div>
 </template>
   

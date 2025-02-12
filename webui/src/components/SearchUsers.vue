@@ -49,7 +49,6 @@ export default {
         },
         async selectUser(receiver) {
             localStorage.clear();
-            localStorage.convId = receiver.Id;
             localStorage.convName = receiver.Name;
             localStorage.convImage = receiver.Img;
             localStorage.isGroup = false;

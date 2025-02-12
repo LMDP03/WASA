@@ -67,7 +67,10 @@ export default {
 				<!-- Mostra il nome dell'utente con cui si sta conversando, l'ultimo messaggio e chi lo ha inviato -->
 				<!-- Se il messaggio è un testo, mostra il contenuto -->
 				<button v-if="preview.LastMessage.Image == ''" type="button" class="btn btn-sm btn-outline-primary" @click="goToConversation(preview)">
-					{{ preview.Image }} {{ preview.Name }} <br> {{ preview.LastMessage.Sender.Name }}: {{ preview.LastMessage.Text }}
+					<img :src="`data:image/jpg;base64,${userImage}`" alt="Profile Picture" class="profile-picture" />
+					<p>{{ preview.Name }}</p>
+					<br>
+					<p>{{ preview.LastMessage.Sender.Name }}: {{ preview.LastMessage.Text }}</p>
 				</button>
 					<!-- Altrimenti mostra "Photo" -->
 				<button v-else type="button" class="btn btn-sm btn-outline-primary" @click="goToConversation(preview)">
@@ -77,7 +80,6 @@ export default {
 					</svg>
 					{{ preview.LastMessage.Text }}
 				</button>
-				<hr>
 			</div>
 		</div>
 	

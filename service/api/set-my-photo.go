@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -45,18 +46,19 @@ func (rt *_router) SetMyPhoto(w http.ResponseWriter, r *http.Request, ps httprou
 		BadRequest(w, err, "The file is too big", ctx)
 		return
 	}
-
+	fmt.Println("pacchetto arrivato e multipart fatti")
 	file, _, err := r.FormFile("image")
 	if err != nil {
 		BadRequest(w, err, "Couldn't access the image file from the request", ctx)
 		return
 	}
-
+	fmt.Println("immagine formata")
 	data, err := io.ReadAll(file)
 	if err != nil {
 		InternalServerError(w, err, "Couldn't read the image file from the request", ctx)
 		return
 	}
+	fmt.Println("immagine letta")
 	defer func() { err = file.Close() }()
 
 	filetype := http.DetectContentType(data)
@@ -65,7 +67,7 @@ func (rt *_router) SetMyPhoto(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 	defer func() { err = file.Close() }()
-
+	fmt.Println("immagine confermata")
 	path := images.SetDefaultUserImage(userId)
 	err = os.WriteFile(path, data, 0644)
 	if err != nil {
@@ -78,7 +80,7 @@ func (rt *_router) SetMyPhoto(w http.ResponseWriter, r *http.Request, ps httprou
 		InternalServerError(w, err, "Couldn't save the image", ctx)
 		return
 	}
-
+	fmt.Println("immagine salvata")
 	dbUser, err := rt.db.GetUserById(userId)
 	if err != nil {
 		InternalServerError(w, err, "Couldn't get the user", ctx)
@@ -90,7 +92,7 @@ func (rt *_router) SetMyPhoto(w http.ResponseWriter, r *http.Request, ps httprou
 		InternalServerError(w, err, "Couldn't convert the user", ctx)
 		return
 	}
-
+	fmt.Println("invio risposta")
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(user); err != nil {
