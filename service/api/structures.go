@@ -75,7 +75,7 @@ func (r *Response) ConvertResponse(res database.Response) error {
 type Message struct {
 	ConvId     int        `json: "conversation"`
 	Sender     User       `json: "sender"`
-	msgId      int        `json: "id"`
+	MsgId      int        `json: "id"`
 	ResponseTo Response   `json: "responseTo"`
 	Text       string     `json: "text"`
 	Image      string     `json: "image"`
@@ -90,7 +90,7 @@ func (m *Message) ConvertMessage(msg database.Message) error {
 	if err != nil {
 		return err
 	}
-	m.msgId = msg.MsgId
+	m.MsgId = msg.MsgId
 	err = m.ResponseTo.ConvertResponse(msg.ResponseTo)
 	if err != nil {
 		return err

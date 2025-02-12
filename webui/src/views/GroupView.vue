@@ -1,6 +1,6 @@
 <script>
-import AddGroup from '../components/AddMembers.vue'
-import SearchUsers from '../components/SearchUsers.vue';
+import Add from '../components/AddMembers.vue'
+import Search from '../components/SearchUsers.vue';
 
 export default {
     data() {
@@ -10,17 +10,17 @@ export default {
             filteredUsers: [],
             owner: sessionStorage.userName,
             selectedUsers: [],
-            showAddGroup: false,
+            showAdd: false,
 
             newGroupName: "",
             newGroupImg: null,
-            showNameUpdate: false,
-            showImageUpdate: false,
+            showName: false,
+            showImage: false,
 
-            groupName: localStorage.userName,
-            groupImage: localStorage.userImage,
-            groupId: localStorage.userId,
-            groupMembers: JSON.parse(localStorage.users),
+            groupName: localStorage.convName,
+            groupImage: localStorage.convImage,
+            groupId: localStorage.convId,
+            groupMembers: JSON.parse(localStorage.members),
         };
     },
     emits: ['successful-login'],
@@ -38,18 +38,18 @@ export default {
             }
             this.newGroupImg = file;
         },
-        handleMemebersUPdate() {
-            this.showAddGroup = !this.showAddGroup
+        handleAddMembers() {
+            this.showAdd = !this.showAdd;
         },
         handleNameUpdate() {
-            localStorage.userName = this.groupName;
-            this.showNameUpdate = !this.showNameUpdate;
+            localStorage.convName = this.groupName;
+            this.showName = !this.showName;
             this.newGroupName = "";
             this.errorMsg = "";
         },
         handleImageUpdate() {
-            localStorage.userImage = this.newGroupImg;
-            this.showImageUpdate = !this.showImageUpdate;
+            localStorage.convImage = this.groupImage;
+            this.showImage = !this.showImage;
             this.newGroupImg = "";
             this.errorMsg = "";
         },
@@ -65,16 +65,17 @@ export default {
             });
         },
         async setGroupName() {
+            this.errorMsg = "";
             if (this.newGroupName == this.groupName) {
-                this.errorMsg = "Please choose a new username";
+                this.errorMsg = "Please choose a new group name";
                 return;
             }
             if (this.newGroupName.length == 0 || this.newGroupName.length > 20) {
                 this.errorMsg = "The Group name must be between 1 and 20 characters"
                 return;
             }
-            this.$axios.put(`/users/${sessionStorage.userId}/conversation/${this.groupId}/name`, formData, { headers: { 'Authorization': `${sessionStorage.token}`}}).then(() => {
-                this.groupName = this.newGroupName;
+            this.$axios.put(`/users/${sessionStorage.userId}/conversation/${this.groupId}/name`, this.newGroupName, { headers: { 'Authorization': `${sessionStorage.token}`}}).then(response => {
+                this.groupName = response.data.Name;
                 this.handleNameUpdate();
             }).catch(e => {
                 this.errorMsg = e.toString();
@@ -82,7 +83,7 @@ export default {
         },
         leaveGroup() {
             this.errorMsg = "";
-            this.$axios.delete(`/profiles/${sessionStorage.userID}/groups/${this.groupId}`, { headers: { 'Authorization': `${sessionStorage.token}` } }).then(() => {
+            this.$axios.delete(`/profiles/${sessionStorage.userId}/groups/${this.groupId}`, { headers: { 'Authorization': `${sessionStorage.token}` } }).then(() => {
             // Fa ritornare l'utente alla home dopo l'uscita dal gruppo
                 this.$router.push("/home");
             }).catch(e => {
@@ -90,7 +91,7 @@ export default {
             });
         }
     },
-    components: {AddGroup, SearchUsers},
+    components: {Add, Search},
 }
 </script>
 
@@ -100,63 +101,63 @@ export default {
             <!-- Group photo -->
             <div class="top-profile-container">
                 <img :src="`data:image/jpg;base64,${groupImage}`">
+                <h1>{{ groupName }}</h1>
             </div>
 
             <!-- Modali della pagina -->
 
             <!-- Modale utlizzato per aggiornare il nome del gruppo -->
-            <SearchUsers :show="showNameUpdate" @close="handleNameUpdate" title="username">
+            <Search :show="showName" @close="handleNameUpdate" title="username">
                 <template v-slot:header>
-                    <h3>Update Group Name</h3>
+                    <h3>Change Group Name</h3>
                 </template>
                 <template v-slot:body>
-                <!-- Input per l'inserimento del nuovo nome per il gruppo -->
-                <form class="username-form">
-                    <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
-                    <input type="text" v-model="this.newGroupname" placeholder="New group name" />
-                    <button type="submit" @click.prevent="setGroupName">Update</button>
-                </form>
+                    <!-- Input per l'inserimento del nuovo nome per il gruppo -->
+                    <form class="username-form">
+                        <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
+                        <input type="text" v-model="newGroupName" placeholder="New Group Name" />
+                        <button type="submit" @click.prevent="setGroupName">Change</button>
+                    </form>
                 </template>
-            </SearchUsers>
+            </Search>
+
             <!-- Modale utlizzato per aggiornare la foto del gruppo  -->
-            <SearchUsers :show="showImageUpdate" @close="handleImageUpdate" title="photo">
+            <Search :show="showImage" @close="handleImageUpdate" title="photo">
                 <template v-slot:header>
-                    <h3>Update Group Picture</h3>
+                    <h3>Change Group Photo</h3>
                 </template>
                 <template v-slot:body>
                 <!-- Input per l'inserimento della nuova foto per il gruppo -->
                 <form class="username-form">
                     <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
-                    <input type="file" ref="file" accept=".jpg,.jpeg" @change="handleFileChange" />
+                    <input type="file" ref="file" accept=".jpg,.jpeg" @change="checkFile" />
                     <button type="submit" @click.prevent="setGroupPhoto">Update</button>
                 </form>
                 </template>
-            </SearchUsers>
+            </Search>
+
             <!-- Modale utilizzato per aggiungere utenti al gruppo -->
-            <AddGroup :show="showAddGroup" @close="handleMemebersUPdate" title="search">
+            <Add :show="showAddGroup" @close="handleAddMembers" title="Search">
                 <template v-slot:header>
-                    <h3>Add to group</h3>
+                    <h3>Add New Members</h3>
                 </template>
-            </AddGroup>
+            </Add>
 
             <!-- Body della pagina -->
 
             <!-- Group name -->
-            <h1 class="h1">{{ this.groupName }}</h1>
             <div class="btn-toolbar mb-2 mb-md-0">
                 <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
                 <!-- Pulsante per aggiornare il nome del gruppo -->
-                <div class="btn-group me-2">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" @click="handleNameUpdate">
-                        Change group name
-                    </button>
+                <button type="button" class="btn btn-sm btn-outline-primary" @click="handleNameUpdate">
+                    Change group name
+                </button>
                 <!-- Pulsante per l'aggiornamento della foto del gruppo -->
-                    <button type="button" class="btn btn-sm btn-outline-secondary" @click="handleImageUpdate">
-                        Change group photo
-                    </button>
-                </div>
+                <button type="button" class="btn btn-sm btn-outline-primary" @click="handleImageUpdate">
+                    Change group photo
+                </button>
                 <!-- Pulsante per aggiungere utenti al gruppo -->
-                <button type="button" class="btn btn-sm btn-outline-primary" @click="handleAddGroupModalToggle">
+                <button type="button" class="btn btn-sm btn-outline-primary" @click="handleAddMembers">
                     Add to group
                 </button>
             </div>
@@ -175,7 +176,7 @@ export default {
             </p>
         </div>
 
-        <ErrorMsg v-if="errormsg" :msg="errormsg"></ErrorMsg>
+        <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
     </div>
 </template>
   

@@ -1,27 +1,32 @@
 <script>
-import Forwarding from '../components/ForwardMessage.vue'
-import Commenting from '../components/Comments.vue'
+import Forward from '../components/ForwardMessage.vue'
+import Comment from '../components/Comments.vue'
 
 export default {
     data() {
         return {
             errorMsg: "",
-            convImg: localStorage.userImage,
-            convId: parseInt(this.$route.params.convId),
-            userToSend: localStorage.userName,
-            userIdToSend: localStorage.userId,
-            isGroup: localStorage.isGroup,
-            text: "",
-            image: "",
-            some_data: [],
-            showUserSearch: false,
-            showComments: false,
-            messageToFordward: null,
 
-            // Messaggio da commentare
+            convImg: localStorage.convImage,
+            convId: localStorage.convId,
+            convName: localStorage.convName,
+            isGroup: localStorage.isGroup,
+
+            receiverId: localStorage.receiverId,
+
+            userId: sessionStorage.userId,
+            
+            text: "",
+            image: null,
+
+            messages: [],
+
+            showForward: false,
+            showComments: false,
+
+            messageToFordward: null,
             messageToComment: null,
 
-            // Commenti del messaggio selezionato
             comments: [],
         }
     },
@@ -41,38 +46,44 @@ export default {
 			this.image = file;
 		},
         async getConversation() {
+            this.errorMsg = "";
 			localStorage.clear();
 			const url = `users/${sessionStorage.userId}/conversation/${this.convId}`;
-			this.$axios.get(url, { headers: { 'Authorization': `${sessionStorage.token}` } }).then(response => {
-				this.some_data = response.data.Messages;
+			await this.$axios.get(url, { headers: { 'Authorization': `${sessionStorage.token}` } }).then(response => {
+				this.messages = response.data.Messages;
+                localStorage.members = response.data.Participants;
 			}).catch(e => {
 				this.errorMsg = e.toString();
 			});
 		},
-        check() {
-            if (isNaN(this.convId) || this.convId == undefined) {
-                this.startConversation();
-            }
-            else {
+        checkType() {
+            if (this.isGroup || this.receiverId == 0) {
                 this.sendMessage();
             }
+            else {
+                this.startConversation();
+            }
         },
-        startConversation() {
+        async startConversation() {
             this.errorMsg = "";
-            this.$axios.post(`/users/${sessionStorage.userId}/conversations/private?rcvId=${localStorage.userId}`, {
-                text: this.text,
-                image: this.image,
-            }, { headers: { 'Authorization': `${sessionStorage.token}`, 'Content-Type': 'application/json'}}).then(response => {
+            const formData = new FormData();
+            formData.append('text', this.text);
+            if (this.image != null) {
+                formData.append('image', this.image);
+            }
+            const url = `/users/${this.userId}/conversations/private?rcvId=${this.receiverId}`;
+            await this.$axios.post(url, formData, { headers: { 'Authorization': `${sessionStorage.token}`}}).then(response => {
                 this.convId = response.data.Id;
-                this.$router.push(`/conversation/${this.convId}`);
+                this.receiverId = 0;
+                window.location.reload();
             }).catch( e => {
                 this.errorMsg = e.toString();
             });
         },
         async deleteMessage(msgId) {
             this.errorMsg = "";
-            this.$axios.delete(`/users/${sessionStorage.userId}/conversation/${this.convId}/messages/${msgId}`, { headers: { 'Authorization': `${sessionStorage.token}` } }).then(() => {
-                this.getConversation();
+            const url = `/users/${this.userId}/conversation/${this.convId}/messages/${msgId}`;
+            await this.$axios.delete(url, { headers: { 'Authorization': `${sessionStorage.token}` } }).then(() => {
             }).catch(e => {
                 this.errorMsg = e.toString()
             });
@@ -84,10 +95,8 @@ export default {
             if (this.image != null) {
                 formData.append('image', this.image);
             }
-            this.$axios.post(`/users/${sessionStorage.userId}/conversation/${this.convId}/messages`, {
-                text: this.text,
-                image: this.image,
-            }, { headers: { 'Authorization': `${sessionStorage.token}`, 'Content-Type': 'application/json'}}).then(() => {
+            const url = `/users/${this.userId}/conversation/${this.convId}/messages`;
+            await this.$axios.post(url, formData, { headers: { 'Authorization': `${sessionStorage.token}`}}).then(() => {
                 this.text = "";
                 this.image = null;
                 this.getConversation();
@@ -95,17 +104,23 @@ export default {
                 this.errorMsg = e.toString();
             });
         },
-        handleSearchMod(msg) {
+        async uncommentMessage(msgId) {
+            this.errorMsg = "";
+            const url = `/users/${this.userId}/conversation/${this.convId}/messages/${msgId}/reactions`;
+            await this.$axios.delete(url, { headers: { 'Authorization': `${sessionStorage.token}`}}).then(() => {}).catch(e => {
+                this.errorMsg = e.toString();
+            });
+        },
+        handleForward(msg) {
             this.messageToFordward = msg;
-			this.showUserSearh = !this.showUserSearh;
+			this.showForward = !this.showForward;
 		},
-        handleCommentMod(cmt, msgComs) {
-            this.messageToComment = cmt;
-            this.comments = msgComs;
+        handleComment(msg) {
+            this.messageToComment = msg;
             this.showComments = !this.showComments;
         },
         goToGroupInfo() {
-            this.$router.push(`conversation/${this.userIdToSend}`);
+            this.$router.push(`/conversation/groupSettings`);
         }
     },
     mounted() {
@@ -114,89 +129,113 @@ export default {
             return;
         }
         if (this.convId != undefined && !isNaN(this.convId)) {
-            this.getConversation()
+            this.getConversation();
         }
     },
-    components: {Forwarding, Commenting}
+    components: {Forward, Comment}
 }
 </script>
 
 <template>
     <div>
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <!-- User photo -->
-            <div class="top-profile-container">
-                <img :src="`data:image/jpg;base64,${this.convImg}`">
-            </div>
+            
             <!-- Controlla se la conversazione è con un gruppo o con un utente -->
             <div v-if="isGroup">
                 <!-- Se è un gruppo mostra il nome del gruppo -->
-                <h1 class="h1 clickable" @click="goToGroupInfo">{{ this.userToSend }}</h1>
+                <img :src="`data:image/jpg;base64,${this.convImg}`">
+                <h1 class="h1 clickable" @click="goToGroupInfo">{{ this.convName}}</h1>
             </div>
             <div v-else>
                 <!-- Se è un utente mostra il nome dell'utente -->
-                <h1 class="h1">{{ this.userToSend }}</h1>
+                <img :src="`data:image/jpg;base64,${this.convImg}`">
+                <h1 class="h1">{{ this.convName }}</h1>
             </div>
   
             <!-- Modali della pagina -->
     
             <!-- Modale utilizzato per lasciare un commento a un messaggio -->
-            <Commenting :show="showComments" :comments="comments" :msg="messageToComment" @close="handleCommentMod" title="comments">
+            <Comment :show="showComments" :comments="comments" :msg="messageToComment" @close="handleComment" title="comments">
                 <template>
                     <h3>Comments</h3>
                 </template>
-            </Commenting>
+            </Comment>
             <!-- Modale utilizzato per selezionare una conversazione in cui inoltrare un messaggio -->
-            <Forwarding :show="showUserSearch" :msg="messageToFordward" @close="handleSearchMod" title="conversations">
+            <Forward :show="showForward" :msg="messageToFordward" @close="handleForward" title="forward">
                 <template v-slot:header>
-                    <h3>Conversations</h3>
+                    <h3>Forward To</h3>
                 </template>
-            </Forwarding>
-   
+            </Forward>
+
         </div>
+
+        <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
+
         <!-- Lista dei messaggi della conversazione -->
-        <div class="messages" v-for="response in some_data" :key="response.message.messageId">
+        <div class="messages" v-for="message in messages" :key="message.MsgId">
             <!-- Mostra il contenuto del messaggio, con chi lo ha mandato, il contenuto e il timeStamp -->
-            <p v-if="response.Text !== '' || response.Image !== ''">
-                {{ response.Sender.Name }}
+            <p v-if="message.Text !== '' || message.Image !== ''">
+                {{ message.Sender.Name }}
             </p>
-            <p v-if="response.Text !== ''">
-                {{ response.Text }}
-            </p>
-            <p></p>
-            <!-- Mostra la foto contenuta nel messaggio nel caso in cui il messaggio contiene una foto -->
-            <img class="msg_photo" v-if="response.Image !== ''":src="`data:image/jpg;base64,${response.Image}`" alt="Message Photo">
-            <p v-if="response.text !== '' || response.Image !== ''">
-                {{ response.timeMsg }}
+            <br>
+            <div v-if="message.ResponseTo.MsgId != 0">
+                <p v-if="message.ResponseTo.Image == ''" >
+					{{ message.ResponseTo.Sender.Name }}: {{ message.ResponseTo.Text }}
+				</p>
+				<p v-else >
+					{{ message.ResponseTo.Sender.Name }}:
+                    <svg class="feather">
+                        <use href="/feather-sprite-v4.29.0.svg#image" />
+                    </svg>
+                    {{ message.ResponseTo.Text }}
+                </p>
+            </div>
+            <br>
+            <img class="msg_photo" v-if="message.Image !== ''" :src="`data:image/jpg;base64,${message.Image}`" alt="Message Photo">
+            {{ message.Text }}
+            <br>
+            <p v-if="message.text !== '' || message.Image !== ''">
+                {{ message.TimeStamp }}
             </p>
             <div class="btn-group me-2">
+                <!-- Pulsante per commentare il messaggio -->
+                <div v-for="cmt in message.Reactions" :key="cmt.Sender.Id">
+                    <p>{{ cmt.Sender.Name }}: {{ cmt.Emoji }}</p>
+                    <button v-if="cmt.Sender.Id == userId" type="button" class="btn btn-sm btn-outline-secondary" @click="uncommentMessage(message.MsgId)">
+                        Uncomment
+                    </button>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" @click="handleComment(message)">
+                    Comment
+                </button>
                 <!-- Pulsante per inoltrare il messaggio in un'altra conversazione -->
-                <button type="button" class="btn btn-sm btn-outline-secondary" @click="handleSearchMod(response.message)">
-                    Forward Message
+                <button type="button" class="btn btn-sm btn-outline-secondary" @click="handleForward(message)">
+                    Forward
                 </button>
                 <!-- Pulsante per eliminare il messaggio dalla conversazione -->
-                <button type="button" class="btn btn-sm btn-outline-secondary" @click="deleteMessage(response.message.messageId)">
-                    Delete message
+                <button v-if="message.Sender.Id == userId" type="button" class="btn btn-sm btn-outline-secondary" @click="deleteMessage(message.MsgId)">
+                    Delete
                 </button>
-                <!-- Pulsante per commentare il messaggio -->
-                <button type="button" class="btn btn-sm btn-outline-secondary" @click="handleCommentMod(response.message, response.comments)">
-                    Comment message
-                </button>
+                
             </div>
-            <hr v-if="response.message.text !== '' && response.message.photo !== ''">
+            <hr v-if="message.text !== '' && message.photo !== ''">
         </div>
-        <!-- Input per invaire un messaggio testuale -->
-        <div class="input-group">
-            <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
-            <!-- Form per inviare un messaggio -->
-            <form @submit.prevent="check">
-                <input type="file" ref="file" accept=".jpg,.jpeg" @change="checkFile" />
-                <input type="text" class="form-control" v-model="text" placeholder="Type your message here">
-                <button type="submit" class="btn btn-outline-primary">Send</button>
-            </form>            
+
+
+            <!-- Body della pagina -->
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <!-- Form per inviare una foto -->
+            <div class="btn-group me-2">
+                <form @submit.prevent="checkType">
+                    <input type="file" ref="file" accept=".jpg,.jpeg" @change="checkFile" />
+                    <input type="text" class="form-control" v-model="text" placeholder="New Message">
+                    <!-- Pulsante per inviare il messaggio -->
+                    <button type="submit" class="btn btn-sm btn-outline-primary">
+                        Send Message
+                    </button>
+                </form>
+            </div>
         </div>
-  
-      <ErrorMsg v-if="errormsg" :msg="errormsg"></ErrorMsg>
     </div>
 </template>
   

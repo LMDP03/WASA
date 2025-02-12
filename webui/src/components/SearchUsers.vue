@@ -12,6 +12,7 @@ export default {
             errorMsg: "",
             searchText: "",
             filteredUsers: [],
+            userName: sessionStorage.userName,
         };
     },
     methods: {
@@ -49,13 +50,14 @@ export default {
         },
         async selectUser(receiver) {
             localStorage.clear();
-            localStorage.userId = receiver.Id;
-            localStorage.userName = receiver.Name;
-            localStorage.userImage = receiver.Img;
+            localStorage.convId = receiver.Id;
+            localStorage.convName = receiver.Name;
+            localStorage.convImage = receiver.Img;
             localStorage.isGroup = false;
+            localStorage.receiverId = receiver.Id;
             this.$router.push('/conversation');
             this.closeMod(); 
-        }
+        },
     },
     watch : {
         searchText() {
@@ -70,11 +72,11 @@ export default {
 
 <template>
     <Transition name="modal">
-        <div v-if="show" class="mask">
-            <div class="wrapper">
-                <div class="container">
+        <div v-if="show" class="modal-mask">
+            <div class="modal-wrapper">
+                <div class="modal-container">
 
-                    <div class="header">
+                    <div class="modal-header">
                         <button class="like-btn" @click="closeMod">
                             <svg class="feather">
                                 <use href="/feather-sprite-v4.29.0.svg#x" />
@@ -82,15 +84,15 @@ export default {
                         </button>
                     </div>
                     
-                    <div class="body">
-                        <div class="input">
+                    <div class="modal-body">
+                        <div class="search-input">
                             <ErrorMsg v-if="errorMsg != ''" :msg="errorMsg"></ErrorMsg>
                             <input type="text" v-model="searchText" placeholder="Search"/>
                         </div>
                         
-                        <div class="results">
+                        <div class="search-results">
                             <div v-for="user in filterUsers" :key="user.Id" @click="selectUser(user)">
-                                <p v-if="user.Name != sessionStorage.userName">{{ user.Name }}</p>
+                                <p v-if="user.Name != userName">{{ user.Name }}</p>
                             </div>
                         </div>
                     </div>
@@ -102,6 +104,7 @@ export default {
     </Transition>
 </template>
 
+
 <style>
 .custom-link {
     color: inherit;
@@ -110,7 +113,7 @@ export default {
     /* This will remove the underline */
 }
 
-.mask {
+.modal-mask {
     position: fixed;
     z-index: 9998;
     top: 0;
@@ -120,53 +123,53 @@ export default {
     background-color: rgba(0, 0, 0, 0.5);
     display: table;
     transition: opacity 0.3s ease;
-    }
+}
 
-.wrapper {
+.modal-wrapper {
     display: table-cell;
     vertical-align: middle;
 }
 
-.container {
+.modal-container {
     width: 350px;
     margin: 0px auto;
     background-color: #fff;
     border-radius: 2px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
     transition: all 0.3s ease;
-}
+    }
 
-.header {
+.modal-header {
     height: 70px;
     padding: 20px 15px 10px 15px;
 }
 
-.header h3 {
+.modal-header h3 {
     margin-top: 0;
     font-size: 25px;
     color: #42b983;
 }
 
-.header button {
+.modal-header button {
     color: rgb(86, 86, 86);
     background: none;
     border: none;
     padding: 5px;
     line-height: 12px;
     font-size: 15px;
-}
+    }
 
-.header button svg {
+.modal-header button svg {
     width: 20px;
     height: 20px;
-}
+    }
 
 
-.input {
+.search-input {
     padding: 0 15px;
 }
 
-.input input {
+.search-input input {
     height: 30px;
     width: 100%;
     outline: none;
@@ -174,7 +177,7 @@ export default {
     border: 1px solid rgb(179, 179, 179)
 }
 
-.results {
+.search-results {
     font-size: 15px;
     padding: 10px 15px;
     border-bottom: 1px solid #eee;
@@ -187,13 +190,13 @@ export default {
     float: right;
 }
 
-.form {
+.username-form {
     display: flex;
     flex-direction: column;
     padding: 0 15px;
 }
 
-.form input {
+.username-form input {
     margin-bottom: 10px;
     margin-top: 5px;
     outline: none;
@@ -201,7 +204,7 @@ export default {
     border: 1px solid rgb(179, 179, 179)
 }
 
-.form button {
+.username-form button {
     margin-bottom: 15px;
 }
 </style>

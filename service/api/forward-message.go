@@ -77,9 +77,9 @@ func (rt *_router) ForwardMessage(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	var destinationid int
-	if !r.URL.Query().Has("destId") {
-		destinationid, err = strconv.Atoi(r.URL.Query().Get("destId"))
+	if r.URL.Query().Has("destId") {
+
+		destinationid, err := strconv.Atoi(r.URL.Query().Get("destId"))
 		if err != nil {
 			BadRequest(w, err, "Couldn't read the destination", ctx)
 			return
@@ -102,40 +102,40 @@ func (rt *_router) ForwardMessage(w http.ResponseWriter, r *http.Request, ps htt
 			Forbidden(w, nil, "The user isn't a member of this conversation", ctx)
 			return
 		}
+
+		dbMsgOrig, err := rt.db.GetMessageById(convId, msgId)
+		if err != nil {
+			InternalServerError(w, err, "Error while getting the message", ctx)
+			return
+		}
+
+		_, err = rt.db.CreateMessage(destinationid, userId, dbMsgOrig.ResponseTo.MsgId, dbMsgOrig.Text, dbMsgOrig.Image)
+		if err != nil {
+			InternalServerError(w, err, "Error while sending the message", ctx)
+			return
+		}
+
+		dbConv, err := rt.db.GetConversationById(destinationid, userId)
+		if err != nil {
+			InternalServerError(w, err, "Error while getting the destination conv", ctx)
+			return
+		}
+
+		var conv Conversation
+		err = conv.ConvertConversation(dbConv)
+		if err != nil {
+			InternalServerError(w, err, "Error while converting the destination conv", ctx)
+			return
+		}
+
+		w.WriteHeader(http.StatusCreated)
+		w.Header().Set("content-type", "application/json")
+		if err := json.NewEncoder(w).Encode(conv); err != nil {
+			InternalServerError(w, err, "Error encoding response", ctx)
+			return
+		}
 	} else {
-		destinationid = 0
-	}
-
-	dbMsgOrig, err := rt.db.GetMessageById(convId, msgId)
-	if err != nil {
-		InternalServerError(w, err, "Error while getting the message", ctx)
+		BadRequest(w, nil, "You must specify the destination for the message", ctx)
 		return
 	}
-
-	_, err = rt.db.CreateMessage(destinationid, userId, dbMsgOrig.ResponseTo.MsgId, dbMsgOrig.Text, dbMsgOrig.Image)
-	if err != nil {
-		InternalServerError(w, err, "Error while sending the message", ctx)
-		return
-	}
-
-	dbConv, err := rt.db.GetConversationById(destinationid, userId)
-	if err != nil {
-		InternalServerError(w, err, "Error while getting the destination conv", ctx)
-		return
-	}
-
-	var conv Conversation
-	err = conv.ConvertConversation(dbConv)
-	if err != nil {
-		InternalServerError(w, err, "Error while converting the destination conv", ctx)
-		return
-	}
-
-	w.WriteHeader(http.StatusCreated)
-	w.Header().Set("content-type", "application/json")
-	if err := json.NewEncoder(w).Encode(conv); err != nil {
-		InternalServerError(w, err, "Error encoding response", ctx)
-		return
-	}
-
 }
