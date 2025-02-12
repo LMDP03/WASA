@@ -1,7 +1,7 @@
 package database
 
 var queryGetMessageById = `SELECT senderId, text, COALESCE(image, ""), timeStamp, responseTo, checkMark FROM Messages WHERE convId = ? AND msgId = ?;`
-var queryGetResponse = `SELECT senderId, text, COALESCE(IMAGE, "") from Messages WHERE convId = ? AND msgId = ?;`
+var queryGetResponse = `SELECT senderId, text, COALESCE(image, "") from Messages WHERE convId = ? AND msgId = ?;`
 
 func (db *appdbimpl) GetMessageById(convId int, msgId int) (Message, error) {
 	var msg Message

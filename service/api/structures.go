@@ -91,10 +91,13 @@ func (m *Message) ConvertMessage(msg database.Message) error {
 		return err
 	}
 	m.MsgId = msg.MsgId
-	err = m.ResponseTo.ConvertResponse(msg.ResponseTo)
-	if err != nil {
-		return err
+	if m.ResponseTo.MsgId != 0 {
+		err = m.ResponseTo.ConvertResponse(msg.ResponseTo)
+		if err != nil {
+			return err
+		}
 	}
+
 	m.Text = msg.Text
 	m.Image = msg.Image
 	m.Timestamp = msg.Timestamp
@@ -145,7 +148,6 @@ func (c *Conversation) ConvertConversation(conv database.Conversation) error {
 		}
 		c.Messages[i] = m
 	}
-
 	if c.Group {
 		image, err := images.ConvertToBase64(images.SetDefaultGroupImage(conv.Id))
 		if err != nil {

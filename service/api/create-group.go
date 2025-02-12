@@ -38,8 +38,8 @@ func (rt *_router) CreateGroup(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	type RequestConv struct {
-		Name         string   `json: "name"`
-		participants []string `json: "participants"`
+		Name         string `json: "name"`
+		participants []User `json: "participants"`
 	}
 
 	var conv RequestConv
@@ -53,14 +53,16 @@ func (rt *_router) CreateGroup(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
+	var members []string
 	for i := range conv.participants {
-		if len(conv.participants[i]) < 3 || len(conv.participants[i]) > 16 {
+		if len(conv.participants[i].Name) < 3 || len(conv.participants[i].Name) > 16 {
 			BadRequest(w, nil, "One or more members have invalid names", ctx)
 			return
 		}
+		members = append(members, conv.participants[i].Name)
 	}
 
-	dbConv, err := rt.db.CreateConversation(conv.Name, true, 0, conv.participants)
+	dbConv, err := rt.db.CreateConversation(conv.Name, true, 0, members)
 	if err != nil {
 		InternalServerError(w, err, "Error while creating the conversation", ctx)
 		return

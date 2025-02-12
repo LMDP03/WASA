@@ -1,10 +1,13 @@
 <script>
-import Search from '../components/SearchUsers.vue'
+import Search from '../components/SearchUsers.vue';
 
 export default {
     data() {
         return {
+            errorMsg: "",
+
             filteredUsers: [],
+            owner: sessionStorage.userName,
             selectedUsers: [],
 
             newName: "",
@@ -39,7 +42,7 @@ export default {
             this.errorMsg = "";
         },
         handleImageUpdate() {
-           sessionStorage.userImage = this.userImage;
+            sessionStorage.userImage = this.userImage;
             this.showImage = !this.showImage;
             this.newImg = "";
             this.errorMsg = "";
@@ -48,7 +51,7 @@ export default {
             this.errorMsg = "";
             const formData = new FormData();
             formData.append('image', this.newImg);
-            this.$axios.put(`/users/${this.userId}/image`, formData, { headers: { 'Authorization': `${sessionStorage.token}`}}).then(response => {
+            this.$axios.put(`/users/${sessionStorage.userId}/image`, formData, { headers: { 'Authorization': sessionStorage.token}}).then(response => {
                 this.userImage = response.data.Image;
                 this.handleImageUpdate();
             }).catch(e => {
@@ -58,25 +61,36 @@ export default {
         async setMyUserName() {
             this.errorMsg = "";
             if (this.newName == this.userName) {
-                this.errorMsg = "Please choose a new username";
+                this.errorMsg = "Please choose a new user name";
                 return;
             }
-            if (this.newGroupName.length == 0 || this.newGroupName.length > 20) {
+            if (this.newName.length < 3 || this.newName.length > 16) {
                 this.errorMsg = "The Group name must be between 1 and 20 characters"
                 return;
             }
-            this.$axios.put(`/users/${sessionStorage.userId}/conversation/${this.groupId}/name`, this.newGroupName, { headers: { 'Authorization': `${sessionStorage.token}`}}).then(response => {
+            this.$axios.put(`/users/${sessionStorage.userId}/name`, this.newName, { headers: { 'Authorization': sessionStorage.token}}).then(response => {
                 this.userName = response.data.Name;
                 this.handleNameUpdate();
             }).catch(e => {
                 this.errorMsg = e.toString();
             });
         },
+        logout() {
+			sessionStorage.clear();
+			this.logged = false;
+			this.$router.push("/");
+            window.location.reload();
+		},
     },
-    components: {Search},
+    mounted() {
+        if (!sessionStorage.token) {
+            this.$router.push("/");
+            return;
+        }
+    },
+    components: {Search}
 }
 </script>
-
 
 <template>
     <div>
@@ -84,12 +98,12 @@ export default {
             <!-- Group photo -->
             <div class="top-profile-container">
                 <img :src="`data:image/jpg;base64,${userImage}`">
-                <h1>{{ userName }}</h1>
             </div>
+            <h1 class="h1">{{ userName }}</h1>
 
             <!-- Modali della pagina -->
 
-            <!-- Modale utlizzato per aggiornare il nome del gruppo -->
+            <!-- Modale utlizzato per aggiornare il nome utente -->
             <Search :show="showName" @close="handleNameUpdate" title="username">
                 <template v-slot:header>
                     <h3>Change Name</h3>
@@ -98,30 +112,50 @@ export default {
                     <!-- Input per l'inserimento del nuovo nome per il gruppo -->
                     <form class="username-form">
                         <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
-                        <input type="text" v-model="newName" placeholder="New User Name" />
+                        <input type="text" v-model="newName" placeholder="New Name" />
                         <button type="submit" @click.prevent="setMyUserName">Change</button>
                     </form>
                 </template>
             </Search>
 
-            <!-- Modale utlizzato per aggiornare la foto del gruppo  -->
+            <!-- Modale utlizzato per aggiornare la foto profilo  -->
             <Search :show="showImage" @close="handleImageUpdate" title="photo">
                 <template v-slot:header>
                     <h3>Change Photo</h3>
                 </template>
                 <template v-slot:body>
-                    <!-- Input per l'inserimento della nuova foto per il gruppo -->
-                    <form class="username-form">
-                        <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
-                        <input type="file" ref="file" accept=".jpg,.jpeg" @change="checkFile" />
-                        <button type="submit" @click.prevent="setMyPhoto">Update</button>
-                    </form>
+                <!-- Input per l'inserimento della nuova foto per il gruppo -->
+                <form class="username-form">
+                    <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
+                    <input type="file" ref="file" accept=".jpg,.jpeg" @change="checkFile" />
+                    <button type="submit" @click.prevent="setMyPhoto">Update</button>
+                </form>
                 </template>
             </Search>
+
+
+            <!-- Group name -->
+            <div class="btn-toolbar mb-2 mb-md-0">
+                <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
+                <!-- Pulsante per aggiornare il nome del gruppo -->
+                <button type="button" class="btn btn-sm btn-outline-primary" @click="handleNameUpdate">
+                    Change Name
+                </button>
+                <!-- Pulsante per l'aggiornamento della foto del gruppo -->
+                <button type="button" class="btn btn-sm btn-outline-primary" @click="handleImageUpdate">
+                    Change Photo
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary" @click="logout">
+                    Logout
+                </button>
+            </div>
         </div>
+
+        <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
     </div>
 </template>
-
+  
+  
 <style>
 .profile-picture {
     width: 40px;

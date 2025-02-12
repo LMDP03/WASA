@@ -37,7 +37,18 @@ func (rt *_router) GetMyConversations(w http.ResponseWriter, r *http.Request, ps
 		return
 	}
 
-	dbPrevs, err := rt.db.GetConversations(userId)
+	var searchName string
+	if !r.URL.Query().Has("srcName") {
+		searchName = ""
+	} else {
+		searchName = r.URL.Query().Get("srcName")
+		if len(searchName) > 20 {
+			BadRequest(w, nil, "the name can be at most 20 characters", ctx)
+			return
+		}
+	}
+
+	dbPrevs, err := rt.db.GetConversations(userId, searchName)
 	if err != nil {
 		ctx.Logger.Error("Couldn't find conversations for this user", err)
 		http.Error(w, "Couldn't find conversations for this user", http.StatusInternalServerError)
@@ -50,8 +61,7 @@ func (rt *_router) GetMyConversations(w http.ResponseWriter, r *http.Request, ps
 		var prev Preview
 		err := prev.ConvertPreview(dbPrev)
 		if err != nil {
-			ctx.Logger.Error("Couldn't load conversations properly", err)
-			http.Error(w, "Couldn't load conversations properly", http.StatusInternalServerError)
+			InternalServerError(w, err, "Couldn't transform previews", ctx)
 			return
 		}
 		previews[i] = prev

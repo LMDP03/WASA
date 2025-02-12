@@ -52,7 +52,7 @@ type AppDatabase interface {
 	DeleteParticipant(convid int, userid int) error
 	DeleteReaction(convid int, msgid int, senderid int) error
 	GetConversationById(convid int, userid int) (Conversation, error)
-	GetConversations(userid int) ([]Preview, error)
+	GetConversations(userid int, searchname string) ([]Preview, error)
 	GetMessageById(convId int, msgId int) (Message, error)
 	GetMessages(convId int) ([]Message, error)
 	GetOtherParticipant(convid int, userid int) (User, error)

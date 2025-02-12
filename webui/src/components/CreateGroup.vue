@@ -34,24 +34,23 @@ export default  {
                     return;
                 }
 
-            } 
-
-            if (this.title === "Search") {
-                try {
-                    const url =  `users/${sessionStorage.userId}/others?srcName=${this.searchText}`
-                    let response = await this.$axios.get(url, { headers: { 'Authorization': `${sessionStorage.token}` } });
-                    if (response.data == null) {
+                if (this.title === "Search") {
+                    try {
+                        const url =  `users/${sessionStorage.userId}/others?srcName=${this.searchText}`
+                        let response = await this.$axios.get(url, { headers: { 'Authorization': sessionStorage.token } });
+                        if (response.data == null) {
+                            this.filteredUsers = [];
+                            return;
+                        }
+                        this.filteredUsers = response.data;
+                    } catch (e) {
+                        this.errorMsg = e.toString();
                         this.filteredUsers = [];
-                        return;
                     }
-                    this.filteredUsers = response.data;
-                } catch (e) {
-                    this.errorMsg = e.toString();
-                    this.filteredUsers = [];
+                } else {
+                    this.filteredUsers = this.users.filter(user => user.Name.toLowerCase().includes(this.searchText.toLowerCase()));
                 }
-            } else {
-                this.filteredUsers = this.users.filter(user => user.Name.toLowerCase().includes(this.searchText.toLowerCase()));
-            }
+            }  
         },
         async createGroup() {
             if (this.groupName.length < 1 || this.groupName.length > 20) {
@@ -60,14 +59,10 @@ export default  {
             }
             try {
                 const url = `users/${sessionStorage.userId}/conversations/group`;
-                var newMembers = [];
-                for (let i in this.selectedUsers) {
-                    newMembers[i] = this.selectedUsers[i].Name;
-                }
                 let response = await this.$axios.post(url, {
                     name: this.groupName,
-                    participants: newMembers,
-                }, {headers: { 'Authorization': `${sessionStorage.token}`, 'Content-Type': 'application/json'}});
+                    participants: this.selectedUsers,
+                }, {headers: { 'Authorization': sessionStorage.token}});
                 localStorage.clear();
                 localStorage.userId = response.data.Id;
                 localStorage.userName = response.data.Name;
@@ -80,7 +75,7 @@ export default  {
             }
         },
         selectUser(user) {
-            if (!this.selectedUsers.find(u => u.name === user.Name)) {
+            if (!this.selectedUsers.find(u => u.Name === user.Name)) {
                 this.selectedUsers.push(user);
             }
         },
@@ -102,11 +97,11 @@ export default  {
 
 <template>
     <Transition name="modal">
-        <div v-if="show" class="mask">
-            <div class="wrapper">
-                <div class="container">
+        <div v-if="show" class="modal-mask">
+            <div class="modal-wrapper">
+                <div class="modal-container">
 
-                    <div class="header">
+                    <div class="modal-header">
                         <button class="like-btn" @click="closeMod">
                             <svg class="feather">
                                 <use href="/feather-sprite-v4.29.0.svg#x" />
@@ -114,10 +109,10 @@ export default  {
                         </button>
                     </div>
                     
-                    <div class="body">
+                    <div class="modal-body">
                         <slot name="body">
                             <!-- Selezione del nome del gruppo -->
-                            <div class="input">
+                            <div class="search-input">
                                 <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
                                 <input type="text" v-model="groupName" placeholder="Select group name" />
                             </div>
@@ -130,18 +125,19 @@ export default  {
                             </div>
             
                             <!-- Risultati della ricerca -->
-                            <div class="results">
+                            <div class="search-results">
                                 <div v-for="user in filteredUsers" :key="user.Id" @click="selectUser(user)" class="user">
-                                    <p>{{ user.Name }}</p>
+                                    <p> {{ user.Name }}</p>
                                 </div>
                             </div>
             
                             <!-- Lista di utenti selezionati -->
-                            <div class="selected">
+                            <div class="selected-users">
+                                <h4>Selected Users:</h4>
                                 <span class="selected-user">{{ owner }}</span>
-                                <div v-for="user in selectedUsers" :key="user.id" class="selected-user">
+                                <div v-for="user in selectedUsers" :key="user.Id" class="selected-user">
                                     <span>{{ user.name }}</span>
-                                    <button v-if="user.name !== owner" @click="removeUser(user.name)">
+                                    <button v-if="user.Name !== owner" @click="removeUser(user.Name)">
                                         <svg class="feather">
                                             <use href="/feather-sprite-v4.29.0.svg#x" />
                                         </svg>
@@ -157,40 +153,31 @@ export default  {
     </Transition>
 </template>
   
-  
 <style>
-.selected {
+.selected-users {
     margin-top: 20px;
     padding: 10px;
-    border-top: 1px solid gray;
+    border-top: 1px solid #ccc;
 }
-  
-.selected {
+
+.selected-user {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 10px;
 }
-  
-.selected span {
+
+.selected-user span {
     font-size: 14px;
     font-weight: bold;
 }
-  
-.selected button {
-    background: white;
-    color: grey;
+
+.selected-user button {
+    background: red;
+    color: white;
     border: none;
     border-radius: 5px;
     padding: 5px 10px;
     cursor: pointer;
 }
-.header button svg {
-    width: 20px;
-    height: 20px;
-}
-.selected button:hover {
-    color: red;
-}
 </style>
-  

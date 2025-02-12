@@ -57,11 +57,11 @@ export default {
 			});
 		},
         checkType() {
-            if (this.isGroup || this.receiverId == 0) {
-                this.sendMessage();
+            if (isNaN(this.convId) || this.convId == undefined) {
+                this.startConversation();
             }
             else {
-                this.startConversation();
+                this.sendMessage();
             }
         },
         async startConversation() {
@@ -72,10 +72,10 @@ export default {
                 formData.append('image', this.image);
             }
             const url = `/users/${this.userId}/conversations/private?rcvId=${this.receiverId}`;
-            await this.$axios.post(url, formData, { headers: { 'Authorization': `${sessionStorage.token}`}}).then(response => {
+            await this.$axios.post(url, formData, { headers: { 'Authorization': sessionStorage.token, 'Content-type': 'multipart/form-data'}}).then(response => {
                 this.convId = response.data.Id;
                 this.receiverId = 0;
-                window.location.reload();
+                this.messages = response.data.Messages;
             }).catch( e => {
                 this.errorMsg = e.toString();
             });
@@ -83,7 +83,7 @@ export default {
         async deleteMessage(msgId) {
             this.errorMsg = "";
             const url = `/users/${this.userId}/conversation/${this.convId}/messages/${msgId}`;
-            await this.$axios.delete(url, { headers: { 'Authorization': `${sessionStorage.token}` } }).then(() => {
+            await this.$axios.delete(url, { headers: { 'Authorization': sessionStorage.token } }).then(() => {
             }).catch(e => {
                 this.errorMsg = e.toString()
             });
@@ -96,7 +96,7 @@ export default {
                 formData.append('image', this.image);
             }
             const url = `/users/${this.userId}/conversation/${this.convId}/messages`;
-            await this.$axios.post(url, formData, { headers: { 'Authorization': `${sessionStorage.token}`}}).then(() => {
+            await this.$axios.post(url, formData, { headers: { 'Authorization': sessionStorage.token}}).then(response => {
                 this.text = "";
                 this.image = null;
                 this.getConversation();
@@ -107,7 +107,7 @@ export default {
         async uncommentMessage(msgId) {
             this.errorMsg = "";
             const url = `/users/${this.userId}/conversation/${this.convId}/messages/${msgId}/reactions`;
-            await this.$axios.delete(url, { headers: { 'Authorization': `${sessionStorage.token}`}}).then(() => {}).catch(e => {
+            await this.$axios.delete(url, { headers: { 'Authorization': sessionStorage.token }}).then(() => {}).catch(e => {
                 this.errorMsg = e.toString();
             });
         },
@@ -128,9 +128,6 @@ export default {
             this.$router.push("/");
             return;
         }
-        if (this.convId != undefined && !isNaN(this.convId)) {
-            this.getConversation();
-        }
     },
     components: {Forward, Comment}
 }
@@ -140,13 +137,14 @@ export default {
     <div>
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
             
+
             <!-- Controlla se la conversazione è con un gruppo o con un utente -->
-            <div v-if="isGroup">
+            <div v-if="isGroup" class="top-profile-container">
                 <!-- Se è un gruppo mostra il nome del gruppo -->
                 <img :src="`data:image/jpg;base64,${this.convImg}`">
                 <h1 class="h1 clickable" @click="goToGroupInfo">{{ this.convName}}</h1>
             </div>
-            <div v-else>
+            <div v-else class="top-profile-container">
                 <!-- Se è un utente mostra il nome dell'utente -->
                 <img :src="`data:image/jpg;base64,${this.convImg}`">
                 <h1 class="h1">{{ this.convName }}</h1>
@@ -192,8 +190,7 @@ export default {
             </div>
             <br>
             <img class="msg_photo" v-if="message.Image !== ''" :src="`data:image/jpg;base64,${message.Image}`" alt="Message Photo">
-            {{ message.Text }}
-            <br>
+            <p>{{ message.Text }}</p>
             <p v-if="message.text !== '' || message.Image !== ''">
                 {{ message.TimeStamp }}
             </p>

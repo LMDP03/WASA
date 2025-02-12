@@ -40,7 +40,7 @@ func (rt *_router) StartConversation(w http.ResponseWriter, r *http.Request, ps 
 
 	receiverid, err := strconv.Atoi(r.URL.Query().Get("rcvId"))
 	if err != nil {
-		BadRequest(w, err, "Couldn't reid the receiverId", ctx)
+		BadRequest(w, err, "Couldn't read the receiverId", ctx)
 		return
 	}
 
@@ -101,7 +101,7 @@ func (rt *_router) StartConversation(w http.ResponseWriter, r *http.Request, ps 
 	}
 	participants = append(participants, other.Name)
 
-	dbConv, err := rt.db.CreateConversation("", false, receiverid, participants)
+	dbConv, err := rt.db.CreateConversation("", false, userId, participants)
 	if err != nil {
 		InternalServerError(w, err, "Error while creating the conversation", ctx)
 		return

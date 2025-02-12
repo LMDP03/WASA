@@ -26,11 +26,6 @@ export default {
 		handleSearch() {
 			this.showSearch = !this.showSearch;
 		},
-		logout() {
-			sessionStorage.clear();
-			this.logged = false;
-			this.$router.push("/");
-		},
 		handleLogin() {
 			this.logged = true;
 			this.userId = sessionStorage.userId;
@@ -111,17 +106,6 @@ export default {
 									<use href="/feather-sprite-v4.29.0.svg#users" />
 								</svg>
 								New Group
-							</a>
-						</li>
-
-						<!-- Esegue il logout (solo se l'utente è loggato) ritornando alla pagina di login -->
-						<li class="nav-item" v-if="logged">
-							<a class="nav-link m-2" @click="logout">
-								<!-- Icona Logout -->
-								<svg class="feather">
-									<use href="/feather-sprite-v4.29.0.svg#power" />
-								</svg>
-								Logout
 							</a>
 						</li>
 

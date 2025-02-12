@@ -34,10 +34,10 @@ export default  {
                     return;
                 }
                 
-                if (this.title === "search") {
+                if (this.title === "Search") {
                     try {
                         const url =  `users/${sessionStorage.userId}/others?srcName=${this.searchText}`
-                        let response = await this.$axios.get(url, { headers: { 'Authorization': `${sessionStorage.token}` } });
+                        let response = await this.$axios.get(url, { headers: { 'Authorization': sessionStorage.token } });
                         if (response.data == null) {
                             this.filteredUsers = [];
                             return;
@@ -55,16 +55,13 @@ export default  {
         async addToGroup() {
             try {
                 const url = `users/${sessionStorage.userId}/conversation/${this.groupId}`;
-                var newMembers = [];
-                for (let i in this.selectedUsers) {
-                    newMembers[i] = this.selectedUsers[i].Name;
-                }
-                let response = await this.$axios.post(url, {participants: newMembers,}, {headers: { 'Authorization': `${sessionStorage.token}`, 'Content-Type': 'application/json'}});
+                
+                let response = await this.$axios.post(url, this.selectedUsers, {headers: { 'Authorization': sessionStorage.token }});
                 localStorage.clear();
                 localStorage.users = JSON.stringify(response.data)
                 this.closeMod();
                 window.location.reload();
-                this.$router.push(`/conversations/${this.groupId}`)
+                this.$router.push(`/conversation`)
             } catch (e) {
                 this.errorMsg = e.toString();
             }
@@ -97,7 +94,6 @@ export default  {
                 <div class="modal-container">
 
                     <div class="modal-header">
-                        <h3>default header</h3>
                         <button class="like-btn" @click="closeMod">
                             <svg class="feather">
                                 <use href="/feather-sprite-v4.29.0.svg#x" />
@@ -106,15 +102,10 @@ export default  {
                     </div>
         
                     <div class="modal-body">
-                        <body>
-                            <!-- Selezione del nome del gruppo -->
-                            <div class="search-input">
-                                <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
-                                <input type="text" v-model="groupName" placeholder="Select group name" />
-                            </div>
+                        <slot name="body">
                             <!-- Campo di ricerca -->
                             <div class="search-input">
-                                <input type="text" v-model="searchText" placeholder="search" />
+                                <input type="text" v-model="searchText" placeholder="Search" />
                             </div>
                             
                             <div class="btn-group me-2">
@@ -133,14 +124,14 @@ export default  {
                                 <h4>Selected Users:</h4>
                                 <div v-for="user in selectedUsers" :key="user.Id" class="selected-user">
                                     <span>{{ user.Name }}</span>
-                                    <button v-if="user.name !== owner" @click="removeUser(user.name)">
+                                    <button v-if="user.Name !== owner" @click="removeUser(user.Name)">
                                         <svg class="feather">
                                             <use href="/feather-sprite-v4.29.0.svg#x" />
                                         </svg>
                                     </button>
                                 </div>
                             </div>
-                        </body>
+                        </slot>
                     </div>
                 </div>
             </div>
@@ -149,39 +140,34 @@ export default  {
 </template>
   
   
+
 <style>
 .selected-users {
     margin-top: 20px;
     padding: 10px;
-    border-top: 1px solid gray;
+    border-top: 1px solid #ccc;
 }
-  
+
 .selected-user {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 10px;
 }
-  
+
 .selected-user span {
     font-size: 14px;
     font-weight: bold;
-}
-  
+    }
+
 .selected-user button {
-    background: white;
-    color: grey;
+    background: red;
+    color: white;
     border: none;
     border-radius: 5px;
     padding: 5px 10px;
     cursor: pointer;
 }
-.modal-header button svg {
-    width: 20px;
-    height: 20px;
-}
-.selected-user button:hover {
-    color: red;
-}
 </style>
+
   

@@ -61,31 +61,33 @@ func (rt *_router) AddToGroup(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	type Request struct {
-		participants []string `json: "participants"`
-	}
-
-	var req Request
+	var req []User
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		BadRequest(w, err, "Couldn't decode the request", ctx)
 		return
 	}
 
-	for i := range req.participants {
-		if len(req.participants[i]) < 3 || len(req.participants[i]) > 16 {
+	var newMembers []string
+	for i := range req {
+		if len(req[i].Name) < 3 || len(req[i].Name) > 16 {
 			BadRequest(w, nil, "One or more members have invalid names", ctx)
 			return
 		}
+		newMembers = append(newMembers, req[i].Name)
 	}
 
-	err = rt.db.AddParticipants(convId, req.participants)
+	err = rt.db.AddParticipants(convId, newMembers)
 	if err != nil {
 		InternalServerError(w, err, "Error while adding participants to group", ctx)
 		return
 	}
 
 	dbMembers, err := rt.db.GetParticipants(convId)
+	if err != nil {
+		InternalServerError(w, err, "Couldn't get the group members", ctx)
+		return
+	}
 	var members = make([]User, len(dbMembers))
 	for i := range dbMembers {
 		var u User

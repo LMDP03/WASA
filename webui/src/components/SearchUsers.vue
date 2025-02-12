@@ -18,7 +18,6 @@ export default {
     methods: {
         closeMod() {
             this.searchText = "";
-            window.location.reload();
             this.$emit('close');
         },
         async filterUsers() {

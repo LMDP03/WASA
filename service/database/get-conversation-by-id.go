@@ -13,11 +13,7 @@ func (db *appdbimpl) GetConversationById(convid int, userid int) (Conversation, 
 		return conv, err
 	}
 
-	if flag == 0 {
-		conv.Group = false
-	} else {
-		conv.Group = true
-	}
+	conv.Group = true
 
 	participants, err := db.GetParticipants(convid)
 	if err != nil {
@@ -33,7 +29,8 @@ func (db *appdbimpl) GetConversationById(convid int, userid int) (Conversation, 
 		conv.Messages = messages
 	}
 
-	if !conv.Group {
+	if flag == 0 {
+		conv.Group = false
 		other, err := db.GetOtherParticipant(convid, userid)
 		if err != nil {
 			return conv, err

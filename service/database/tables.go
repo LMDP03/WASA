@@ -42,7 +42,7 @@ var sql_MESSAGES = `CREATE TABLE IF NOT EXISTS Messages
 	CONSTRAINT fk_Messages
 		FOREIGN KEY (convId) REFERENCES Conversations(id)
 			ON DELETE CASCADE
-		FOREIGN KEY (senderId) REFERENCES User(id)
+		FOREIGN KEY (senderId) REFERENCES Users(id)
 			ON DELETE CASCADE
 );`
 

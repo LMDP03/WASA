@@ -27,6 +27,7 @@ export default {
 			localStorage.convName = conv.Name;
 			localStorage.convImage = conv.Image;
 			localStorage.isGroup = conv.Group;
+			localStorage.receiverId = 0;
 			this.$router.push(`/conversation`);
 		}
 	},

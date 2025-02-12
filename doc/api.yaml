@@ -684,7 +684,7 @@ paths:
           $ref: "#/components/schemas/MessageID"
       requestBody:
         content:
-          application/json:
+          multipart/form-data:
             schema: 
               $ref: "#/components/schemas/MessageContent"
       responses:

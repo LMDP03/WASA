@@ -11,6 +11,7 @@ export default {
 
             convs: sessionStorage.conversations,
             filteredConvs: [],
+            selectedConvs: [],
             convId: localStorage.convId,
 
             searchText: "",
@@ -18,6 +19,7 @@ export default {
     },
     methods: {
         closeMod() {
+            this.searchText = "";
             this.filteredConvs = [];
             window.location.reload();
             this.$emit('close')
@@ -49,10 +51,10 @@ export default {
                 }
             }
         },
-        async forwardMessage(destId) {
+        async forwardMessage() {
             this.errorMsg = "";
-            const url = `users/${sessionStorage.userId}/conversation/${this.convId}/messages/${this.msg.MsgId}?destId=${destId}`;
-            await this.$axios.post(url, {}, { headers: { 'Authorization': `${sessionStorage.token}` } }).then(response => {
+            const url = `users/${sessionStorage.userId}/conversation/${this.convId}/messages/${this.msg.MsgId}`;
+            await this.$axios.post(url, this.selectedConvs, { headers: { 'Authorization': sessionStorage.token } }).then(response => {
                 localStorage.clear();
                 localStorage.convId = response.data.Id;
                 localStorage.convName = response.data.Name;
@@ -63,8 +65,14 @@ export default {
                 this.errorMsg = e.toString();
             });       
         },
-
-        
+        selectConv(conv) {
+            if (!this.selectedConvs.find(c => c.Id === conv.Id)) {
+                this.selectedConvs.push(conv.Id);
+            }
+        },
+        removeConv(convid) {
+            this.selectedConvs = this.selectedConvs.filter(conv => conv.Id !== convid);
+        },        
     },
     watch: {
         searchText() {
@@ -98,12 +106,23 @@ export default {
                                 <input type="text" v-model="searchText" placeholder="Search" />
                             </div>
                             <br>
+                            <div class="btn-group me-2">
+                                <button class="btn btn-sm btn-outline-primary" @click="forwardMessage">Forward Message</button>
+                            </div>
                             <!-- Risultati della ricerca -->
                             <div class="search-results">
-                                <div v-for="conv in filteredConvs" :key="conv.Id" @click="forwardMessage(conv.Id)" class="user">
-                                <p>{{ conv.Name }}</p>
+                                <div v-for="conv in filteredConvs" :key="conv.Id" @click="selectConv(conv)" class="user">
+                                    <p>{{ conv.Image }}  {{ conv.Name }}</p>
                                 </div>
                             </div>
+
+                            <div class="selected-users">
+                                <h4>Selected Destinations:</h4>
+                                <div v-for="conv in selectedConvs" :key="conv.Id" class="selected-user">
+                                <span>{{ conv.Name }}</span>
+                                <button @click="removeConv(conv.Id)">Remove</button>
+                            </div>
+                        </div>
 
                         </slot>
                     </div>

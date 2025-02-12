@@ -49,7 +49,7 @@ func (db *appdbimpl) CreateUser(username string) (User, error) {
 		return user, err
 	}
 	defer source.Close()
-
+	fmt.Println(user.Id, new_id)
 	destination, err := os.Create(images.SetDefaultUserImage(user.Id)) // Create the path where the photo will be saved
 	if err != nil {
 		return user, err
