@@ -3,65 +3,111 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"sort"
 	"strconv"
 
-	"wasatext/service/api/reqcontext"
-
 	"github.com/julienschmidt/httprouter"
+	"wasa.project/service/api/reqcontext"
+	"wasa.project/service/api/structs"
 )
 
-func (rt *_router) GetConversation(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
-
-	if r.Method != http.MethodGet {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
-	userId, err := strconv.Atoi(ps.ByName("usrId"))
+func (rt *_router) getConversation(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+	// Get the userId from the endpoint
+	userId, err := strconv.Atoi(ps.ByName("user"))
 	if err != nil {
-		BadRequest(w, err, "Invalid userId", ctx)
+		BadRequest(w, err, ctx, "Can't take the user id from the endpoint")
+		return
+	}
+	// Check if the user is authorized
+	if checkAuth(w, userId, ctx) != nil {
 		return
 	}
 
-	if checkAuthorization(w, ctx, userId) != nil {
-		return
-	}
-
-	exists, err := rt.db.CheckUserById(userId)
+	// Get the id of the conversation
+	convId, err := strconv.Atoi(ps.ByName("conv"))
 	if err != nil {
-		InternalServerError(w, err, "Error while checking the user", ctx)
-		return
-	}
-	if !exists {
-		BadRequest(w, err, "User doesn't exists", ctx)
+		BadRequest(w, err, ctx, "Can't take the conversation id from the endpoint")
 		return
 	}
 
-	convId, err := strconv.Atoi(ps.ByName("convId"))
+	// Get the conversation by id
+	var conv structs.Conversation
+	conv, err = rt.db.GetConversationById(convId)
 	if err != nil {
-		BadRequest(w, err, "Invalid convId", ctx)
+		BadRequest(w, err, ctx, "Can't take the conversation from the db")
 		return
 	}
 
-	dbConv, err := rt.db.GetConversationById(convId, userId)
+	messages, err := rt.db.GetMessages(conv.ConversationId)
 	if err != nil {
-		InternalServerError(w, err, "Couldn't get the conversation from the database", ctx)
+		BadRequest(w, err, ctx, "Can't get messages of the conversation")
 		return
 	}
 
-	var conv Conversation
-	err = conv.ConvertConversation(dbConv)
+	for i := 0; i < len(messages); i++ {
+		err = rt.db.UpdateStatusMessage(messages[i].MessageId, conv.ConversationId)
+		if err != nil {
+			BadRequest(w, err, ctx, "Error updating status o message")
+			return
+		}
+	}
+
+	// Getting all message after the update of the status
+	messages, err = rt.db.GetMessages(conv.ConversationId)
 	if err != nil {
-		InternalServerError(w, err, "Error while converting the conversation", ctx)
+		BadRequest(w, err, ctx, "Can't get messages of the conversation")
 		return
 	}
 
+	sort.Slice(messages, func(i, j int) bool {
+		return messages[i].SendTime.After(messages[j].SendTime)
+	})
+
+	// Informazione di chi ha mandato il messaggio
+	// Stuct used for the response
+	type MessageResponse struct {
+		Message  structs.Message      `json:"message"`
+		Comments []structs.RspComment `json:"comments"`
+		User     User                 `json:"user"`
+		TimeMsg  string               `json:"timeMsg"`
+	}
+
+	response := make([]MessageResponse, len(messages))
+	for idx, msg := range messages {
+		sender, err := rt.db.GetUserById(msg.SenderUserId)
+		if err != nil {
+			BadRequest(w, err, ctx, "Error taking the user from the user table")
+			return
+		}
+		var user User
+		err = user.ConvertUserFromDB(sender)
+		if err != nil {
+			BadRequest(w, err, ctx, "Bad request")
+			return
+		}
+
+		// Get the time of the message
+		timemsg := msg.SendTime.Format("15:04 - 02/01/2006")
+
+		comments, err := rt.db.GetMsgComments(msg.MessageId, conv.ConversationId)
+		if err != nil {
+			BadRequest(w, err, ctx, "Can't take the comments of the message")
+			return
+		}
+
+		var rsp MessageResponse
+		rsp.Message = msg
+		rsp.User = user
+		rsp.TimeMsg = timemsg
+		rsp.Comments = comments
+		response[idx] = rsp
+	}
+
+	// Write the response
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(conv); err != nil {
-		ctx.Logger.Error("Couldn't encode the response", err)
-		http.Error(w, "Couldn't encode the response", http.StatusInternalServerError)
+	if err = json.NewEncoder(w).Encode(response); err != nil {
+		InternalServerError(w, err, "Error encoding response", ctx)
 		return
 	}
-
 }

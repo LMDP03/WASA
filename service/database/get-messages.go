@@ -1,53 +1,37 @@
 package database
 
-var queryGetMessages = `SELECT senderId, msgId, text, COALESCE(image, ""), timeStamp, responseTo, checkMark FROM Messages WHERE convId = ? ORDER BY msgId DESC;`
+import (
+	"wasa.project/service/api/structs"
+)
 
-func (db *appdbimpl) GetMessages(convId int) ([]Message, error) {
+// Query used to get the messages of a conversation from the database
+var queryGetMessages = `SELECT MessageId, Message, Status, SenderUserId, SendTime, COALESCE(Photo, "") FROM message WHERE ConversationId = ?`
 
-	var messages []Message
+func (db *appdbimpl) GetMessages(convId int) ([]structs.Message, error) {
+	// Create a new slice of messages
+	var messages []structs.Message
 
+	// Execute the query to get the messages of a conversation
 	rows, err := db.c.Query(queryGetMessages, convId)
 	if err != nil {
 		return nil, err
 	}
 	defer func() { rows.Close() }()
 
+	// Iterate
 	for rows.Next() {
 		if rows.Err() != nil {
 			return nil, err
 		}
-		var msg Message
-		msg.ConvId = convId
-		var senderId int
-		var responseTo int
-		err = rows.Scan(&senderId, &msg.MsgId, &msg.Text, &msg.Image, &msg.Timestamp, &responseTo, &msg.Checkmark)
+		// Create a new message
+		var message structs.Message
+		// Scan the values of the message
+		err := rows.Scan(&message.MessageId, &message.Text, &message.Status, &message.SenderUserId, &message.SendTime, &message.Photo)
 		if err != nil {
 			return nil, err
 		}
-		msg.Sender, err = db.GetUserById(senderId)
-		if err != nil {
-			return nil, err
-		}
-		reactions, err := db.GetReactions(convId, msg.MsgId)
-		if err != nil {
-			return nil, err
-		}
-		msg.Reactions = reactions
-		messages = append(messages, msg)
-		msg.ResponseTo.MsgId = responseTo
-		if responseTo != 0 {
-			var responseSender int
-			err = db.c.QueryRow(queryGetResponse, convId, responseTo).Scan(responseSender, msg.ResponseTo.Text, msg.ResponseTo.Image)
-			if err != nil {
-				return nil, err
-			}
-			msg.ResponseTo.Sender, err = db.GetUserById(responseSender)
-			if err != nil {
-				return nil, err
-			}
-		}
+		// Append the message to the slice
+		messages = append(messages, message)
 	}
-
 	return messages, nil
-
 }

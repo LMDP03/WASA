@@ -3,39 +3,78 @@ package database
 import (
 	"database/sql"
 	"errors"
+	"wasa.project/service/api/structs"
 )
 
-var queryAddMessage = `INSERT INTO Messages (convId, senderId, msgId, text, image, responseTo, checkMark) VALUES (?, ?, ?, ?, ?, ?, "received");`
+// Query used to add the message in the database
+var queryAddMessage = `INSERT INTO message (MessageId, Message, Status, ConversationId, SenderUserId, Photo) VALUES (?, ?, ?, ?, ?, ?)`
 
-var queryGetMessageId = `SELECT MAX(msgId) AS new_id FROM Messages WHERE convId = ?;`
+// Query used to get the last id in the message table
+var queryGetLastIdMessage = `SELECT MAX(MessageId) FROM message WHERE ConversationId = ?`
 
-func (db *appdbimpl) CreateMessage(convid int, senderid int, responseto int, text string, image string) (Message, error) {
-
-	var msg Message
-
-	var new_id int
-	var max_id = sql.NullInt64{Int64: 0, Valid: false}
-	err := db.c.QueryRow(queryGetMessageId, convid).Scan(&max_id)
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return msg, err
-	}
-	if !max_id.Valid {
-		new_id = 1
-	} else {
-		new_id = int(max_id.Int64) + 1
-	}
-
-	_, err = db.c.Exec(queryAddMessage, convid, senderid, new_id, text, image, responseto)
+// Function used to get the last id in the conversation table
+func (db *appdbimpl) GetMaxMessageId(convId int) (int, error) {
+	var _maxID = sql.NullInt64{Int64: 0, Valid: false}
+	row, err := db.c.Query(queryGetLastIdMessage, convId)
 	if err != nil {
-		return msg, err
+		return 0, err
 	}
 
-	err = db.UpdateLastMessage(convid, new_id)
+	var maxID int
+	for row.Next() {
+		if row.Err() != nil {
+			return 0, err
+		}
+
+		err = row.Scan(&_maxID)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return 0, err
+		}
+
+		if !_maxID.Valid {
+			maxID = 0
+		} else {
+			maxID = int(_maxID.Int64)
+		}
+	}
+
+	return maxID, nil
+}
+
+func (db *appdbimpl) CreateMessage(msg structs.Message) (structs.Message, error) {
+	// New message
+	var newMsg structs.Message
+
+	// Set the value of the new message
+	newMsg.Text = msg.Text
+	newMsg.ConversationId = msg.ConversationId
+	newMsg.Status = msg.Status
+	newMsg.SenderUserId = msg.SenderUserId
+	newMsg.Photo = msg.Photo
+
+	// Get the last id
+	maxId, err := db.GetMaxMessageId(newMsg.ConversationId)
 	if err != nil {
-		return msg, err
+		return structs.Message{}, err
 	}
 
-	msg, err = db.GetMessageById(convid, new_id)
+	// Set the id of the new message
+	newMsg.MessageId = maxId + 1
 
-	return msg, err
+	// Execute the query to create the conversation
+	_, err = db.c.Exec(queryAddMessage, newMsg.MessageId, newMsg.Text, newMsg.Status, newMsg.ConversationId, newMsg.SenderUserId, newMsg.Photo)
+	if err != nil {
+		return structs.Message{}, err
+	}
+
+	// Return the new conversation
+	return structs.Message{
+		MessageId:      newMsg.MessageId,
+		Text:           newMsg.Text,
+		SendTime:       newMsg.SendTime,
+		Status:         newMsg.Status,
+		SenderUserId:   newMsg.SenderUserId,
+		ConversationId: newMsg.ConversationId,
+		Photo:          newMsg.Photo,
+	}, nil
 }

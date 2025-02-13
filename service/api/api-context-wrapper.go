@@ -1,13 +1,11 @@
 package api
 
 import (
-	"net/http"
-
-	"wasatext/service/api/reqcontext"
-
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/sirupsen/logrus"
+	"net/http"
+	"wasa.project/service/api/reqcontext"
 )
 
 // httpRouterHandler is the signature for functions that accepts a reqcontext.RequestContext in addition to those
@@ -24,6 +22,7 @@ func (rt *_router) wrap(fn httpRouterHandler, auth bool) func(http.ResponseWrite
 			return
 		}
 
+		// Check if the user is is authorized
 		userId := 0
 		if auth {
 			userId = isAuthorized(r.Header)
@@ -33,6 +32,7 @@ func (rt *_router) wrap(fn httpRouterHandler, auth bool) func(http.ResponseWrite
 				return
 			}
 		}
+
 		var ctx = reqcontext.RequestContext{
 			ReqUUID: reqUUID,
 			UserId:  userId,
