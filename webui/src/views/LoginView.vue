@@ -6,29 +6,26 @@ export default {
             errorMsg: "",
         }
     },
-    emits: ['successful-login'],
+    emits: ['login-success'],
     methods: {
         async doLogin() {
-            try {
-                if (this.username.length < 3 || this.username.length > 16) {
-                    throw "Invalid username: must be between 3 and 16 characters."
-                }
-                let response = await this.$axios.post('/session', {
-                    name: this.username,
-                });
+        try {
+            if (this.username.length < 3 || this.username.length > 16) throw "Invalid username, it must contains min 3 characters and max 16 characters"
 
-                sessionStorage.userId = response.data.Id;
-                sessionStorage.userName = response.data.Name;
-                sessionStorage.token =  response.data.Id;
-                sessionStorage.userImage = response.data.Image;
+            let response = await this.$axios.post('/session', {name: this.username});
 
-                this.$router.push("/home");
-                this.$emit('successful-login');
-            } catch (e) {
-                this.errorMsg = e.toString();
-                document.getElementsByTagName("input")[0].style.outline = "auto";
-                document.getElementsByTagName("input")[0].style.outlineColor = "red";
-            };
+            sessionStorage.userId = response.data.Id;
+            sessionStorage.userName = response.data.Name;
+            sessionStorage.token = response.data.Id;
+            sessionStorage.userImage = response.data.Image;
+
+            this.$router.push("/home");
+            this.$emit('login-success');
+        } catch (e) {
+            this.errorMsg = e.toString();
+            document.getElementsByTagName("input")[0].style.outline = "auto";
+            document.getElementsByTagName("input")[0].style.outlineColor = "red";
+        };
         }
     },
     mounted() {
@@ -39,49 +36,53 @@ export default {
         sessionStorage.clear();
     },
 }
+
 </script>
 
 <template>
-    <ErrorMsg v-if="errorMsg" :msg="errorMsg" ></ErrorMsg>
+    <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
     <div class="login-container">
         <form @submit.prevent="doLogin">
-            <h1>Welcome to WASA-Text!</h1>
-            <input type="text" v-model="username" placeholder="Enter your username">
+            <h1>WasaText</h1>
+            <input type="text" v-model="username" placeholder="Enter your username" />
             <button type="submit">Login</button>
         </form>
     </div>
 </template>
+
 
 <style>
 .login-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 40vh;
-    width: 80%
+    height: 50vh;
 }
+
 .login-container form {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
+
 .login-container input {
-  margin: 10px;
-  padding: 7px;
-  border: 1px solid black;
-  border-radius: 20px;
-  justify-items: center;
+    margin: 15px;
+    padding: 10px;
+    border: 1px solid white;
+    border-radius: 5px;
 }
+
 .login-container button {
-  padding: 10px 20px;
-  border-radius: 5px;
-  background-color: black;
-  color: white;
-  cursor: pointer;
-  border: 1px solid black
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: black;
+    color: white;
+    cursor: pointer;
 }
+
 .login-container button:hover {
-  background-color: white;
-  color: black;
+    background-color: white;
+    color: black;
 }
 </style>
