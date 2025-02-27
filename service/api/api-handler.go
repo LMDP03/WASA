@@ -7,65 +7,37 @@ import (
 // Handler returns an instance of httprouter.Router that handle APIs registered here
 func (rt *_router) Handler() http.Handler {
 
-	// User routes
-	//
-	// -- Do Login -- //
+	// Session routes
 	rt.router.POST("/session", rt.wrap(rt.doLogin, false))
-	//
-	// -- Search User -- //
-	rt.router.GET("/profiles", rt.wrap(rt.searchUsers, true))
-	//
-	// -- Set my UserName -- //
-	rt.router.PUT("/profiles/:user/username", rt.wrap(rt.setMyUserName, true))
-	//
-	// -- Set my Photo -- //
-	rt.router.PUT("/profiles/:user/photo", rt.wrap(rt.setMyPhoto, true))
 
-	// Group routes
-	//
-	// -- Create Group -- //
-	rt.router.POST("/profiles/:user/groups", rt.wrap(rt.createGroup, true))
-	//
-	// -- Leave Group -- //
-	rt.router.DELETE("/profiles/:user/groups/:group", rt.wrap(rt.leaveGroup, true))
-	//
-	// -- Add to Group -- //
-	rt.router.PUT("/profiles/:user/groups/:group", rt.wrap(rt.addToGroup, true))
-	//
-	// -- Set new name to the group -- //
-	rt.router.PUT("/profiles/:user/groups/:group/groupname", rt.wrap(rt.setGroupName, true))
-	//
-	// -- Set new photo group -- //
-	rt.router.PUT("/profiles/:user/groups/:group/grouphoto", rt.wrap(rt.setGroupPhoto, true))
+	// Users routes
+	rt.router.GET("/users/:usrId/others", rt.wrap(rt.GetUsers, true))
+	rt.router.PUT("/users/:usrId/image", rt.wrap(rt.SetMyPhoto, true))
+	rt.router.PUT("/users/:usrId/name", rt.wrap(rt.SetMyUserName, true))
 
-	// -- Conversation Routes -- //
-	//
-	rt.router.PUT("/profiles/:user/conversations/:dest", rt.wrap(rt.createConversation, true))
-	//
-	// -- Get User Conversations -- //
-	rt.router.GET("/profiles/:user/conversations", rt.wrap(rt.getMyConversations, true))
-	//
-	// -- Get conversation -- //
-	rt.router.GET("/profiles/:user/conversations/:conv", rt.wrap(rt.getConversation, true))
+	// General conversations routes
+	rt.router.GET("/users/:usrId/conversations", rt.wrap(rt.GetMyConversations, true))
+	rt.router.POST("/users/:usrId/conversations/private", rt.wrap(rt.StartConversation, true))
+	rt.router.POST("/users/:usrId/conversations/group", rt.wrap(rt.CreateGroup, true))
 
-	// Message Routes
-	//
-	// -- Send Message -- //
-	rt.router.POST("/profiles/:user/conversations/:conv/messages", rt.wrap(rt.sendMessage, true))
-	//
-	// -- Forward Message -- //
-	rt.router.POST("/profiles/:user/conversations/:conv/messages/:message", rt.wrap(rt.forwardMessage, true))
-	//
-	// -- Delete the message -- //
-	rt.router.DELETE("/profiles/:user/conversations/:conv/messages/:message", rt.wrap(rt.deleteMessage, true))
+	// Specific conversation routes
+	rt.router.GET("/users/:usrId/conversation/:convId", rt.wrap(rt.GetConversation, true))
+	rt.router.POST("/users/:usrId/conversation/:convId", rt.wrap(rt.AddToGroup, true))
+	rt.router.DELETE("/users/:usrId/conversation/:convId", rt.wrap(rt.LeaveGroup, true))
+	rt.router.PUT("/users/:usrId/conversation/:convId/name", rt.wrap(rt.SetGroupName, true))
+	rt.router.PUT("/users/:usrId/conversation/:convId/image", rt.wrap(rt.SetGroupPhoto, true))
 
-	// Comment Routes
-	//
-	// -- Comment Message -- //
-	rt.router.PUT("/profiles/:user/conversations/:dest/messages/:message/reactions", rt.wrap(rt.commentMessage, true))
-	//
-	// -- Uncomment Message -- //
-	rt.router.DELETE("/profiles/:user/conversations/:conv/messages/:message/reactions/:comment", rt.wrap(rt.uncommentMessage, true))
+	// Messages routes
+	rt.router.POST("/users/:usrId/conversation/:convId/messages", rt.wrap(rt.SendMessage, true))
+	rt.router.POST("/users/:usrId/conversation/:convId/messages/:msgId", rt.wrap(rt.ForwardMessage, true))
+	rt.router.DELETE("/users/:usrId/conversation/:convId/messages/:msgId", rt.wrap(rt.DeleteMessage, true))
+
+	// Reactions routes
+	rt.router.POST("/users/:usrId/conversation/:convId/messages/:msgId/reactions", rt.wrap(rt.CommentMessage, true))
+	rt.router.DELETE("/users/:usrId/conversation/:convId/messages/:msgId/reactions", rt.wrap(rt.UncommentMessage, true))
+
+	// Special routes
+	rt.router.GET("/liveness", rt.liveness)
 
 	return rt.router
 }

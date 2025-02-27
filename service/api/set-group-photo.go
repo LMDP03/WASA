@@ -7,98 +7,119 @@ import (
 	"os"
 	"strconv"
 
-	"wasa.project/service/api/imageFunctions"
+	"wasatext/service/images"
+
+	"wasatext/service/api/reqcontext"
 
 	"github.com/julienschmidt/httprouter"
-	"wasa.project/service/api/reqcontext"
 )
 
-func (rt *_router) setGroupPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
-	userId, err := strconv.Atoi(ps.ByName("user"))
+func (rt *_router) SetGroupPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+
+	if r.Method != http.MethodPut {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	userId, err := strconv.Atoi(ps.ByName("usrId"))
 	if err != nil {
-		BadRequest(w, err, ctx, "Bad Request")
+		BadRequest(w, err, "Invalid userId", ctx)
 		return
 	}
 
-	// Check if the user is authorized
-	if checkAuth(w, userId, ctx) != nil {
+	if checkAuthorization(w, ctx, userId) != nil {
 		return
 	}
 
-	// Take the group id from the endpoint
-	groupId, err := strconv.Atoi(ps.ByName("group"))
+	exists, err := rt.db.CheckUserById(userId)
 	if err != nil {
-		BadRequest(w, err, ctx, "Bad Request")
+		InternalServerError(w, err, "Error while checking the user", ctx)
+		return
+	}
+	if !exists {
+		BadRequest(w, err, "User doesn't exists", ctx)
 		return
 	}
 
-	// Check if the user is a member of the group
-	isMember, err := rt.db.CheckMember(userId, groupId)
-	if !isMember || err != nil {
-		BadRequest(w, err, ctx, "The user is not a member of the group")
+	convId, err := strconv.Atoi(ps.ByName("convId"))
+	if err != nil {
+		BadRequest(w, err, "Invalid convId", ctx)
 		return
 	}
 
-	// Check if the size of the image is less than 5MB
+	exists, is_group, err := rt.db.CheckConversationById(convId)
+	if err != nil {
+		InternalServerError(w, err, "Error checking the conversation", ctx)
+		return
+	}
+	if !exists {
+		BadRequest(w, err, "The conversation doesn't exists", ctx)
+		return
+	}
+	ok, err := rt.db.IsParticipant(convId, userId)
+	if err != nil {
+		InternalServerError(w, err, "Couldn't check Group existance", ctx)
+		return
+	}
+	if !ok || !is_group {
+		Forbidden(w, nil, "The user isn't a member of this group or the conversation isn't a group", ctx)
+		return
+	}
+
 	err = r.ParseMultipartForm(5 << 20)
 	if err != nil {
-		BadRequest(w, err, ctx, "Image too big")
+		BadRequest(w, err, "The file is too big", ctx)
 		return
 	}
 
-	// Access the file from the request
 	file, _, err := r.FormFile("image")
 	if err != nil {
-		BadRequest(w, err, ctx, "Bad request")
+		BadRequest(w, err, "Couldn't access the image file from the request", ctx)
 		return
 	}
-	// Read the file
-	data, err := io.ReadAll(file) // In data we have the image file taked in the request
+
+	data, err := io.ReadAll(file)
 	if err != nil {
-		InternalServerError(w, err, "Error reading the image file", ctx)
-		return
-	}
-	// Check if the file is a jpeg
-	fileType := http.DetectContentType(data)
-	if fileType != "image/jpeg" {
-		http.Error(w, "Bad Request wrong file type", http.StatusBadRequest)
+		InternalServerError(w, err, "Couldn't read the image file from the request", ctx)
 		return
 	}
 	defer func() { err = file.Close() }()
 
-	// Create the file
-	path := imageFunctions.SetDefaultPhotoGroup(groupId) // Take the path of the image of the user profile
-	err = os.WriteFile(path, data, 0644)                 // Write the new image in the path selected
+	filetype := http.DetectContentType(data)
+	if filetype != "image/jpeg" {
+		http.Error(w, "Can only use .jpeg images", http.StatusBadRequest)
+		return
+	}
+	defer func() { err = file.Close() }()
+
+	path := images.SetDefaultGroupImage(userId)
+	err = os.WriteFile(path, data, 0644)
 	if err != nil {
-		InternalServerError(w, err, "Error setting the profile photo", ctx)
+		InternalServerError(w, err, "Couldn't copy the new image", ctx)
 		return
 	}
 
-	// Crop the image
-	err = imageFunctions.SaveAndCrop(path, 250, 250)
+	err = images.SaveImage(path, 250, 250)
 	if err != nil {
-		InternalServerError(w, err, "Error in the crop", ctx)
-	}
-
-	response, err := imageFunctions.ImageToBase64(imageFunctions.SetDefaultPhotoGroup(groupId))
-	if err != nil {
-		BadRequest(w, err, ctx, "Error taking new picture from storage")
+		InternalServerError(w, err, "Couldn't save the image", ctx)
 		return
 	}
 
-	type Response struct {
-		Photo string `json:"photo"`
+	dbConv, err := rt.db.GetConversationById(convId, userId)
+	if err != nil {
+		InternalServerError(w, err, "Error changing group name", ctx)
+		return
 	}
-
-	var res Response
-	res.Photo = response
-
-	// Resposne
+	var conv Conversation
+	err = conv.ConvertConversation(dbConv)
+	if err != nil {
+		InternalServerError(w, err, "Error converting group from DB", ctx)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("content-type", "plain/text")
-	if err := json.NewEncoder(w).Encode(res); err != nil {
-		InternalServerError(w, err, "Error encoding the response", ctx)
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(conv); err != nil {
+		InternalServerError(w, err, "Couldn't encode the response", ctx)
 		return
 	}
-
 }

@@ -1,84 +1,86 @@
 package api
 
 import (
-	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"strconv"
-	"wasa.project/service/api/reqcontext"
-	"wasa.project/service/api/structs"
+
+	"wasatext/service/api/reqcontext"
+
+	"github.com/julienschmidt/httprouter"
 )
 
-func (rt *_router) uncommentMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
-	// Get the user id from the endpoint
-	userId, err := strconv.Atoi(ps.ByName("user"))
+func (rt *_router) UncommentMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+
+	if r.Method != http.MethodDelete {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	userId, err := strconv.Atoi(ps.ByName("usrId"))
 	if err != nil {
-		BadRequest(w, err, ctx, "Can't get the user id from the endpoint")
+		BadRequest(w, err, "Invalid userId", ctx)
 		return
 	}
 
-	// Check if the user is authorized
-	if checkAuth(w, userId, ctx) != nil {
+	if checkAuthorization(w, ctx, userId) != nil {
 		return
 	}
 
-	// Get the conversation id
-	convId, err := strconv.Atoi(ps.ByName("conv"))
+	exists, err := rt.db.CheckUserById(userId)
 	if err != nil {
-		BadRequest(w, err, ctx, "Can't get the conversation id from the endpoint")
+		InternalServerError(w, err, "Error while checking the user", ctx)
+		return
+	}
+	if !exists {
+		BadRequest(w, err, "User doesn't exists", ctx)
 		return
 	}
 
-	// Get the conversation
-	var conv structs.Conversation
-	conv, err = rt.db.GetConversationById(convId)
+	convId, err := strconv.Atoi(ps.ByName("convId"))
 	if err != nil {
-		BadRequest(w, err, ctx, "Can't get the conversation from the db")
+		BadRequest(w, err, "Invalid convId", ctx)
 		return
 	}
 
-	// Check if the user is in the conversation
-	if check, err := rt.db.CheckUserConv(userId, conv.ConversationId); !check || err != nil {
-		BadRequest(w, err, ctx, "The user isn't in the conversation")
-		return
-	}
-
-	// Get the message id from the endpoint
-	msgId, err := strconv.Atoi(ps.ByName("message"))
+	exists, _, err = rt.db.CheckConversationById(convId)
 	if err != nil {
-		BadRequest(w, err, ctx, "Can't get the message id from the endpoint")
+		InternalServerError(w, err, "Error checking the conversation", ctx)
 		return
 	}
-
-	// Get the message
-	var msg structs.Message
-	msg, err = rt.db.GetMessageById(msgId, conv.ConversationId)
+	if !exists {
+		BadRequest(w, err, "The conversation doesn't exists", ctx)
+		return
+	}
+	ok, err := rt.db.IsParticipant(convId, userId)
 	if err != nil {
-		BadRequest(w, err, ctx, "Can't get the message from the db")
+		InternalServerError(w, err, "Couldn't check Group existance", ctx)
+		return
+	}
+	if !ok {
+		Forbidden(w, nil, "The user isn't a member of this group", ctx)
 		return
 	}
 
-	// Get the comment id
-	comId, err := strconv.Atoi(ps.ByName("comment"))
+	msgId, err := strconv.Atoi(ps.ByName("msgId"))
 	if err != nil {
-		BadRequest(w, err, ctx, "Can't get the commen id from the endpoint")
+		BadRequest(w, err, "Invalid msgId", ctx)
 		return
 	}
-
-	// Get the comment
-	var comment structs.Comment
-	comment, err = rt.db.GetCommentByUser(userId, msg.MessageId, conv.ConversationId)
-	if err != nil || comment.CommentId != comId {
-		BadRequest(w, err, ctx, "Bad request")
-		return
-	}
-
-	// Delete the comment
-	err = rt.db.DeleteComment(comment.CommentId, msg.MessageId, conv.ConversationId)
+	ok, err = rt.db.CheckMessageById(convId, msgId)
 	if err != nil {
-		BadRequest(w, err, ctx, "Can't delete the commet")
+		InternalServerError(w, err, "Error while checking the original message", ctx)
+		return
+	}
+	if !ok {
+		BadRequest(w, err, "The message doesn't exist or isn't from this conversation", ctx)
 		return
 	}
 
-	// Response
+	err = rt.db.DeleteReaction(convId, msgId, userId)
+	if err != nil {
+		InternalServerError(w, err, "Error while uncommenting the message", ctx)
+		return
+	}
+
 	w.WriteHeader(http.StatusNoContent)
 }

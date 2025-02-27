@@ -5,146 +5,138 @@ import (
 	"net/http"
 	"strconv"
 
+	"wasatext/service/api/reqcontext"
+
 	"github.com/julienschmidt/httprouter"
-	"wasa.project/service/api/reqcontext"
-	"wasa.project/service/api/structs"
 )
 
-func (rt *_router) forwardMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
-	// Get the id of the user who want Forwar the message
-	userId, err := strconv.Atoi(ps.ByName("user"))
+func (rt *_router) ForwardMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	userId, err := strconv.Atoi(ps.ByName("usrId"))
 	if err != nil {
-		BadRequest(w, err, ctx, "Can't take the user id from the endpoint")
+		BadRequest(w, err, "Invalid userId", ctx)
 		return
 	}
 
-	// Check if the user is authorized
-	if checkAuth(w, userId, ctx) != nil {
+	if checkAuthorization(w, ctx, userId) != nil {
 		return
 	}
 
-	// Get the id of the destination user
-	convId, err := strconv.Atoi(ps.ByName("conv"))
+	exists, err := rt.db.CheckUserById(userId)
 	if err != nil {
-		BadRequest(w, err, ctx, "Error getting the conversation id")
+		InternalServerError(w, err, "Error while checking the user", ctx)
+		return
+	}
+	if !exists {
+		BadRequest(w, err, "User doesn't exists", ctx)
 		return
 	}
 
-	// Get the conversation from the db
-	var conv structs.Conversation
-	conv, err = rt.db.GetConversationById(convId)
+	convId, err := strconv.Atoi(ps.ByName("convId"))
 	if err != nil {
-		BadRequest(w, err, ctx, "Can't take the conversation from the db")
+		BadRequest(w, err, "Invalid convId", ctx)
 		return
 	}
 
-	// Check if the user is in the Conversation
-	if check, err := rt.db.CheckUserConv(userId, conv.ConversationId); !check || err != nil {
-		BadRequest(w, err, ctx, "The user isn't in the conversation")
+	exists, _, err = rt.db.CheckConversationById(convId)
+	if err != nil {
+		InternalServerError(w, err, "Error checking the conversation", ctx)
+		return
+	}
+	if !exists {
+		BadRequest(w, err, "The conversation doesn't exists", ctx)
+		return
+	}
+	ok, err := rt.db.IsParticipant(convId, userId)
+	if err != nil {
+		InternalServerError(w, err, "Couldn't check Group existance", ctx)
+		return
+	}
+	if !ok {
+		Forbidden(w, nil, "The user isn't a member of this group", ctx)
 		return
 	}
 
-	// Query conversation
-	var destConv structs.Conversation
+	msgId, err := strconv.Atoi(ps.ByName("msgId"))
+	if err != nil {
+		BadRequest(w, err, "Invalid msgId", ctx)
+		return
+	}
+	ok, err = rt.db.CheckMessageById(convId, msgId)
+	if err != nil {
+		InternalServerError(w, err, "Error while checking the original message", ctx)
+		return
+	}
+	if !ok {
+		BadRequest(w, err, "The message doesn't exist or isn't from this conversation", ctx)
+		return
+	}
 
-	// Get the conversation where forward the message
-	if r.URL.Query().Has("dest_user") {
-		destUser, err := strconv.Atoi(r.URL.Query().Get("dest_user"))
+	dbMsgOrig, err := rt.db.GetMessageById(convId, msgId)
+	if err != nil {
+		InternalServerError(w, err, "Error while getting the original message", ctx)
+		return
+	}
+
+	var destinations []int
+	if err := json.NewDecoder(r.Body).Decode(&destinations); err != nil {
+		BadRequest(w, err, "Couldn't decode the request", ctx)
+		return
+	}
+	for i := range destinations {
+
+		exists, _, err := rt.db.CheckConversationById(destinations[i])
 		if err != nil {
-			BadRequest(w, err, ctx, "Can't get the conversation id from the query")
+			InternalServerError(w, err, "Error checking the destination", ctx)
 			return
 		}
-		// Check if the conversation between userId and destUser exist
-		if check, err := rt.db.CheckIfExistConv(userId, destUser); !check {
-			if err != nil {
-				BadRequest(w, err, ctx, "Can't check")
-				return
-			}
-			destConv.GroupId = 0
-			// Create the conversation
-			destConv, err = rt.db.CreateConversation(destConv)
-			if err != nil {
-				BadRequest(w, err, ctx, "Error creating the covnersation")
-				return
-			}
-
-			// Adding the link of the user and the conversation
-			if rt.db.AddUserConv(destConv.ConversationId, userId) != nil {
-				BadRequest(w, err, ctx, "Error adding in the conversation_user table")
-				return
-			}
-
-			if rt.db.AddUserConv(destConv.ConversationId, destUser) != nil {
-				BadRequest(w, err, ctx, "Error adding the receiver in the conversation_user table")
-				return
-			}
-		} else {
-			// Get the conversation if exist
-			destConvId, err := rt.db.GetConversation(userId, destUser)
-			if err != nil {
-				BadRequest(w, err, ctx, "Error getting the conversation id with the receiver")
-				return
-			}
-			destConv, err = rt.db.GetConversationById(destConvId)
-			if err != nil {
-				BadRequest(w, err, ctx, "Erro getting the conversation with the receiver")
-				return
-			}
+		if !exists {
+			BadRequest(w, err, "The destination doesn't exists", ctx)
+			return
 		}
-	} else {
-		BadRequest(w, err, ctx, "Missing the user id from query")
-		return
+		ok, err := rt.db.IsParticipant(destinations[i], userId)
+		if err != nil {
+			InternalServerError(w, err, "Couldn't check destination existance", ctx)
+			return
+		}
+		if !ok {
+			Forbidden(w, nil, "The user isn't a member of at least one conversation", ctx)
+			return
+		}
+
+		_, err = rt.db.CreateMessage(destinations[i], userId, dbMsgOrig.ResponseTo.MsgId, dbMsgOrig.Text, dbMsgOrig.Image)
+		if err != nil {
+			InternalServerError(w, err, "Error while sending the message", ctx)
+			return
+		}
+
 	}
 
-	// Check if the userId is in the other conversation
-	if check, err := rt.db.CheckUserConv(userId, destConv.ConversationId); !check || err != nil {
-		BadRequest(w, err, ctx, "The user isn't in the conversation")
-		return
-	}
+	k := len(destinations) - 1
 
-	// Getting the message id from the endpoint
-	msgId, err := strconv.Atoi(ps.ByName("message"))
+	dbConv, err := rt.db.GetConversationById(destinations[k], userId)
 	if err != nil {
-		BadRequest(w, err, ctx, "Can't take the message id, check the endpoint")
+		InternalServerError(w, err, "Error while getting the destination conv", ctx)
 		return
 	}
 
-	// Getting the message from the id
-	msg, err := rt.db.GetMessageById(msgId, conv.ConversationId)
+	var conv Conversation
+	err = conv.ConvertConversation(dbConv)
 	if err != nil {
-		BadRequest(w, err, ctx, "Can't get the message from the db")
+		InternalServerError(w, err, "Error while converting the destination conv", ctx)
 		return
 	}
 
-	// New message
-	var newMsg structs.Message
-
-	// Setting the value of the new message
-	newMsg.ConversationId = destConv.ConversationId
-	newMsg.SenderUserId = userId
-	newMsg.Text = msg.Text
-	newMsg.Status = "Sended"
-	newMsg.Photo = msg.Photo
-
-	// Create the message in the new conversation
-	newMsg, err = rt.db.CreateMessage(newMsg)
-	if err != nil {
-		BadRequest(w, err, ctx, "Error insert message in the db")
-		return
-	}
-
-	// Update last message in the conversation
-	err = rt.db.UpdateLastMessage(newMsg.MessageId, destConv.ConversationId)
-	if err != nil {
-		BadRequest(w, err, ctx, "Error updating last message of the conversation")
-		return
-	}
-
-	// Response
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("content-type", "application/json")
-	if err := json.NewEncoder(w).Encode(newMsg); err != nil {
-		InternalServerError(w, err, "Error encoding resposne", ctx)
+	if err := json.NewEncoder(w).Encode(conv); err != nil {
+		InternalServerError(w, err, "Error encoding response", ctx)
 		return
 	}
+
 }

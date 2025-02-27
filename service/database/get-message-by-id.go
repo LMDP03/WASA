@@ -1,14 +1,34 @@
 package database
 
-import (
-	"wasa.project/service/api/structs"
-)
+var queryGetMessageById = `SELECT senderId, text, COALESCE(image, ""), timeStamp, responseTo, checkMark FROM Messages WHERE convId = ? AND msgId = ?;`
+var queryGetResponse = `SELECT senderId, text, COALESCE(image, "") from Messages WHERE convId = ? AND msgId = ?;`
 
-// Query used to find a message by its id in the database
-var queryFindMessageById = `SELECT MessageId, Message, SenderUserId, SendTime, ConversationId, COALESCE(Photo, "") FROM message WHERE MessageId = ? AND ConversationId = ?`
-
-func (db *appdbimpl) GetMessageById(messageId int, convId int) (structs.Message, error) {
-	var message structs.Message
-	err := db.c.QueryRow(queryFindMessageById, messageId, convId).Scan(&message.MessageId, &message.Text, &message.SenderUserId, &message.SendTime, &message.ConversationId, &message.Photo)
-	return message, err
+func (db *appdbimpl) GetMessageById(convId int, msgId int) (Message, error) {
+	var msg Message
+	msg.ConvId = convId
+	msg.MsgId = msgId
+	var senderId int
+	var responseTo int
+	err := db.c.QueryRow(queryGetMessageById, convId, msgId).Scan(&senderId, &msg.Text, &msg.Image, &msg.Timestamp, &responseTo, &msg.Checkmark)
+	if err != nil {
+		return msg, err
+	}
+	msg.Sender, err = db.GetUserById(senderId)
+	if err != nil {
+		return msg, err
+	}
+	msg.ResponseTo.MsgId = responseTo
+	if responseTo != 0 {
+		var responseSender int
+		err = db.c.QueryRow(queryGetResponse, convId, responseTo).Scan(responseSender, msg.ResponseTo.Text, msg.ResponseTo.Image)
+		if err != nil {
+			return msg, err
+		}
+		msg.ResponseTo.Sender, err = db.GetUserById(responseSender)
+		if err != nil {
+			return msg, err
+		}
+	}
+	msg.Reactions, err = db.GetReactions(convId, msgId)
+	return msg, err
 }

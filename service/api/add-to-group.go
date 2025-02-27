@@ -5,154 +5,105 @@ import (
 	"net/http"
 	"strconv"
 
+	"wasatext/service/api/reqcontext"
+
 	"github.com/julienschmidt/httprouter"
-	"wasa.project/service/api/reqcontext"
 )
 
-// Function to add a list of users to a group
-func (rt *_router) addToGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
-	// Take the user id of the user who want add member to a group
-	userId, err := strconv.Atoi(ps.ByName("user"))
+func (rt *_router) AddToGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	userId, err := strconv.Atoi(ps.ByName("usrId"))
 	if err != nil {
-		BadRequest(w, err, ctx, "Bad Request")
+		BadRequest(w, err, "Invalid userId", ctx)
 		return
 	}
 
-	// Check if the user is authorized
-	if checkAuth(w, userId, ctx) != nil {
+	if checkAuthorization(w, ctx, userId) != nil {
 		return
 	}
-
-	// Take the group id from the endpoint
-	groupId, err := strconv.Atoi(ps.ByName("group"))
+	exists, err := rt.db.CheckUserById(userId)
 	if err != nil {
-		BadRequest(w, err, ctx, "Bad Request")
+		InternalServerError(w, err, "Error while checking the user", ctx)
+		return
+	}
+	if !exists {
+		BadRequest(w, err, "User doesn't exists", ctx)
 		return
 	}
 
-	// Check if the group exist
-	_, err = rt.db.GetGroupById(groupId)
+	convId, err := strconv.Atoi(ps.ByName("convId"))
 	if err != nil {
-		BadRequest(w, err, ctx, "The group doesn't exist")
+		BadRequest(w, err, "Invalid convId", ctx)
 		return
 	}
 
-	// Check if the user is a member of the group
-	isMember, err := rt.db.CheckMember(userId, groupId)
-	if !isMember || err != nil {
-		BadRequest(w, err, ctx, "The user is not a member of the group")
-		return
-	}
-
-	// Struct to take the body of the request
-	type UserToAdd struct {
-		Users []User `json:"users"`
-	}
-	var contentRequest UserToAdd
-
-	// Take the content of the request
-	if err := json.NewDecoder(r.Body).Decode(&contentRequest); err != nil {
-		BadRequest(w, err, ctx, "Bad request, can't take the body of the request, check the struct or the http reequst")
-		return
-	}
-
-	// List of users
-	user := contentRequest.Users
-
-	convId, err := rt.db.GetConvGroup(groupId)
+	exists, is_group, err := rt.db.CheckConversationById(convId)
 	if err != nil {
-		InternalServerError(w, err, "Error getting the conversation id", ctx)
+		InternalServerError(w, err, "Error checking the conversation", ctx)
+		return
+	}
+	if !exists {
+		BadRequest(w, err, "The conversation doesn't exists", ctx)
+		return
+	}
+	ok, err := rt.db.IsParticipant(convId, userId)
+	if err != nil {
+		InternalServerError(w, err, "Couldn't check Group existance", ctx)
+		return
+	}
+	if !ok || !is_group {
+		Forbidden(w, nil, "The user isn't a member of this group or the conversation isn't a group", ctx)
 		return
 	}
 
-	for i := 0; i < len(user); i++ {
-		userDB, err := rt.db.GetUserByName(user[i].Username)
-		if err != nil {
-			InternalServerError(w, err, "Error getting user in the request body from user table", ctx)
+	var req []User
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		BadRequest(w, err, "Couldn't decode the request", ctx)
+		return
+	}
+
+	var newMembers []string
+	for i := range req {
+		if len(req[i].Name) < 3 || len(req[i].Name) > 16 {
+			BadRequest(w, nil, "One or more members have invalid names", ctx)
 			return
 		}
-
-		err = user[i].ConvertUserFromDB(userDB)
-		if err != nil {
-			InternalServerError(w, err, "Error converting the user from the database struct", ctx)
-			return
-		}
-
-		// Check if the user is a member of the group
-		isMember, err := rt.db.CheckMember(user[i].UserId, groupId)
-		if !isMember || err != nil {
-			// Check if the username is already used
-			exist, err := rt.db.CheckIfExist(user[i].Username)
-			if err != nil {
-				InternalServerError(w, err, "Can't check if the user exist", ctx)
-				return
-			}
-
-			if !exist {
-				BadRequest(w, err, ctx, "The user doesn't exist")
-				return
-			}
-
-			// Add
-			err = rt.db.AddUserGroup(user[i].UserId, groupId)
-			if err != nil {
-				InternalServerError(w, err, "Error adding the user in the group", ctx)
-				return
-			}
-
-			// Add to conversation
-			err = rt.db.AddUserConv(convId, user[i].UserId)
-			if err != nil {
-				InternalServerError(w, err, "Error adding the user in the conversation", ctx)
-				return
-			}
-		}
+		newMembers = append(newMembers, req[i].Name)
 	}
 
-	type Response struct {
-		Group   Group  `json:"group"`
-		Members []User `json:"members"`
-	}
-
-	var res Response
-	group, err := rt.db.GetGroupById(groupId)
+	err = rt.db.AddParticipants(convId, newMembers)
 	if err != nil {
-		InternalServerError(w, err, "Error getting the group", ctx)
-		return
-	}
-	err = res.Group.ConvertGroupFromDB(group)
-	if err != nil {
-		InternalServerError(w, err, "Error converting the group from the database struct", ctx)
+		InternalServerError(w, err, "Error while adding participants to group", ctx)
 		return
 	}
 
-	members, err := rt.db.GetMembers(groupId)
+	dbMembers, err := rt.db.GetParticipants(convId)
 	if err != nil {
-		InternalServerError(w, err, "Error getting the members of the group", ctx)
+		InternalServerError(w, err, "Couldn't get the group members", ctx)
 		return
 	}
-
-	// Convert the members from the db to the user used in the api
-	for i := 0; i < len(members); i++ {
-		userDB, err := rt.db.GetUserById(members[i].UserId)
+	var members = make([]User, len(dbMembers))
+	for i := range dbMembers {
+		var u User
+		err := u.ConvertUser(dbMembers[i])
 		if err != nil {
-			InternalServerError(w, err, "Error getting the user from the user table", ctx)
+			InternalServerError(w, err, "Error converting users", ctx)
 			return
 		}
-		var user User
-		err = user.ConvertUserFromDB(userDB)
-		if err != nil {
-			InternalServerError(w, err, "Error converting the user from the database struct", ctx)
-			return
-		}
-		res.Members = append(res.Members, user)
+		members[i] = u
 	}
 
-	// Response
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("content-type", "application/json")
-	if err := json.NewEncoder(w).Encode(res); err != nil {
-		InternalServerError(w, err, "Error econding the response", ctx)
+	w.WriteHeader(http.StatusCreated)
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(members); err != nil {
+		ctx.Logger.Error("Couldn't encode the response", err)
+		http.Error(w, "Couldn't encode the response", http.StatusInternalServerError)
 		return
 	}
 

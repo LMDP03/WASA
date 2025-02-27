@@ -1,10 +1,9 @@
 package database
 
-// Query for search the user by username
-var queryFindUserByUsername = `SELECT UserId, Username FROM user WHERE Username = ?;`
+var queryGetUserByName = `SELECT id, name FROM Users WHERE name = ?;`
 
 func (db *appdbimpl) GetUserByName(username string) (User, error) {
 	var user User
-	err := db.c.QueryRow(queryFindUserByUsername, username).Scan(&user.UserId, &user.Username)
+	err := db.c.QueryRow(queryGetUserByName, username).Scan(&user.Id, &user.Name)
 	return user, err
 }

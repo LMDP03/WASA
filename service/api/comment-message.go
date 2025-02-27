@@ -2,135 +2,137 @@ package api
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"strconv"
 
+	"wasatext/service/api/reqcontext"
+
 	"github.com/julienschmidt/httprouter"
-	"wasa.project/service/api/reqcontext"
-	"wasa.project/service/api/structs"
 )
 
-func (rt *_router) commentMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
-	// Get the user id from the endpoint
-	userId, err := strconv.Atoi(ps.ByName("user"))
+func (rt *_router) CommentMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	userId, err := strconv.Atoi(ps.ByName("usrId"))
 	if err != nil {
-		BadRequest(w, err, ctx, "Can't get the user id from the endpoint check URL")
+		BadRequest(w, err, "Invalid userId", ctx)
 		return
 	}
 
-	// Check if the user is authorized
-	if checkAuth(w, userId, ctx) != nil {
+	if checkAuthorization(w, ctx, userId) != nil {
 		return
 	}
 
-	// Get the conversation id
-	convId, err := strconv.Atoi(ps.ByName("dest"))
+	exists, err := rt.db.CheckUserById(userId)
 	if err != nil {
-		BadRequest(w, err, ctx, "Can't get the conversation id from the endpoint check URL")
+		InternalServerError(w, err, "Error while checking the user", ctx)
+		return
+	}
+	if !exists {
+		BadRequest(w, err, "User doesn't exists", ctx)
 		return
 	}
 
-	// Get the conversation by the id taked from the endpoint
-	conv, err := rt.db.GetConversationById(convId)
+	convId, err := strconv.Atoi(ps.ByName("convId"))
 	if err != nil {
-		BadRequest(w, err, ctx, "Conversatino not found")
+		BadRequest(w, err, "Invalid convId", ctx)
 		return
 	}
 
-	// Check if the user is part of the conversation
-	if _, err := rt.db.CheckUserConv(userId, conv.ConversationId); err != nil {
-		BadRequest(w, err, ctx, "The user is not in the conversation")
-		return
-	}
-
-	// Get the id of the message
-	msgId, err := strconv.Atoi(ps.ByName("message"))
+	exists, _, err = rt.db.CheckConversationById(convId)
 	if err != nil {
-		BadRequest(w, err, ctx, "Can't get the id of the message check the endpoint")
+		InternalServerError(w, err, "Error checking the conversation", ctx)
 		return
 	}
-
-	// Take the message from the db
-	var msg structs.Message
-	msg, err = rt.db.GetMessageById(msgId, conv.ConversationId)
+	if !exists {
+		BadRequest(w, err, "The conversation doesn't exists", ctx)
+		return
+	}
+	ok, err := rt.db.IsParticipant(convId, userId)
 	if err != nil {
-		BadRequest(w, err, ctx, "Can't get the message from the db")
+		InternalServerError(w, err, "Couldn't check Group existance", ctx)
+		return
+	}
+	if !ok {
+		Forbidden(w, nil, "The user isn't a member of this group", ctx)
 		return
 	}
 
-	if userId == msg.SenderUserId {
-		BadRequest(w, err, ctx, "You can't comment your message")
+	msgId, err := strconv.Atoi(ps.ByName("msgId"))
+	if err != nil {
+		BadRequest(w, err, "Invalid msgId", ctx)
+		return
+	}
+	ok, err = rt.db.CheckMessageById(convId, msgId)
+	if err != nil {
+		InternalServerError(w, err, "Error while checking the original message", ctx)
+		return
+	}
+	if !ok {
+		BadRequest(w, err, "The message doesn't exist or isn't from this conversation", ctx)
 		return
 	}
 
-	// Comment
-	var comment structs.Comment
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		BadRequest(w, err, "Couldn't read the body", ctx)
+		return
+	}
 
-	// Check if the comment exist
-	if comment, err = rt.db.GetCommentByUser(userId, msg.MessageId, conv.ConversationId); err == nil {
+	emoji := string(body)
 
-		// Take the comment from the request body
-		err = json.NewDecoder(r.Body).Decode(&comment)
+	if len(emoji) != 1 || !CheckEmoji(emoji) {
+		BadRequest(w, err, "Invalid emoji", ctx)
+		return
+	}
+
+	exists, err = rt.db.CheckReactionById(convId, msgId, userId)
+	if err != nil {
+		InternalServerError(w, err, "Error While checking your comment", ctx)
+		return
+	}
+
+	if !exists {
+		_, err := rt.db.CreateReaction(convId, userId, msgId, emoji)
 		if err != nil {
-			BadRequest(w, err, ctx, "Error decode request body")
+			InternalServerError(w, err, "Couldn't comment the message", ctx)
 			return
 		}
-
-		// Check if the comment is valid
-		if !comment.IsValid() {
-			BadRequest(w, err, ctx, "The comment isn't a emoji")
-			return
-		}
-
-		// Update comment
-		err = rt.db.UpdateComment(comment.Comment, comment.CommentId, msg.MessageId, conv.ConversationId)
-		if err != nil {
-			BadRequest(w, err, ctx, "Error updating the comment")
-			return
-		}
-
-		// Response
 		w.WriteHeader(http.StatusCreated)
-		w.Header().Set("content-type", "application/json")
-		if err := json.NewEncoder(w).Encode(comment); err != nil {
-			InternalServerError(w, err, "Errro encode response", ctx)
+	} else {
+		_, err := rt.db.UpdateReaction(convId, userId, msgId, emoji)
+		if err != nil {
+			InternalServerError(w, err, "Couldn't update the comment", ctx)
 			return
 		}
-
-		// Stop function
-		return
+		w.WriteHeader(http.StatusOK)
 	}
 
-	// Take the comment from the request body
-	err = json.NewDecoder(r.Body).Decode(&comment)
+	dbReactions, err := rt.db.GetReactions(convId, msgId)
 	if err != nil {
-		BadRequest(w, err, ctx, "Error decode request body")
+		InternalServerError(w, err, "Couldn't retireve the comments", ctx)
 		return
 	}
+	reactions := make([]Reaction, len(dbReactions))
 
-	// Check if the comment is valid
-	if !comment.IsValid() {
-		BadRequest(w, err, ctx, "The comment isn't a emoji")
-		return
+	for i := range dbReactions {
+		var reac Reaction
+		err = reac.ConvertReaction(dbReactions[i])
+		if err != nil {
+			InternalServerError(w, err, "Couldn't convert the comments", ctx)
+			return
+		}
+		reactions[i] = reac
 	}
-
-	// Set values of comment
-	comment.MessageId = msg.MessageId
-	comment.ConversationId = msg.ConversationId
-	comment.CommentUserId = userId
-
-	// Create the comment in the db
-	comment, err = rt.db.CreateComment(comment)
-	if err != nil {
-		BadRequest(w, err, ctx, "Error add comment in the db")
-		return
-	}
-
-	// Response
-	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("content-type", "application/json")
-	if err := json.NewEncoder(w).Encode(comment); err != nil {
-		InternalServerError(w, err, "Errro encode response", ctx)
+	if err := json.NewEncoder(w).Encode(reactions); err != nil {
+		InternalServerError(w, err, "Error encoding response", ctx)
 		return
 	}
+
 }

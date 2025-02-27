@@ -1,0 +1,61 @@
+package database
+
+var sql_USERS = `CREATE TABLE IF NOT EXISTS Users
+(
+	id INTEGER NOT NULL UNIQUE,
+	name STRING NOT NULL UNIQUE,
+	PRIMARY KEY(id)
+);`
+
+var sql_CONVERSATIONS = `CREATE TABLE IF NOT EXISTS Conversations
+(
+	id INTEGER NOT NULL UNIQUE,
+	name STRING NOT NULL,
+	groupFlag INTEGER NOT NULL,
+	last_message INTEGER,
+	PRIMARY KEY (id)
+);`
+
+var sql_PARTICIPANTS = `CREATE TABLE IF NOT EXISTS Participants
+(
+	convId INTEGER NOT NULL,
+	userId INTEGER NOT NULL,
+	PRIMARY KEY (convId, userId),
+	CONSTRAINT fk_Participants
+		FOREIGN KEY (convId) REFERENCES Conversations(id)
+			ON DELETE CASCADE
+		FOREIGN KEY (userId) REFERENCES Users(id)
+			ON DELETE CASCADE
+);`
+
+var sql_MESSAGES = `CREATE TABLE IF NOT EXISTS Messages
+(
+	convId INTEGER NOT NULL,
+	senderId INTEGER NOT NULL,
+	msgId INTEGER NOT NULL UNIQUE,
+	text TEXT,
+	image STRING,
+	timeStamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+	responseTo INTEGER NOT NULL,
+	checkMark STRING NOT NULL,
+	PRIMARY KEY (convId, msgId),
+	CONSTRAINT fk_Messages
+		FOREIGN KEY (convId) REFERENCES Conversations(id)
+			ON DELETE CASCADE
+		FOREIGN KEY (senderId) REFERENCES Users(id)
+			ON DELETE CASCADE
+);`
+
+var sql_REACTIONS = `CREATE TABLE IF NOT EXISTS Reactions
+(
+	convId INTEGER NOT NULL,
+	senderId INTEGER NOT NULL,
+	msgId INTEGER NOT NULL,
+	emoji STRING,
+	PRIMARY KEY (convId, msgId, senderId),
+	CONSTRAINT fk_Reactions
+		FOREIGN KEY (convId, msgId) REFERENCES Messages(convId, msgId)
+			ON DELETE CASCADE
+    	FOREIGN KEY (SenderId) REFERENCES Users(id)
+      		ON DELETE CASCADE
+); `

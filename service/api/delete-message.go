@@ -1,108 +1,87 @@
 package api
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
 
+	"wasatext/service/api/reqcontext"
+
 	"github.com/julienschmidt/httprouter"
-	"wasa.project/service/api/reqcontext"
-	"wasa.project/service/api/structs"
 )
 
-func (rt *_router) deleteMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
-	// Get the id of the user who want delete message
-	userId, err := strconv.Atoi(ps.ByName("user"))
+func (rt *_router) DeleteMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+
+	if r.Method != http.MethodDelete {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	userId, err := strconv.Atoi(ps.ByName("usrId"))
 	if err != nil {
-		BadRequest(w, err, ctx, "Can't get the user id from the endpoint check it")
+		BadRequest(w, err, "Invalid userId", ctx)
 		return
 	}
 
-	// Check if the user is authorized
-	if checkAuth(w, userId, ctx) != nil {
+	if checkAuthorization(w, ctx, userId) != nil {
 		return
 	}
 
-	// Get the id of the conversation
-	convId, err := strconv.Atoi(ps.ByName("conv"))
+	exists, err := rt.db.CheckUserById(userId)
 	if err != nil {
-		BadRequest(w, err, ctx, "Can't get the conversation id from the endpoint check URL")
+		InternalServerError(w, err, "Error while checking the user", ctx)
+		return
+	}
+	if !exists {
+		BadRequest(w, err, "User doesn't exists", ctx)
 		return
 	}
 
-	// Check if the conversation exist taking it from the db
-	var conv structs.Conversation
-	conv, err = rt.db.GetConversationById(convId)
+	convId, err := strconv.Atoi(ps.ByName("convId"))
 	if err != nil {
-		BadRequest(w, err, ctx, "Can't get the conversation from the db")
+		BadRequest(w, err, "Invalid convId", ctx)
 		return
 	}
 
-	// Check if the user is in the conversation
-	if check, err := rt.db.CheckUserConv(userId, conv.ConversationId); !check || err != nil {
-		BadRequest(w, err, ctx, "The user is not in the conversation")
-		return
-	}
-
-	// Get the id of the message
-	msgId, err := strconv.Atoi(ps.ByName("message"))
+	exists, _, err = rt.db.CheckConversationById(convId)
 	if err != nil {
-		BadRequest(w, err, ctx, "Can't get the id of the message check the endpoint")
+		InternalServerError(w, err, "Error checking the conversation", ctx)
 		return
 	}
-
-	// Take the message from the db
-	var msg structs.Message
-	msg, err = rt.db.GetMessageById(msgId, conv.ConversationId)
+	if !exists {
+		BadRequest(w, err, "The conversation doesn't exists", ctx)
+		return
+	}
+	ok, err := rt.db.IsParticipant(convId, userId)
 	if err != nil {
-		BadRequest(w, err, ctx, "Can't get the message from the db")
+		InternalServerError(w, err, "Couldn't check Group existance", ctx)
+		return
+	}
+	if !ok {
+		Forbidden(w, nil, "The user isn't a member of this group", ctx)
 		return
 	}
 
-	// Get the max id of the message table
-	maxId, err := rt.db.GetMaxMessageId(msg.ConversationId)
+	msgId, err := strconv.Atoi(ps.ByName("msgId"))
 	if err != nil {
-		BadRequest(w, err, ctx, "Can't get the max id of the message table")
+		BadRequest(w, err, "Invalid msgId", ctx)
 		return
 	}
-
-	if maxId == msg.MessageId {
-		// Check if the maxId is the first message
-		if maxId == 1 {
-			err = rt.db.UpdateLastMessage(0, msg.ConversationId)
-			if err != nil {
-				BadRequest(w, err, ctx, "Error updating last message with NULL")
-				return
-			}
-		} else {
-			// Update
-			maxId -= 1
-			err = rt.db.UpdateLastMessage(maxId, msg.ConversationId)
-			for err != nil {
-				maxId -= 1
-				err = rt.db.UpdateLastMessage(maxId, msg.ConversationId)
-			}
-		}
-	}
-
-	// Delete the message from the db
-	err = rt.db.DeleteMessage(msg.MessageId, msg.ConversationId)
+	ok, err = rt.db.CheckMessageById(convId, msgId)
 	if err != nil {
-		BadRequest(w, err, ctx, "Can't delete the message "+strconv.Itoa(msg.MessageId)+" "+strconv.Itoa(msg.ConversationId))
+		InternalServerError(w, err, "Error while checking the original message", ctx)
+		return
+	}
+	if !ok {
+		BadRequest(w, err, "The message doesn't exist or isn't from this conversation", ctx)
 		return
 	}
 
-	// Delete the message from the db
-	err = rt.db.DeleteMessage(msg.MessageId, conv.ConversationId)
+	err = rt.db.DeleteMessage(convId, msgId, userId)
 	if err != nil {
-		BadRequest(w, err, ctx, "Can't delete the message")
+		InternalServerError(w, err, "Error while deleting the message", ctx)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("content-type", "plain/text")
-	if err := json.NewEncoder(w).Encode("Message deleted"); err != nil {
-		InternalServerError(w, err, "Error encoding the response", ctx)
-		return
-	}
+	w.WriteHeader(http.StatusNoContent)
+
 }

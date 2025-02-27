@@ -1,30 +1,15 @@
 package database
 
-import (
-	"database/sql"
-)
+var queryDeleteMessage = `DELETE FROM Messages WHERE msgId = ? AND convId = ? AND senderId = ?;`
 
-// Query used to remeove a message from the db
-var queryDeleteMessage = `DELETE FROM message WHERE MessageId = ? AND ConversationId = ?`
+func (db *appdbimpl) DeleteMessage(convid int, msgid int, senderid int) error {
 
-func (db *appdbimpl) DeleteMessage(messageId int, convId int) error {
-	tx, err := db.c.BeginTx(db.ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
+	_, err := db.c.Exec(queryDeleteMessage, convid, msgid, senderid)
 	if err != nil {
 		return err
 	}
 
-	defer func() {
-		if err != nil {
-			err = tx.Rollback()
-		}
-		err = tx.Commit()
-	}()
+	err = db.UpdateLastMessage(convid, msgid-1)
 
-	// Exec query
-	_, err = tx.Exec(queryDeleteMessage, messageId, convId)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }

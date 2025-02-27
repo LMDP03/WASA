@@ -19,130 +19,110 @@ import Modal from './components/Modal.vue'
 </script>
 <script>
 export default {
-  data() {
-    return {
-      errorMsg: null,
+    data() {
+        return {
+            errorMsg: null,
 
-      // Utilizzato per mostrare o nascondere il modale di ricerca
-      searchModalIsVisible: false,
-      // Utilizato per mostarer determinati contenuti della pagina solo se un utente ha effettuato il login
-      isLoggedIn: sessionStorage.token ? true : false,
+            showSearch: false,
+            isLoggedIn: sessionStorage.token ? true : false,
 
-      // UserId dell'utente loggato
-      userID: sessionStorage.userID,
+            userID: sessionStorage.userId,
 
-      // Username dell'utente loggato
-      username: sessionStorage.username,
-      // Profile picture dell'utente logagto
-      photo: sessionStorage.photo,
+            username: sessionStorage.userName,
+            photo: sessionStorage.userImage,
 
-      // Utitizzato per mostrare o nascondere il modale di aggiornamento username
-      updateNameModalIsVisible: false,
-      newUsername: "",  // Nuovo username inserito dall'utente
+            showNameUpdate: false,
+            newUsername: "", 
 
-      // Utilizzato per mostrare o nascondere il modale di aggiornamento immagine del profilo
-      updateProPicIsVisible: false,
-      newProPic: null,  // Nuova immagine del profilo inserita dall'utente
+            showImageUpdate: false,
+            newUserImage: null,
 
-      // Utilizzato per controllare se l'username inserito dall'utente è valido
-      usernameValidation: new RegExp('^\\w{3,16}$'),
-    }
-  },
-  methods: {
-    // Funzione utilizzata per controllare se il file inserito dall'utente è del formato corretto
-    async handleFileChange(event) {
-      this.errorMsg = "";
-      const file = event.target.files[0]; // Prende il file inserito dall'utente
-      if (file.type !== "image/jpeg") {
-        this.errorMsg = "File type not supported, only jpg and jpeg are allowed";
-        return
-      }
-      if (file.size > 5242880) {
-        this.errorMsg = "File size is too big. Max size is 5MB";
-        return
-      }
-      this.newProPic = file; // Assegna il file inserito dall'utente alla variabile newProPic
-    },
-    // Funzione utilizzata per mostrare o nascondere il modale di aggiornamento immagine del profilo
-    handleUpdateProPicToggle() {
-      sessionStorage.photo = this.photo;  // Assegna la nuova immagine del profilo alla sessione
-      this.updateProPicIsVisible = !this.updateProPicIsVisible; // Nasconde o mostra il modale
-      this.newProPic = "";
-      this.errorMsg = "";
-    },
-    // Funzione utilizzata per mostare o nascondere il modale di aggiornamento dell'username
-    handleUpdateNameToggle() {
-      sessionStorage.username = this.username;  // Assegna il nuovo username del profilo alla sessione
-      this.updateNameModalIsVisible = !this.updateNameModalIsVisible; // Nasconde o mostra il modale
-      this.newUsername = "";
-      this.errorMsg = "";
-    },
-    // Funzione utilizzata per l'aggiornamento della foto profilo dell'utente
-    async updateProPic() {
-      this.errorMsg = "";
+            showSearch: false,
+            showGroup: false,
 
-      // Crea un nuovo oggetto FormData e vi aggiunge l'immagine inserita dall'utente da mandare al server
-      const formData = new FormData();
-      formData.append('image', this.newProPic);
-
-      // Effettua una richiesta PUT al server per l'aggiornamento della foto profilo
-      this.$axios.put(`/profiles/${sessionStorage.userID}/photo`, formData, { headers: { 'Authorization': `${sessionStorage.token}` } })
-        .then(response => {
-          this.photo = response.data.photo; // Assegna la nuova immagine del profilo alla variabile photo per l'aggiornamento della pagina
-          this.handleUpdateProPicToggle(); // Nasconde il modale di aggiornamento dell'immagine del profilo e aggiorna l'immagine del profilo della sessione
-        })
-        .catch(e => {
-          this.errorMsg = e.toString();
-        });
-    },
-    // Funzione utilizzata per l'aggiornamento dell'username dell'utente
-    async updateUsername() {
-      // COntrolla se l'username inserito dall'utente è uguale a quello attuale
-      if (this.newUsername == this.username) {
-        this.errorMsg = "You must enter a new username";
-        return
-      }
-      // Controlla se l'username inserito dall'utente ha una lunghezza valida
-      if (this.newUsername.length < 3 || this.newUsername.length > 16) {
-        this.errorMsg = "Invalid username, it must contains min 3 characters and max 16 characters";
-        return
-      }
-      // Conotrolla se l'username inserito dall'utente è valido
-      if (!this.usernameValidation.test(this.newUsername)) {
-        this.errorMsg = "Invalid username, it must contain only letters and numbers";
-        return
-      }
-      try {
-        // Effettua una richiesta PUT al server per l'aggiornamento dell'username
-        let _ = await this.$axios.put(`/profiles/${sessionStorage.userID}/username`, { username: this.newUsername }, { headers: { 'Authorization': `${sessionStorage.token}` } })
-        this.username = this.newUsername; // Assegna il nuovo username alla variabile username per l'aggiornamento della pagina
-        this.handleUpdateNameToggle(); // Nasconde il modale di aggiornamento dell'username e aggiorna l'username della sessione
-      } catch (e) {
-        if (e.response.data == "Username already exist\n") {
-          this.errorMsg = "This username is already taken. Please try another one.";
-        } else {
-          this.errorMsg = e.toString();
         }
-      }
     },
-    // Funzione utilizzata per mostrare o nascondere il modale di ricerca di un utente per aprire una nuova conversazione
-    handleSearchModalToggle() {
-      this.searchModalIsVisible = !this.searchModalIsVisible;
-    },
-    // Funzione utilizzata per il logout dell'utente
-    logout() {
-      sessionStorage.clear();
-      this.isLoggedIn = false;
-      this.$router.push("/");
-    },
-    // Funzione utilizzata per il login dell'utente
-    handleLoginSuccess() {
-      this.isLoggedIn = true;
-      this.userID = sessionStorage.userID;
-      this.username = sessionStorage.username;
-      this.photo = sessionStorage.photo;
+    methods: {
+        async handleFileChange(event) {
+            this.errorMsg = "";
+            const file = event.target.files[0];
+            if (file.type !== "image/jpeg") {
+                this.errorMsg = "File type not supported, only jpg and jpeg are allowed";
+                return
+            }
+            if (file.size > 5242880) {
+                this.errorMsg = "File size is too big. Max size is 5MB";
+                return
+            }
+            this.newUserImage = file;
+        },
+        handleImageUpdate() {
+        sessionStorage.userImage = this.photo;  
+        this.showImageUpdate = !this.showImageUpdate;
+        this.newUserImage = "";
+        this.errorMsg = "";
+        },
+        handleNameUpdate() {
+        sessionStorage.userName = this.username;  
+        this.showNameUpdate = !this.showNameUpdate;
+        this.newUsername = "";
+        this.errorMsg = "";
+        },
+        async setMyPhoto() {
+            this.errorMsg = "";
+
+            const formData = new FormData();
+            formData.append('image', this.newUserImage);
+
+            this.$axios.put(`/users/${sessionStorage.userID}/Image`, formData, { headers: { 'Authorization': `${sessionStorage.token}` } }).then(response => {
+                this.photo = response.data.Image; 
+                this.handleImageUpdate();
+            }).catch(e => {
+                this.errorMsg = e.toString();
+            });
+        },
+        async setMyUserName() {
+            // COntrolla se l'username inserito dall'utente è uguale a quello attuale
+            if (this.newUsername == this.username) {
+                this.errorMsg = "You must enter a new username";
+                return
+            }
+            // Controlla se l'username inserito dall'utente ha una lunghezza valida
+            if (this.newUsername.length < 3 || this.newUsername.length > 16) {
+                this.errorMsg = "Invalid username, it must contains min 3 characters and max 16 characters";
+                return
+            }
+            try {
+                let _ = await this.$axios.put(`/users/${sessionStorage.userId}/name`, this.newUsername, { headers: { 'Authorization': `${sessionStorage.token}` } })
+                this.username = this.newUsername;
+                this.handleNameUpdate();
+            } catch (e) {
+                if (e.response.data == "Username already exist\n") {
+                    this.errorMsg = "This username is already taken. Please try another one.";
+                } else {
+                    this.errorMsg = e.toString();
+                }
+            }
+        },
+        handleSearch() {
+            this.showSearch = !this.showSearch;
+        },
+        handleGroup() {
+            this.showGroup = !this.showGroup;
+        },
+        logout() {
+            sessionStorage.clear();
+            this.isLoggedIn = false;
+            this.$router.push("/");
+            },
+        handleLoginSuccess() {
+        this.isLoggedIn = true;
+        this.userID = sessionStorage.userId;
+        this.username = sessionStorage.userame;
+        this.photo = sessionStorage.photo;
+        },
+
     }
-  }
 }
 </script>
 
@@ -158,42 +138,56 @@ export default {
       <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse" v-show="isLoggedIn">
         <div class="position-sticky pt-3 sidebar-sticky">
 
-          <!-- Modale utilizzato per la ricerca di un utente con cui aprire una conversazione -->
-          <Modal :show="searchModalIsVisible" @close="handleSearchModalToggle" title="search">
-            <template v-slot:header>
-              <h3>Users</h3>
-            </template>
-          </Modal>
+            <!-- Modale utilizzato per la ricerca di un utente con cui aprire una conversazione -->
+            <Modal :show="showSearch" @close="handleSearch" title="search">
+                <template v-slot:header>
+                <h3>Users</h3>
+                </template>
+            </Modal>
 
-          <!-- Modale utilizzato per l'aggiornamento dell'username dell'utente -->
-          <Modal :show="updateNameModalIsVisible" @close="handleUpdateNameToggle" title="username">
-            <template v-slot:header>
-              <h3>Update Username</h3>
-            </template>
-            <template v-slot:body>
-              <!-- Input in cui viene inserito il nuovo nome dell'utente -->
-              <form class="username-form">
-                <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
-                <input type="text" v-model="newUsername" placeholder="New username" />
-                <button type="submit" @click.prevent="updateUsername">Update</button>
-              </form>
-            </template>
-          </Modal>
+            <!-- Modale utilizzato per l'aggiornamento dell'username dell'utente -->
+            <Modal :show="showNameUpdate" @close="handleNameUpdate" title="username">
+                <template v-slot:header>
+                <h3>Update Username</h3>
+                </template>
+                <template v-slot:body>
+                <!-- Input in cui viene inserito il nuovo nome dell'utente -->
+                <form class="username-form">
+                    <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
+                    <input type="text" v-model="newUsername" placeholder="New username" />
+                    <button type="submit" @click.prevent="setMyUserName">Update</button>
+                </form>
+                </template>
+            </Modal>
 
-          <!-- Modale utilizzato per l'aggiornamento della foto profilo dell'utente -->
-          <Modal :show="updateProPicIsVisible" @close="handleUpdateProPicToggle" title="photo">
-            <template v-slot:header>
-              <h3>Update Profile Picture</h3>
-            </template>
-            <template v-slot:body>
-              <!-- Input in cui viene inserita la nuova immagine del profilo dell'utente -->
-              <form class="username-form">
-                <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
-                <input type="file" ref="file" accept=".jpg,.jpeg" @change="handleFileChange" />
-                <button type="submit" @click.prevent="updateProPic">Update</button>
-              </form>
-            </template>
-          </Modal>
+            <!-- Modale utilizzato per l'aggiornamento della foto profilo dell'utente -->
+            <Modal :show="showImageUpdate" @close="handleImageUpdate" title="photo">
+                <template v-slot:header>
+                    <h3>Update Profile Picture</h3>
+                    </template>
+                    <template v-slot:body>
+                    <!-- Input in cui viene inserita la nuova immagine del profilo dell'utente -->
+                    <form class="username-form">
+                        <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
+                        <input type="file" ref="file" accept=".jpg,.jpeg" @change="handleFileChange" />
+                        <button type="submit" @click.prevent="setMyPhoto">Update</button>
+                    </form>
+                </template>
+            </Modal>
+
+                <!-- Modale utilizzato per la creazione di un nuovo gruppo -->
+            <Group :show="showGroup" @close="handleGroup" title="search">
+                <template v-slot:header>
+                <h3>Select users</h3>
+                </template>
+            </Group>
+            <!-- Modale utilzzato per la ricerca degli utenti con cui aprire una nuova conversazione -->
+            <Modal :show="showSearch" @close="handleSearch" title="search">
+                <template v-slot:header>
+                <h3>Users</h3>
+                </template>
+            </Modal>
+
 
           <!-- Titolo della NavBar -->
           <h6
@@ -215,7 +209,7 @@ export default {
             </li>
             <!-- Apre il modale (solo se l'utente è loggato) per la ricerca di un utente con cui aprire una conversazione -->
             <li class="nav-item m-2" v-if="isLoggedIn">
-              <a class="nav-link" @click="handleSearchModalToggle">
+              <a class="nav-link" @click="handleSearch">
                 <!-- Icona Search -->
                 <svg class="feather">
                   <use href="/feather-sprite-v4.29.0.svg#search" />
@@ -223,6 +217,8 @@ export default {
                 Search
               </a>
             </li>
+
+            
             <!-- Esegue il logout (solo se l'utente è loggato) ritornando alla pagina di login -->
             <li class="nav-item m-2" v-if="isLoggedIn">
               <a class="nav-link" @click="logout">
@@ -245,7 +241,7 @@ export default {
             </li>
             <!-- Apre il modale per l'inserimento di un nuovo username (Mostato solo se l'utente è loggato) -->
             <li class="nav-item m-2" v-if="isLoggedIn">
-              <button @click="handleUpdateNameToggle">
+              <button @click="handleNameUpdate">
                 <!-- Icona Edit -->
                 <svg class="feather">
                   <use href="/feather-sprite-v4.29.0.svg#edit" />
@@ -255,7 +251,7 @@ export default {
             </li>
             <!-- Apre il modale per l'inserimento di una nuova immagine del profilo (Mostato solo se l'utente è loggato) -->
             <li class="nav-item m-2" v-if="isLoggedIn">
-              <button @click="handleUpdateProPicToggle">
+              <button @click="handleImageUpdate">
                 <!-- Icona Edit -->
                 <svg class="feather">
                   <use href="/feather-sprite-v4.29.0.svg#edit" />

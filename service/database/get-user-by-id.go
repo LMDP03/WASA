@@ -1,9 +1,9 @@
 package database
 
-var queryFindUserById = `SELECT UserId, Username FROM user WHERE UserId = ?;`
+var queryGetUserById = `SELECT id, name FROM Users WHERE id = ?;`
 
-func (db *appdbimpl) GetUserById(userId int) (User, error) {
+func (db *appdbimpl) GetUserById(userid int) (User, error) {
 	var user User
-	err := db.c.QueryRow(queryFindUserById, userId).Scan(&user.UserId, &user.Username)
+	err := db.c.QueryRow(queryGetUserById, userid).Scan(&user.Id, &user.Name)
 	return user, err
 }
