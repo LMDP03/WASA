@@ -1,0 +1,113 @@
+# DO LOGIN #
+POST http://localhost:3000/session  HTTP/1.1
+Content-Type: application/json
+
+{
+    "name": "livio"
+}
+
+###
+
+# DO LOGIN #
+POST http://localhost:3000/session  HTTP/1.1
+Content-Type: application/json
+
+{
+    "name": "marzio"
+}
+
+###
+
+# DO LOGIN #
+POST http://localhost:3000/session  HTTP/1.1
+Content-Type: application/json
+
+{
+    "name": "della"
+}
+
+###
+
+
+# SET USERNAME #
+PUT http://localhost:3000/users/1/name  HTTP/1.1
+Authorization: 1
+Content-Type: text/plain
+
+della
+
+###
+
+# SET USERNAME #
+PUT http://localhost:3000/users/1/name  HTTP/1.1
+Authorization: 1
+Content-Type: text/plain
+
+penna
+
+###
+
+# GET USERS #
+GET http://localhost:3000/users/1/others?srcName=e HTTP/1.1
+Authorization: 1
+
+###
+
+# SET PICTURE #
+PUT http://localhost:3000/users/1/image HTTP/1.1
+Authorization: 1
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="image"; filename="image.jpeg"
+Content-Type: image/jpeg
+
+< ./image.jpg
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+
+###
+
+# CREATE PRIVATE CONVERSATION #
+POST http://localhost:3000/users/1/conversations/private?rcvId=3 HTTP/1.1
+Authorization: 1
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+-----WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data, name="text"
+
+prova
+-----WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="image"; filename="image.jpeg"
+Content-Type: image/jpeg
+
+< ./image.jpg
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+
+###
+
+# CREATE PUBLIC CONVERSATION #
+POST http://localhost:3000/users/1/conversations/group HTTP/1.1
+Authorization: 1
+Content-Type: application/json
+
+{
+    "name" : "figata",
+    "participants": [
+        {
+            "name": "marzio"
+        },
+        {
+            "name": "penna"
+        }
+    ]
+}
+
+###
+
+# GET CONVERSATIONS #
+GET http://localhost:3000/users/1/conversations?srcName=io HTTP/1.1
+Authorization: 1
+
+###

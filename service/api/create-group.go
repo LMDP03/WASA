@@ -61,6 +61,12 @@ func (rt *_router) CreateGroup(w http.ResponseWriter, r *http.Request, ps httpro
 		}
 		members = append(members, conv.participants[i].Name)
 	}
+	usr, err := rt.db.GetUserById(userId)
+	if err != nil {
+		InternalServerError(w, err, "Couldn't find the user", ctx)
+		return
+	}
+	members = append(members, usr.Name)
 
 	dbConv, err := rt.db.CreateConversation(conv.Name, true, 0, members)
 	if err != nil {

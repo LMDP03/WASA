@@ -191,11 +191,14 @@ func (p *Preview) ConvertPreview(prev database.Preview) error {
 		}
 		p.Image = image
 	} else {
-		image, err := images.ConvertToBase64(images.SetDefaultUserImage(prev.UserId))
-		if err != nil {
-			return err
+		if prev.UserId == 0 {
+			p.Image = "No messages sent yet."
+		} else {
+			p.Image, err = images.ConvertToBase64(images.SetDefaultUserImage(prev.UserId))
+			if err != nil {
+				return err
+			}
 		}
-		p.Image = image
 	}
 
 	return nil
