@@ -18,11 +18,15 @@ type User struct {
 func (u *User) ConvertUser(user database.User) error {
 	u.Id = user.Id
 	u.Name = user.Name
-	image, err := images.ConvertToBase64(images.SetDefaultUserImage(user.Id))
-	if err != nil {
-		return err
+	if user.Id == 0 {
+		u.Image = ""
+	} else {
+		image, err := images.ConvertToBase64(images.SetDefaultUserImage(user.Id))
+		if err != nil {
+			return err
+		}
+		u.Image = image
 	}
-	u.Image = image
 	return nil
 }
 

@@ -41,7 +41,7 @@ func (rt *_router) SetMyPhoto(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	err = r.ParseMultipartForm(5 << 20)
+	err = r.ParseMultipartForm(10 << 20)
 	if err != nil {
 		BadRequest(w, err, "The file is too big", ctx)
 		return

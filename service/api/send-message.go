@@ -70,7 +70,7 @@ func (rt *_router) SendMessage(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 	var req Request
 
-	err = r.ParseMultipartForm(5 << 20)
+	err = r.ParseMultipartForm(10 << 20)
 	if err != nil {
 		BadRequest(w, err, "The file is too big", ctx)
 		return
@@ -97,7 +97,7 @@ func (rt *_router) SendMessage(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	var responseid int
-	if !r.URL.Query().Has("responseTo") {
+	if r.URL.Query().Has("responseTo") {
 		responseid, err = strconv.Atoi(r.URL.Query().Get("responseTo"))
 		if err != nil {
 			BadRequest(w, err, "Couldn't read the responseId", ctx)
