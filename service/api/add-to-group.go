@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -76,6 +77,7 @@ func (rt *_router) AddToGroup(w http.ResponseWriter, r *http.Request, ps httprou
 		}
 		newMembers = append(newMembers, req[i].Name)
 	}
+	fmt.Println(newMembers)
 
 	err = rt.db.AddParticipants(convId, newMembers)
 	if err != nil {

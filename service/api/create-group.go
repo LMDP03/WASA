@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -67,7 +68,7 @@ func (rt *_router) CreateGroup(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 	members = append(members, usr.Name)
-
+	fmt.Println(members)
 	dbConv, err := rt.db.CreateConversation(conv.Name, true, 0, members)
 	if err != nil {
 		InternalServerError(w, err, "Error while creating the conversation", ctx)

@@ -103,6 +103,11 @@ func run() error {
 	}
 	defer func() {
 		logger.Debug("database stopping")
+		_, _ = dbconn.Exec("DROP TABLE Reactions")
+		_, _ = dbconn.Exec("DROP TABLE Messages")
+		_, _ = dbconn.Exec("DROP TABLE Participants")
+		_, _ = dbconn.Exec("DROP TABLE Conversations")
+		_, _ = dbconn.Exec("DROP TABLE Users")
 		_ = dbconn.Close()
 	}()
 	db, err := database.New(dbconn)
