@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -40,7 +39,7 @@ func (rt *_router) CreateGroup(w http.ResponseWriter, r *http.Request, ps httpro
 
 	type RequestConv struct {
 		Name         string `json: "name"`
-		participants []User `json: "participants"`
+		Participants []User `json: "participants"`
 	}
 
 	var conv RequestConv
@@ -55,12 +54,12 @@ func (rt *_router) CreateGroup(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	var members []string
-	for i := range conv.participants {
-		if len(conv.participants[i].Name) < 3 || len(conv.participants[i].Name) > 16 {
+	for i := range conv.Participants {
+		if len(conv.Participants[i].Name) < 3 || len(conv.Participants[i].Name) > 16 {
 			BadRequest(w, nil, "One or more members have invalid names", ctx)
 			return
 		}
-		members = append(members, conv.participants[i].Name)
+		members = append(members, conv.Participants[i].Name)
 	}
 	usr, err := rt.db.GetUserById(userId)
 	if err != nil {
@@ -68,7 +67,6 @@ func (rt *_router) CreateGroup(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 	members = append(members, usr.Name)
-	fmt.Println(members)
 	dbConv, err := rt.db.CreateConversation(conv.Name, true, 0, members)
 	if err != nil {
 		InternalServerError(w, err, "Error while creating the conversation", ctx)

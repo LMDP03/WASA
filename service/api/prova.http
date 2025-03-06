@@ -112,7 +112,7 @@ Authorization: 1
 Content-Type: application/json
 
 {
-    "name" : "figata",
+    "name": "figata",
     "participants": [
         {
             "name": "marzio"
