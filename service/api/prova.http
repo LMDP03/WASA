@@ -283,15 +283,6 @@ POST http://localhost:3000/users/1/conversation/1/messages/1/reactions HTTP/1.1
 Authorization: 1
 Content-Type: text/plain
 
-😁😅
-
-###
-
-# COMMENT MESSAGE #
-POST http://localhost:3000/users/1/conversation/1/messages/1/reactions HTTP/1.1
-Authorization: 1
-Content-Type: text/plain
-
 😁
 
 ###
