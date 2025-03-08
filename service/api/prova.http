@@ -53,21 +53,12 @@ PUT http://localhost:3000/users/1/name  HTTP/1.1
 Authorization: 1
 Content-Type: text/plain
 
-della
-
-###
-
-# SET USERNAME #
-PUT http://localhost:3000/users/1/name  HTTP/1.1
-Authorization: 1
-Content-Type: text/plain
-
 penna
 
 ###
 
 # GET USERS #
-GET http://localhost:3000/users/1/others?srcName=o HTTP/1.1
+GET http://localhost:3000/users/1/others?srcName=io HTTP/1.1
 Authorization: 1
 
 ###
@@ -147,7 +138,7 @@ Authorization: 1
 ###
 
 # GET CONVERSATION #
-GET http://localhost:3000/users/1/conversation/6 HTTP/1.1
+GET http://localhost:3000/users/1/conversation/1 HTTP/1.1
 Authorization: 1
 
 ###
@@ -176,35 +167,11 @@ Authorization: 1
 ###
 
 # SET GROUP NAME #
-PUT http://localhost:3000/users/1/conversation/1/name  HTTP/1.1
-Authorization: 1
-Content-Type: text/plain
-
-pazzurdo
-
-###
-
-# SET GROUP NAME #
 PUT http://localhost:3000/users/1/conversation/2/name  HTTP/1.1
 Authorization: 1
 Content-Type: text/plain
 
 pazzurdo
-
-###
-
-# SET GROUP PICTURE #
-PUT http://localhost:3000/users/1/conversation/1/image HTTP/1.1
-Authorization: 1
-Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
-
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="image"; filename="image.jpeg"
-Content-Type: image/jpeg
-
-< ./image.jpg
-
-------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
 ###
 
@@ -244,20 +211,20 @@ Content-Type: image/jpeg
 ###
 
 # RESPOND TO MESSAGE #
-POST http://localhost:3000/users/1/conversation/1/messages?responseTo=2 HTTP/1.1
+POST http://localhost:3000/users/1/conversation/1/messages?responseTo=1 HTTP/1.1
 Authorization: 1
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="text"
 
-ciao
+risposta
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="image"; filename="image.jpg"
 Content-Type: image/jpeg
 
 < ./image.jpg
-------WebKitFormBoundary7MA4YWxkTrZu0gW
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
 ###
 
@@ -281,24 +248,25 @@ Content-Type: image/jpeg
 ###
 
 # RESPOND TO MESSAGE #
-POST http://localhost:3000/users/1/conversation/2/messages?responseTo=2 HTTP/1.1
+POST http://localhost:3000/users/1/conversation/2/messages?responseTo=1 HTTP/1.1
 Authorization: 1
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="text"
 
-ciao
+risposta
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
 ###
 
 # FORWARD MESSAGE #
-POST http://localhost:3000/users/1/conversation/2/messages/3 HTTP/1.1
+POST http://localhost:3000/users/1/conversation/2/messages/2 HTTP/1.1
 Authorization: 1
 Content-Type: application/json
 
 [
+    3,
     1
 ]
 

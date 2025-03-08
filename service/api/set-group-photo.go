@@ -92,7 +92,7 @@ func (rt *_router) SetGroupPhoto(w http.ResponseWriter, r *http.Request, ps http
 	}
 	defer func() { err = file.Close() }()
 
-	path := images.SetDefaultGroupImage(userId)
+	path := images.SetDefaultGroupImage(convId)
 	err = os.WriteFile(path, data, 0644)
 	if err != nil {
 		InternalServerError(w, err, "Couldn't copy the new image", ctx)

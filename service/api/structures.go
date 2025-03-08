@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"time"
 	"unicode/utf8"
 
@@ -73,6 +74,10 @@ func (r *Response) ConvertResponse(res database.Response) error {
 	r.MsgId = res.MsgId
 	r.Text = res.Text
 	r.Image = res.Image
+	fmt.Println(r.MsgId, res.MsgId)
+	fmt.Println(r.Sender.Id, res.Sender.Id)
+	fmt.Println(r.Sender.Name, res.Sender.Name)
+	fmt.Println(r.Text, res.Text)
 	return nil
 }
 
@@ -95,7 +100,7 @@ func (m *Message) ConvertMessage(msg database.Message) error {
 		return err
 	}
 	m.MsgId = msg.MsgId
-	if m.ResponseTo.MsgId != 0 {
+	if msg.ResponseTo.MsgId != 0 {
 		err = m.ResponseTo.ConvertResponse(msg.ResponseTo)
 		if err != nil {
 			return err

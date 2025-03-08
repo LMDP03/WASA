@@ -109,7 +109,7 @@ func (rt *_router) ForwardMessage(w http.ResponseWriter, r *http.Request, ps htt
 			return
 		}
 
-		_, err = rt.db.CreateMessage(destinations[i], userId, dbMsgOrig.ResponseTo.MsgId, dbMsgOrig.Text, dbMsgOrig.Image)
+		_, err = rt.db.CreateMessage(destinations[i], userId, 0, dbMsgOrig.Text, dbMsgOrig.Image)
 		if err != nil {
 			InternalServerError(w, err, "Error while sending the message", ctx)
 			return

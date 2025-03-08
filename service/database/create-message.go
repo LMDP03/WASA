@@ -29,12 +29,10 @@ func (db *appdbimpl) CreateMessage(convid int, senderid int, responseto int, tex
 	if err != nil {
 		return msg, err
 	}
-
 	err = db.UpdateLastMessage(convid, new_id)
 	if err != nil {
 		return msg, err
 	}
-
 	msg, err = db.GetMessageById(convid, new_id)
 
 	return msg, err

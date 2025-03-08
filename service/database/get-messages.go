@@ -37,7 +37,7 @@ func (db *appdbimpl) GetMessages(convId int) ([]Message, error) {
 		msg.ResponseTo.MsgId = responseTo
 		if responseTo != 0 {
 			var responseSender int
-			err = db.c.QueryRow(queryGetResponse, convId, responseTo).Scan(responseSender, msg.ResponseTo.Text, msg.ResponseTo.Image)
+			err = db.c.QueryRow(queryGetResponse, convId, responseTo).Scan(&responseSender, &msg.ResponseTo.Text, &msg.ResponseTo.Image)
 			if err != nil {
 				return nil, err
 			}
