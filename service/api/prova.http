@@ -144,8 +144,8 @@ Authorization: 2
 ###
 
 # ADD TO GROUP #
-POST http://localhost:3000/users/2/conversation/2 HTTP/1.1
-Authorization: 2
+POST http://localhost:3000/users/1/conversation/2 HTTP/1.1
+Authorization: 1
 Content-Type: application/json
 
 [
@@ -161,8 +161,8 @@ Content-Type: application/json
 
 # LEAVE GROUP #
 
-DELETE http://localhost:3000/users/2/conversation/2 HTTP/1.1
-Authorization: 2
+DELETE http://localhost:3000/users/1/conversation/2 HTTP/1.1
+Authorization: 1
 
 ###
 
@@ -261,12 +261,12 @@ risposta
 ###
 
 # FORWARD MESSAGE #
-POST http://localhost:3000/users/1/conversation/1/messages/2 HTTP/1.1
+POST http://localhost:3000/users/1/conversation/1/messages/1 HTTP/1.1
 Authorization: 1
 Content-Type: application/json
 
 [
-    1
+    2
 ]
 
 ###

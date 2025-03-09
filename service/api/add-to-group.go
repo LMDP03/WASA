@@ -56,8 +56,12 @@ func (rt *_router) AddToGroup(w http.ResponseWriter, r *http.Request, ps httprou
 		InternalServerError(w, err, "Couldn't check Group existance", ctx)
 		return
 	}
-	if !ok || !is_group {
-		Forbidden(w, nil, "The user isn't a member of this group or the conversation isn't a group", ctx)
+	if !is_group {
+		BadRequest(w, nil, "The conversation isn't a group", ctx)
+		return
+	}
+	if !ok {
+		Forbidden(w, nil, "The user isn't a member of this group", ctx)
 		return
 	}
 
@@ -68,11 +72,23 @@ func (rt *_router) AddToGroup(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
+	currentMembers, err := rt.db.GetParticipants(convId)
+	if err != nil {
+		InternalServerError(w, err, "Couldn't get the current members", ctx)
+		return
+	}
+
 	var newMembers []string
 	for i := range req {
 		if len(req[i].Name) < 3 || len(req[i].Name) > 16 {
 			BadRequest(w, nil, "One or more members have invalid names", ctx)
 			return
+		}
+		for j := range currentMembers {
+			if currentMembers[j].Name == req[i].Name {
+				BadRequest(w, nil, "One or more chose user(s) are already group members", ctx)
+				return
+			}
 		}
 		newMembers = append(newMembers, req[i].Name)
 	}

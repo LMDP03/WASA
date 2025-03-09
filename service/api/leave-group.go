@@ -42,7 +42,7 @@ func (rt *_router) LeaveGroup(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	exists, _, err = rt.db.CheckConversationById(convId)
+	exists, is_group, err := rt.db.CheckConversationById(convId)
 	if err != nil {
 		InternalServerError(w, err, "Error checking the conversation", ctx)
 		return
@@ -58,6 +58,10 @@ func (rt *_router) LeaveGroup(w http.ResponseWriter, r *http.Request, ps httprou
 	}
 	if !ok {
 		Forbidden(w, nil, "The user isn't a member of this conversation", ctx)
+		return
+	}
+	if !is_group {
+		BadRequest(w, nil, "This conversation isn't a group", ctx)
 		return
 	}
 
