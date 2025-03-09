@@ -22,11 +22,10 @@ func (db *appdbimpl) GetConversationById(convid int, userid int) (Conversation, 
 	conv.Participants = participants
 
 	if lastmsg != 0 {
-		messages, err := db.GetMessages(convid)
+		conv.Messages, err = db.GetMessages(convid)
 		if err != nil {
 			return conv, err
 		}
-		conv.Messages = messages
 	}
 
 	if flag == 0 {

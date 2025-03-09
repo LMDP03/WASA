@@ -58,7 +58,7 @@ penna
 ###
 
 # GET USERS #
-GET http://localhost:3000/users/1/others?srcName=io HTTP/1.1
+GET http://localhost:3000/users/1/others?srcName=o HTTP/1.1
 Authorization: 1
 
 ###
@@ -138,14 +138,14 @@ Authorization: 1
 ###
 
 # GET CONVERSATION #
-GET http://localhost:3000/users/1/conversation/1 HTTP/1.1
-Authorization: 1
+GET http://localhost:3000/users/2/conversation/1 HTTP/1.1
+Authorization: 2
 
 ###
 
 # ADD TO GROUP #
-POST http://localhost:3000/users/1/conversation/2 HTTP/1.1
-Authorization: 1
+POST http://localhost:3000/users/2/conversation/2 HTTP/1.1
+Authorization: 2
 Content-Type: application/json
 
 [
@@ -161,8 +161,8 @@ Content-Type: application/json
 
 # LEAVE GROUP #
 
-DELETE http://localhost:3000/users/1/conversation/2 HTTP/1.1
-Authorization: 1
+DELETE http://localhost:3000/users/2/conversation/2 HTTP/1.1
+Authorization: 2
 
 ###
 
@@ -261,12 +261,11 @@ risposta
 ###
 
 # FORWARD MESSAGE #
-POST http://localhost:3000/users/1/conversation/2/messages/2 HTTP/1.1
+POST http://localhost:3000/users/1/conversation/1/messages/2 HTTP/1.1
 Authorization: 1
 Content-Type: application/json
 
 [
-    3,
     1
 ]
 
@@ -279,20 +278,20 @@ Authorization: 1
 ###
 
 # COMMENT MESSAGE #
-POST http://localhost:3000/users/1/conversation/1/messages/1/reactions HTTP/1.1
-Authorization: 1
+POST http://localhost:3000/users/2/conversation/1/messages/1/reactions HTTP/1.1
+Authorization: 2
 Content-Type: text/plain
 
-😁
+😅
 
 ###
 
 # UPDATE COMMENT MESSAGE #
-POST http://localhost:3000/users/1/conversation/1/messages/1/reactions HTTP/1.1
-Authorization: 1
+POST http://localhost:3000/users/2/conversation/1/messages/1/reactions HTTP/1.1
+Authorization: 2
 Content-Type: text/plain
 
-😅
+😁
 
 ###
 

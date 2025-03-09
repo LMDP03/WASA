@@ -86,7 +86,7 @@ func (rt *_router) CommentMessage(w http.ResponseWriter, r *http.Request, ps htt
 
 	emoji := string(body)
 
-	if len(emoji) != 1 || !CheckEmoji(emoji) {
+	if !CheckEmoji(emoji) {
 		BadRequest(w, err, "Invalid emoji", ctx)
 		return
 	}

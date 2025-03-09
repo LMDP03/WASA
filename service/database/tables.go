@@ -20,12 +20,7 @@ var sql_PARTICIPANTS = `CREATE TABLE IF NOT EXISTS Participants
 (
 	convId INTEGER NOT NULL,
 	userId INTEGER NOT NULL,
-	PRIMARY KEY (convId, userId),
-	CONSTRAINT fk_Participants
-		FOREIGN KEY (convId) REFERENCES Conversations(id)
-			ON DELETE CASCADE
-		FOREIGN KEY (userId) REFERENCES Users(id)
-			ON DELETE CASCADE
+	PRIMARY KEY (convId, userId)
 );`
 
 var sql_MESSAGES = `CREATE TABLE IF NOT EXISTS Messages
@@ -38,12 +33,7 @@ var sql_MESSAGES = `CREATE TABLE IF NOT EXISTS Messages
 	timeStamp DATETIME DEFAULT CURRENT_TIMESTAMP,
 	responseTo INTEGER NOT NULL,
 	checkMark STRING NOT NULL,
-	PRIMARY KEY (convId, msgId),
-	CONSTRAINT fk_Messages
-		FOREIGN KEY (convId) REFERENCES Conversations(id)
-			ON DELETE CASCADE
-		FOREIGN KEY (senderId) REFERENCES Users(id)
-			ON DELETE CASCADE
+	PRIMARY KEY (convId, msgId)
 );`
 
 var sql_REACTIONS = `CREATE TABLE IF NOT EXISTS Reactions
@@ -52,10 +42,5 @@ var sql_REACTIONS = `CREATE TABLE IF NOT EXISTS Reactions
 	senderId INTEGER NOT NULL,
 	msgId INTEGER NOT NULL,
 	emoji STRING,
-	PRIMARY KEY (convId, msgId, senderId),
-	CONSTRAINT fk_Reactions
-		FOREIGN KEY (convId, msgId) REFERENCES Messages(convId, msgId)
-			ON DELETE CASCADE
-    	FOREIGN KEY (SenderId) REFERENCES Users(id)
-      		ON DELETE CASCADE
+	PRIMARY KEY (convId, msgId, senderId)
 ); `

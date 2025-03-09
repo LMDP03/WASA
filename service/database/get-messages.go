@@ -28,12 +28,10 @@ func (db *appdbimpl) GetMessages(convId int) ([]Message, error) {
 		if err != nil {
 			return nil, err
 		}
-		reactions, err := db.GetReactions(convId, msg.MsgId)
+		msg.Reactions, err = db.GetReactions(convId, msg.MsgId)
 		if err != nil {
 			return nil, err
 		}
-		msg.Reactions = reactions
-		messages = append(messages, msg)
 		msg.ResponseTo.MsgId = responseTo
 		if responseTo != 0 {
 			var responseSender int
@@ -46,6 +44,7 @@ func (db *appdbimpl) GetMessages(convId int) ([]Message, error) {
 				return nil, err
 			}
 		}
+		messages = append(messages, msg)
 	}
 
 	return messages, nil
