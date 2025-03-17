@@ -67,6 +67,7 @@
                     sessionStorage.convImg = response.data.Image;
                     sessionStorage.members = JSON.stringify(response.data.Participants);
                     sessionStorage.messages = [];
+                    sessionStorage.isGroup = true;
                     this.closeModal();
                     this.$router.push(`/conversation`)
                 } catch (e) {

@@ -53,6 +53,7 @@
                 sessionStorage.convId = 0;
                 sessionStorage.convImg = user.Image;
                 sessionStorage.convName = user.Name;
+                sessionStorage.isGroup = false;
                 this.$router.push('/conversation');
                 closeModal();
             },

@@ -1,6 +1,6 @@
 <script setup>
     import { RouterLink, RouterView } from 'vue-router'
-    import SearchUsers from '.components/SearchUsers.vue'
+    import SearchUsers from './components/SearchUsers.vue'
 </script>
 
 <script>
@@ -82,7 +82,7 @@
                     return;
                 }
                 try {
-                    let _ = await this.$axios.put(`users/${localStorage.userId}/name`, this.newName, { headers: { 'Authorization': localStorage.token } });
+                    let _ = await this.$axios.put(`/users/${localStorage.userId}/name`, this.newName, { headers: { 'Authorization': localStorage.token } });
                     this.userName = this.newName;
                     this.handleUpdateName();
                 } catch (e) {

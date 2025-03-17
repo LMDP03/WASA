@@ -1,90 +1,125 @@
 <script>
-import Modal from '../components/Modal.vue';
-import Group from '../components/ModalGroup.vue';
+    import SearchUsers from '../components/SearchUsers.vue';
+    import CreateGroup from '../components/CreateGroup.vue';
 
-export default {
-    data: function () {
-        return {
-            errormsg: null,
-
-            conversations: [],
-
-            
-
-            users: [],
-        }
-    },
-    emits: ['login-success', 'username-changed'],
-    methods: {
-        async getMyConversations() {
-            this.errormsg = null;
-            try {
-                let response = await this.$axios.get(`/users/${sessionStorage.userId}/conversations`, { headers: { 'Authorization': sessionStorage.token } });
-                this.conversations = response.data;
-            } catch (e) {
-                this.errormsg = e.toString();
+    export default {
+        data() {
+            return {
+                errorMsg: "",
+                conversations: [],
+                searchModalIsVisible: false,
+                createGroupModalIsVisible: false,
+                users: [],
+                intervalId: null,
             }
         },
-        async getConversation(prev) {
-            this.errormsg = null;
-            this.$axios.get(`/users/${sessionStorage.userId}/conversation/${prev.Id}`, { headers: { 'Authorization': sessionStorage.token } }).then(response => {
-                localStorage.convName = response.data.Name;
-                localStorage.convId = response.data.Id;
-                localStorage.convImage = response.data.Image;
-                localStorage.isGroup = response.data.Group;
-                localStorage.isNew = false;
-                localStorage.members = JSON.stringify(response.Participants);
-                this.$router.push(`/conversation`);
-            }).catch(e => {
-                this.errormsg = e.toString();
-            });
+        methods: {
+            async getMyConversations() {
+                this.errorMsg = "";
+                try {
+                    let response = await this.$axios.get(`/users/${localStorage.userId}/conversations`, { headers: { 'Authorization': localStorage.token } });
+                    this.conversations = response.data;
+                } catch (e) {
+                    this.errorMsg = e.toString();
+                }
+            },
+            goToConversation(preview) {
+                sessionStorage.clear();
+                sessionStorage.convId = preview.Id;
+                sessionStorage.convName = preview.Name;
+                sessionStorage.convImg = preview.Image;
+                sessionStorage.isGroup = preview.Group;
+                this.$router.push('/conversations')
+            },
+            handleSearchModal() {
+                this.searchModalIsVisible = !this.searchModalIsVisible;
+            },
+            handleCreateGroupModal() {
+                this.createGroupModalIsVisible = !this.createGroupModalIsVisible;
+            },
         },
-    },
-    mounted() {
-        if (!sessionStorage.token) {
-            this.$router.push("/");
-            return;
-        }
-        this.getMyConversations();
-    },
-    components: { Modal, Group }
-}
+        emits: ['login-success', 'username-changed'],
+        mounted() {
+            if (!localStorage.token) {
+                this.$router.push('/')
+            }
+            this.getMyConversations();
+            this.intervalId = setInterval(async () => {
+                clearInterval(this.intervalId);
+                await this.getMyConversations();
+                this.intervalId = setInterval(this.getMyConversations, 1000);
+            }, 1000);
+        },
+        beforeUnmount() {
+            if (this.intervalId) {
+                clearInterval(this.intervalId);
+            }
+        },
+        components: {SearchUsers, CreateGroup}
+    }
 </script>
 
 <template>
     <div>
-        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">Home page</h1>
+        <div class="d-flex justify content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h1 class="h2">Home</h1>
 
-        
-        <div class="btn-toolbar mb-2 mb-md-0">
-            <div class="btn-group me-2">
-                <button type="button" class="btn btn-sm btn-outline-secondary" @click="getMyConversations">
-                    Refresh
-                </button>
+            <CreateGroup :show="createGroupModalIsVisible" @close="handleCreateGroupModal" title="search">
+                <template v-slot:header>
+                    <h3>New Group</h3>
+                </template>
+            </CreateGroup>
+            <SearchUsers :show="searchModalIsVisible" @close="handleSearchModal" title="search">
+                <template v-slot:header>
+                    <h3>Start Conversation</h3>
+                </template>
+            </SearchUsers>
+
+            <div class="btn-toolbar mb-2 mb-md-0">
+                <div class="btn-group me-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" @click="getMyConversations">
+                        <svg class="feather">
+                            <use href="/feather-sprite-v4.29.0.svg#refresh-ccw" />
+                            Refresh
+                        </svg>
+                    </button>
+                </div>
+                <div class="btn-group me-2">
+                    <button type="button" class="btn btn-sm btn-outline-primary" @click="handleCreateGroupModal">
+                        <svg class="feather">
+                            <use href="/feather-sprite-v4.29.0.svg#users" />
+                            New Group
+                        </svg>
+                    </button>
+                </div>
+                <div class="btn-group me-2">
+                    <button type="button" class="btn btn-sm btn-outline-primary" @click="handleCreateGroupModal">
+                        <svg class="feather">
+                            <use href="/feather-sprite-v4.29.0.svg#user" />
+                            Start New Chat
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
 
         <div v-if="conversations.length !== 0">
-            <!-- Mostra le conversazioni dell'utente iterando all'interno di conversations dove sono salvate tutte le conversazioni -->
-            <div class="conversations" v-for="prev in conversations" :key="prev.Id">
-                <button v-if="prev.Image == ''" type="button" class="btn btn-sm btn-outline-primary" @click="getConversation(prev)">
-                    {{ prev.Name }} <br> {{ prev.Sender.Name }}: {{ prev.Text }}
+            <div class="conversations" v-for="preview in conversations" :key="preview.Id">
+                <button v-if="preview.LastMessage.Image == ''" type="button" class="btn btn-sm btn-outline-primary" @click="goToConversation(preview)">
+                    {{ preview.Name }} <br> {{ preview.LastMessage.Sender.Name }}: {{ preview.LastMessage.Text }}
                 </button>
-                <button type="button" class="btn btn-sm btn-outline-primary" @click="getConversation(prev)" v-else>
-                    {{ prev.Name }} <br> {{ prev.Sender.Name }}: Photo
+                <button v-else type="button" class="btn btn-sm btn-outline-primary" @click="goToConversation(preview)">
+                    {{ preview.Name }} <br> {{ preview.LastMessage.Sender.Name }}: 
+                    <svg class="feather">
+                        <use href="/feather-sprite-v4.29.0.svg#user" />
+                    </svg> {{ preview.LastMessage.Text }}
                 </button>
-                
-                <hr>
             </div>
         </div>
-
         <div v-else>
-            <p>Start a conversation</p>
+            <p>Start Chatting!</p>
         </div>
-
-        <ErrorMsg v-if="errormsg" :msg="errormsg"></ErrorMsg>
+        <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
     </div>
 </template>
 
