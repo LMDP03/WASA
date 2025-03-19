@@ -1,7 +1,5 @@
 <script>
     import CommentMessage from '../components/CommentMessage.vue';
-import CommentMessage from '../components/CommentMessage.vue';
-import ForwardMessage from '../components/ForwardMessage.vue';
     import ForwardMessage from '../components/ForwardMessage.vue';
 
     export default {
