@@ -47,6 +47,7 @@ import ForwardMessage from '../components/ForwardMessage.vue';
                 this.$axios.get(`/users/${localStorage.userId}/conversation/${this.convId}`, { headers: {'Authorization': localStorage.token } }).then(response => {
                     this.messages = response.data.Messages;
                     this.isGroup = response.data.Group;
+                    this.members = JSON.stringify(response.data.Participants);
                 }).catch(e => {
                     this.errorMsg = e.toString();
                 });
@@ -58,7 +59,7 @@ import ForwardMessage from '../components/ForwardMessage.vue';
                     this.sendMessage();
                 }
             },
-            async createConversation() {
+            async startConversation() {
                 this.errorMsg = "";
                 const formData = new FormData();
                 formData.append('text', this.text);

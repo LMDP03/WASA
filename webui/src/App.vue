@@ -60,7 +60,7 @@
                 this.newName = "";
                 this.errorMsg = "";
             },
-            async updateUserImage() {
+            async setMyPhoto() {
                 this.errorMsg = "";
                 const formData = new FormData();
                 formData.append('image', this.newImage);
@@ -72,7 +72,7 @@
                     this.errorMsg = e.toString();
                 });
             },
-            async updateUserName() {
+            async setMyUserName() {
                 if (this.userName == this.newName) {
                     this.errorMsg = "Please choose a username different from your actual one";
                     return;
@@ -120,7 +120,7 @@
                             <form class="username-form">
                                 <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
                                 <input type="text" v-model="newName" placeholder="Choose new name" />
-                                <button type="submit" @click.prevent="updateUserName">Update</button>
+                                <button type="submit" @click.prevent="setMyUserName">Update</button>
                             </form>
                         </template>
                     </SearchUsers>
@@ -132,7 +132,7 @@
                             <form class="username-form">
                                 <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
                                 <input type="file" ref="file" accept=".jpg,.jpeg" @change="handleFileChange" />
-                                <button type="submit" @click.prevent="updateUserImage">Update</button>
+                                <button type="submit" @click.prevent="setMyPhoto">Update</button>
                             </form>
                         </template>
                     </SearchUsers>
