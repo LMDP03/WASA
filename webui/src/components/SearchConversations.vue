@@ -2,7 +2,7 @@
 export default {
     props: {
         show: Boolean,
-        users: Array,
+        conversations: Array,
         title: String,
     },
     data() {
@@ -10,7 +10,7 @@ export default {
             errorMsg: "",
             searchText: "",
             usernameValidate: new RegExp('^\\w{0,16}$'),
-            filteredUsers: [],
+            filteredConvs: [],
         };
     },
     methods: {
@@ -19,51 +19,51 @@ export default {
             window.location.reload();
             this.$emit('close');
         },
-        async filterUsers() {
+        async filterConvs() {
             this.errorMsg = "";
-            this.filteredUsers = this.users;
+            this.filteredConvs = this.conversations;
             if (this.searchText.length > 0) {
                 if (this.searchText.length > 16 || !this.usernameValidate.test(this.searchText)) {
                     this.errorMsg = "Invalid username, it can contain at most 16 alphanumerical characters.";
-                    this.filteredUsers = [];
+                    this.filteredConvs = [];
                     return;
                 }
 
                 if (this.title === "search") {
                     try {
-                        const url = `/users/${localStorage.userId}/others?srcName=${this.searchText}`;
+                        const url = `/users/${localStorage.userId}/conversations?srcName=${this.searchText}`;
                         let response = await this.$axios.get(url, {headers: {'Authorization': `${localStorage.token}`}});
                         if (response.data == null) {
-                            this.filteredUsers = [];
+                            this.filteredConvs = [];
                             return;
                         }
-                        this.filteredUsers = response.data;
+                        this.filteredConvs = response.data;
                     } catch (e) {
                         this.errorMsg = e.toString();
-                        this.filteredUsers = [];
+                        this.filteredConvs = [];
                     }
                 } else {
-                    this.filteredUsers = this.users.filter(user => user.Name.toLowerCase().includes(this.searchText.toLowerCase()));
+                    this.filteredConvs = this.conversations.filter(conv => conv.Name.toLowerCase().includes(this.searchText.toLowerCase()));
                 }
             }
         },
-        async selectUser(user) {
+        async selectConv(conv) {
             sessionStorage.clear();
-            sessionStorage.userId = user.Id;
-            sessionStorage.convId = 0;
-            sessionStorage.convImg = user.Image;
-            sessionStorage.convName = user.Name;
-            sessionStorage.isGroup = false;
+            sessionStorage.userId = 0;
+            sessionStorage.convId = conv.Id;
+            sessionStorage.convImg = conv.Image;
+            sessionStorage.convName = conv.Name;
+            sessionStorage.isGroup = conv.Group;
             this.$router.push('/conversation');
             closeModal();
         },
     },
     watch: {
         searchText() {
-            this.filterUsers();
+            this.filterConvs();
         },
         show() {
-            this.filteredUsers = this.users;
+            this.filteredConvs = this.conversations;
         }
     },
 };
@@ -90,9 +90,9 @@ export default {
                                 <input type="text" v-model="searchText" placeholder="Search" />
                             </div>
                             <div class="search-results">
-                                <div v-for="user in filteredUsers" :key="user.Name" @click="selectUser(user)">
+                                <div v-for="conv in filteredConvs" :key="conv.Name" @click="selectConv(conv)">
                                     <div class="user">
-                                        <p>{{ user.Name }}</p>
+                                        <p>{{ conv.Name }}</p>
                                     </div>
                                 </div>
                             </div>

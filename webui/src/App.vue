@@ -1,6 +1,7 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
-import SearchUsers from './components/SearchUsers.vue'
+import SearchUsers from './components/SearchUsers.vue';
+import SearchConversations from './components/SearchConversations.vue';
 </script>
 
 <script>
@@ -104,14 +105,14 @@ export default {
 
     <div class="container-fluid">
         <div class="row">
-            <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse" v-show="isLoggedIn">
+            <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse" v-if="isLoggedIn">
                 <div class="position-sticky pt-3 sidebar-sticky">
 
-                    <SearchUsers :show="searchModalIsVisible" @close="handleSearchModal" title="search">
+                    <SearchConversations :show="searchModalIsVisible" @close="handleSearchModal" title="search">
                         <template v-slot:header>
-                            <h3>Users</h3>
+                            <h3>Conversations</h3>
                         </template>
-                    </SearchUsers>
+                    </SearchConversations>
                     <SearchUsers :show="updateNameIsVisible" @close="handleUpdateName" title="username">
                         <template v-slot:header>
                             <h3>Update UserName</h3>
@@ -147,12 +148,28 @@ export default {
                             <span class="username">{{ userName }}</span>
                         </li>
                         <li class="nav-item" v-else>
-                            <RouterLink to="/session" class="nal-link m-2">
+                            <RouterLink to="/session" class="nav-link m-2">
                                 <svg class="feather">
                                     <use href="/feather-sprite-v4.29.0.svg#log-in" />
                                 </svg>
                                 Login
                             </RouterLink>
+                        </li>
+                        <li class="nav-item m-2">
+                            <a class="nav-link" @click="handleUpdateName">
+                                <svg class="feather">
+                                    <use href="/feather-sprite-v4.29.0.svg#edit" />
+                                </svg>
+                                Update Username
+                            </a>
+                        </li>
+                        <li class="nav-item m-2">
+                            <a class="nav-link" @click="handleUpdateImage">
+                                <svg class="feather">
+                                    <use href="/feather-sprite-v4.29.0.svg#edit" />
+                                </svg>
+                                Update Profile Picture
+                            </a>
                         </li>
                         <li class="nav-item">
                             <RouterLink to="/home" class="nav-link m-2">
@@ -162,12 +179,12 @@ export default {
                                 Home
                             </RouterLink>
                         </li>
-                        <li class="nav-item m-2" v-if="isLoggedIn">
+                        <li class="nav-item m-2">
                             <a class="nav-link" @click="handleSearchModal">
                                 <svg class="feather">
                                     <use href="/feather-sprite-v4.29.0.svg#search" />
                                 </svg>
-                                Search Users
+                                Search Conversations
                             </a>
                         </li>
                         <li class="nav-item m-2" v-if="isLoggedIn">
@@ -203,5 +220,11 @@ export default {
 .username {
     font-size: 14px;
     font-weight: bold;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
 }
 </style>
