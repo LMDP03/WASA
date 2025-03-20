@@ -1,84 +1,84 @@
 <script>
-    export default {
-        props: {
-            show: Boolean,
-            users: Array,
-            title: String,
+export default {
+    props: {
+        show: Boolean,
+        users: Array,
+        title: String,
+    },
+    data() {
+        return {
+            errorMsg: "",
+            usernameValidate: new RegExp('^\\w{0,16}$'),
+            filteredUsers: [],
+            searchText: "",
+            owner: localStorage.userName,
+            convId: sessionStorage.convId,
+            selectedUsers:[],                
+        };
+    },
+    methods: {
+        closeModal() {
+            this.searchText = "";
+            this.selectedUsers = [];
+            this.$emit('close');
         },
-        data() {
-            return {
-                errorMsg: "",
-                usernameValidate: new RegExp('^\\w{0,16}$'),
-                filteredUsers: [],
-                searchText: "",
-                owner: localStorage.userName,
-                convId: sessionStorage.convId,
-                selectedUsers:[],                
-            };
-        },
-        methods: {
-            closeModal() {
-                this.searchText = "";
-                this.selectedUsers = [];
-                this.$emit('close');
-            },
-            async filterUsers() {
-                this.errorMsg = "";
-                this.filteredUsers = this.users;
-                if (this.searchText.length > 0) {
-                    if (this.searchText.length > 16 || !this.usernameValidate.test(this.searchText)) {
-                        this.errorMsg = "Invalid username, it can contain at most 16 alphanumerical characters.";
-                        this.filteredUsers = [];
-                        return;
-                    }
+        async filterUsers() {
+            this.errorMsg = "";
+            this.filteredUsers = this.users;
+            if (this.searchText.length > 0) {
+                if (this.searchText.length > 16 || !this.usernameValidate.test(this.searchText)) {
+                    this.errorMsg = "Invalid username, it can contain at most 16 alphanumerical characters.";
+                    this.filteredUsers = [];
+                    return;
+                }
 
-                    if (this.title === "search") {
-                        try {
-                            const url = `/users/${localStorage.userId}/others?srcName=${this.searchText}`;
-                            let response = await this.$axios.get(url, { headers: {'Authorization': `${localStorage.token}` } });
-                            if (response.data == null) {
-                                this.filteredUsers = [];
-                                return;
-                            }
-                            this.filteredUsers = response.data;
-                        } catch (e) {
-                            this.errorMsg = e.toString();
+                if (this.title === "search") {
+                    try {
+                        const url = `/users/${localStorage.userId}/others?srcName=${this.searchText}`;
+                        let response = await this.$axios.get(url, { headers: {'Authorization': `${localStorage.token}` } });
+                        if (response.data == null) {
                             this.filteredUsers = [];
+                            return;
                         }
-                    } else {
-                        this.filteredUsers = this.users.filter(user => user.Name.toLowerCase().includes(this.searchText.toLowerCase()));
+                        this.filteredUsers = response.data;
+                    } catch (e) {
+                        this.errorMsg = e.toString();
+                        this.filteredUsers = [];
                     }
+                } else {
+                    this.filteredUsers = this.users.filter(user => user.Name.toLowerCase().includes(this.searchText.toLowerCase()));
                 }
-            },
-            async addToGroup() {
-                try {
-                    let response = await this.$axios.post(`/users/${localStorage.userId}/conversation/${this.convId}`, this.selectedUsers, { headers: {'Authorization': `${localStorage.token}` } });
-                    sessionStorage.members = JSON.stringify(response.data);
-                    this.closeModal();
-                    window.location.reload();
-                    this.$router.push('/conversation/groupSettings');
-                } catch (e) {
-                    this.errorMsg = e.toString();
-                }
-            },
-            selectUser(user) {
-                if (!this.selectedUsers.find(u => u.Name === user.Name)) {
-                    this.selectedUsers.push(user);
-                }
-            },
-            removeUser(user) {
-                this.selectedUsers = this.selectedUsers.filter(u => u.name !== user.Name);
-            },
-        },
-        watch: {
-            searchText() {
-                this.filterUsers();
-            },
-            show() {
-                this.filteredUsers = this.users;
             }
         },
-    };
+        async addToGroup() {
+            try {
+                let response = await this.$axios.post(`/users/${localStorage.userId}/conversation/${this.convId}`, this.selectedUsers, { headers: {'Authorization': `${localStorage.token}` } });
+                sessionStorage.members = JSON.stringify(response.data);
+                this.closeModal();
+                window.location.reload();
+                this.$router.push('/conversation/groupSettings');
+            } catch (e) {
+                this.errorMsg = e.toString();
+            }
+        },
+        selectUser(user) {
+            if (!this.selectedUsers.find(u => u.Name === user.Name)) {
+                this.selectedUsers.push(user);
+            }
+        },
+        removeUser(user) {
+            this.selectedUsers = this.selectedUsers.filter(u => u.name !== user.Name);
+        },
+    },
+    watch: {
+        searchText() {
+            this.filterUsers();
+        },
+        show() {
+            this.filteredUsers = this.users;
+        }
+    },
+};
 </script>
 
 <template>
@@ -125,30 +125,30 @@
 </template>
 
 <style>
-    .selected-users {
-        margin-top: 20px;
-        padding: 10px;
-        border-top: 1px solid white;
-    }
+.selected-users {
+    margin-top: 20px;
+    padding: 10px;
+    border-top: 1px solid white;
+}
 
-    .selected-user {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-    }
+.selected-user {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
 
-    .selected-user span {
-        font-size: 14px;
-        font-weight: bold;
-    }
+.selected-user span {
+    font-size: 14px;
+    font-weight: bold;
+}
 
-    .selected-user button {
-        background: red;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        padding: 5px 10px;
-        cursor: pointer;
-    }
+.selected-user button {
+    background: red;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
 </style>

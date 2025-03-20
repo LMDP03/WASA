@@ -1,62 +1,62 @@
 <script>
-    import SearchUsers from '../components/SearchUsers.vue';
-    import CreateGroup from '../components/CreateGroup.vue';
+import SearchUsers from '../components/SearchUsers.vue'
+import CreateGroup from '../components/CreateGroup.vue'
 
-    export default {
-        data() {
-            return {
-                errorMsg: "",
-                conversations: [],
-                searchModalIsVisible: false,
-                createGroupModalIsVisible: false,
-                users: [],
-                intervalId: null,
+export default {
+    data() {
+        return {
+            errorMsg: "",
+            conversations: [],
+            searchModalIsVisible: false,
+            createGroupModalIsVisible: false,
+            users: [],
+            intervalId: null,
+        }
+    },
+    methods: {
+        async getMyConversations() {
+            this.errorMsg = "";
+            try {
+                let response = await this.$axios.get(`/users/${localStorage.userId}/conversations`, { headers: { 'Authorization': localStorage.token } });
+                this.conversations = response.data;
+            } catch (e) {
+                this.errorMsg = e.toString();
             }
         },
-        methods: {
-            async getMyConversations() {
-                this.errorMsg = "";
-                try {
-                    let response = await this.$axios.get(`/users/${localStorage.userId}/conversations`, { headers: { 'Authorization': localStorage.token } });
-                    this.conversations = response.data;
-                } catch (e) {
-                    this.errorMsg = e.toString();
-                }
-            },
-            goToConversation(preview) {
-                sessionStorage.clear();
-                sessionStorage.convId = preview.Id;
-                sessionStorage.convName = preview.Name;
-                sessionStorage.convImg = preview.Image;
-                sessionStorage.isGroup = preview.Group;
-                this.$router.push('/conversations')
-            },
-            handleSearchModal() {
-                this.searchModalIsVisible = !this.searchModalIsVisible;
-            },
-            handleCreateGroupModal() {
-                this.createGroupModalIsVisible = !this.createGroupModalIsVisible;
-            },
+        goToConversation(preview) {
+            sessionStorage.clear();
+            sessionStorage.convId = preview.Id;
+            sessionStorage.convName = preview.Name;
+            sessionStorage.convImg = preview.Image;
+            sessionStorage.isGroup = preview.Group;
+            this.$router.push('/conversations')
         },
-        emits: ['login-success', 'username-changed'],
-        mounted() {
-            if (!localStorage.token) {
-                this.$router.push('/')
-            }
-            this.getMyConversations();
-            this.intervalId = setInterval(async () => {
-                clearInterval(this.intervalId);
-                await this.getMyConversations();
-                this.intervalId = setInterval(this.getMyConversations, 1000);
-            }, 1000);
+        handleSearchModal() {
+            this.searchModalIsVisible = !this.searchModalIsVisible;
         },
-        beforeUnmount() {
-            if (this.intervalId) {
-                clearInterval(this.intervalId);
-            }
+        handleCreateGroupModal() {
+            this.createGroupModalIsVisible = !this.createGroupModalIsVisible;
         },
-        components: {SearchUsers, CreateGroup}
-    }
+    },
+    emits: ['login-success', 'username-changed'],
+    mounted() {
+        if (!localStorage.token) {
+            this.$router.push('/')
+        }
+        this.getMyConversations();
+        this.intervalId = setInterval(async () => {
+            clearInterval(this.intervalId);
+            await this.getMyConversations();
+            this.intervalId = setInterval(this.getMyConversations, 1000);
+        }, 1000);
+    },
+    beforeUnmount() {
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+        }
+    },
+    components: {SearchUsers, CreateGroup}
+}
 </script>
 
 <template>

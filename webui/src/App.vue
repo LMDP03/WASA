@@ -1,100 +1,100 @@
 <script setup>
-    import { RouterLink, RouterView } from 'vue-router'
-    import SearchUsers from './components/SearchUsers.vue'
+import { RouterLink, RouterView } from 'vue-router'
+import SearchUsers from './components/SearchUsers.vue'
 </script>
 
 <script>
-    export default {
-        data() {
-            return {
-                errorMsg: "",
-                searchModalIsVisible: false,
-                isLoggedIn: localStorage.token ? true : false,
-                useId: localStorage.userId,
-                userName: localStorage.userName,
-                userImage: localStorage.userImage,
-                updateNameIsVisible: false,
-                newName: "",
-                updateImageIsVisible: false,
-                newImage: null,
-                usernameValidate: new RegExp('^\\w{0,16}$'),
-            };
+export default {
+    data() {
+        return {
+            errorMsg: "",
+            searchModalIsVisible: false,
+            isLoggedIn: localStorage.token ? true : false,
+            useId: localStorage.userId,
+            userName: localStorage.userName,
+            userImage: localStorage.userImage,
+            updateNameIsVisible: false,
+            newName: "",
+            updateImageIsVisible: false,
+            newImage: null,
+            usernameValidate: new RegExp('^\\w{0,16}$'),
+        };
+    },
+    methods: {
+        handleSearchModal() {
+            this.searchModalIsVisible = !this.searchModalIsVisible;
         },
-        methods: {
-            handleSearchModal() {
-                this.searchModalIsVisible = !this.searchModalIsVisible;
-            },
-            logout() {
-                localStorage.clear();
-                this.isLoggedIn = false;
-                this.$router.push('/');
-            },
-            handleLoginSucces() {
-                this.isLoggedIn = true;
-                this.userId = localStorage.userId;
-                this.userName = localStorage.userName;
-                this.userImage = localStorage.userImage;
-            },
-            handleFileChange(event) {
-                this.errorMsg = "";
-                const file = event.target.files[0];
-                if (file.type !== "image/jpeg") {
-                    this.errorMsg = "Images can only be jpg or jpeg";
-                    return;
-                }
-                if (file.size > 10485760) {
-                    this.errorMsg = "Image can be at most 10 MB large";
-                    return;
-                }
-                this.newImage = file;
-            },
-            handleUpdateImage() {
-                localStorage.userImage = this.userImage;
-                this.updateImageIsVisible = !this.updateImageIsVisible;
-                this.newImage = "";
-                this.errorMsg = "";
-            },
-            handleUpdateName() {
-                localStorage.userName = this.userName;
-                this.updateNameIsVisible = !this.updateNameIsVisible;
-                this.newName = "";
-                this.errorMsg = "";
-            },
-            async setMyPhoto() {
-                this.errorMsg = "";
-                const formData = new FormData();
-                formData.append('image', this.newImage);
+        logout() {
+            localStorage.clear();
+            this.isLoggedIn = false;
+            this.$router.push('/');
+        },
+        handleLoginSucces() {
+            this.isLoggedIn = true;
+            this.userId = localStorage.userId;
+            this.userName = localStorage.userName;
+            this.userImage = localStorage.userImage;
+        },
+        handleFileChange(event) {
+            this.errorMsg = "";
+            const file = event.target.files[0];
+            if (file.type !== "image/jpeg") {
+                this.errorMsg = "Images can only be jpg or jpeg";
+                return;
+            }
+            if (file.size > 10485760) {
+                this.errorMsg = "Image can be at most 10 MB large";
+                return;
+            }
+            this.newImage = file;
+        },
+        handleUpdateImage() {
+            localStorage.userImage = this.userImage;
+            this.updateImageIsVisible = !this.updateImageIsVisible;
+            this.newImage = null;
+            this.errorMsg = "";
+        },
+        handleUpdateName() {
+            localStorage.userName = this.userName;
+            this.updateNameIsVisible = !this.updateNameIsVisible;
+            this.newName = "";
+            this.errorMsg = "";
+        },
+        async setMyPhoto() {
+            this.errorMsg = "";
+            const formData = new FormData();
+            formData.append('image', this.newImage);
 
-                this.$axios.put(`/users/${localStorage.userId}/image`, formData, { headers: { 'Authorization': localStorage.token } }).then(response => {
-                    this.userImage = response.data.Image;
-                    this.handleUpdateImage();
-                }).catch(e => {
+            this.$axios.put(`/users/${localStorage.userId}/image`, formData, { headers: { 'Authorization': `${localStorage.token}` } }).then(response => {
+                this.userImage = response.data.Image;
+                this.handleUpdateImage();
+            }).catch(e => {
+                this.errorMsg = e.toString();
+            });
+        },
+        async setMyUserName() {
+            if (this.userName == this.newName) {
+                this.errorMsg = "Please choose a username different from your actual one";
+                return;
+            }
+            if (!this.usernameValidate.test(this.newName)) {
+                this.errorMsg = "Username must be between 3 and 16 alphanumerical characters.";
+                return;
+            }
+            try {
+                let _ = await this.$axios.put(`/users/${localStorage.userId}/name`, this.newName, { headers: { 'Authorization': `${localStorage.token}` } });
+                this.userName = this.newName;
+                this.handleUpdateName();
+            } catch (e) {
+                if (e.response.data == "Username already exists\n") {
+                    this.errorMsg = "Username already taken; please choose another one.";
+                } else {
                     this.errorMsg = e.toString();
-                });
-            },
-            async setMyUserName() {
-                if (this.userName == this.newName) {
-                    this.errorMsg = "Please choose a username different from your actual one";
-                    return;
-                }
-                if (!this.usernameValidate.test(this.newName)) {
-                    this.errorMsg = "Username must be between 3 and 16 alphanumerical characters.";
-                    return;
-                }
-                try {
-                    let _ = await this.$axios.put(`/users/${localStorage.userId}/name`, this.newName, { headers: { 'Authorization': localStorage.token } });
-                    this.userName = this.newName;
-                    this.handleUpdateName();
-                } catch (e) {
-                    if (e.response.data == "Username already exists\n") {
-                        this.errorMsg = "Username already taken; please choose another one.";
-                    } else {
-                        this.errorMsg = e.toString();
-                    }
                 }
             }
         }
     }
+}
 </script>
 
 <template>
@@ -104,7 +104,7 @@
 
     <div class="container-fluid">
         <div class="row">
-            <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+            <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse" v-show="isLoggedIn">
                 <div class="position-sticky pt-3 sidebar-sticky">
 
                     <SearchUsers :show="searchModalIsVisible" @close="handleSearchModal" title="search">
@@ -119,7 +119,7 @@
                         <template v-slot:body>
                             <form class="username-form">
                                 <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
-                                <input type="text" v-model="newName" placeholder="Choose new name" />
+                                <input type="text" v-model="newName" placeholder="Choose a new name" />
                                 <button type="submit" @click.prevent="setMyUserName">Update</button>
                             </form>
                         </template>
@@ -192,16 +192,16 @@
 </template>
 
 <style>
-    .profile-picture {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        margin-right: 10px;
-        object-fit: cover;
-    }
-    
-    .username {
-        font-size: 14px;
-        font-weight: bold;
-    }
+.profile-picture {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+    object-fit: cover;
+}
+
+.username {
+    font-size: 14px;
+    font-weight: bold;
+}
 </style>

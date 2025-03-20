@@ -1,34 +1,34 @@
 <script>
-    export default {
-        props: {
-            show: Boolean,
-            msg: Object,
+export default {
+    props: {
+        show: Boolean,
+        msg: Object,
+    },
+    data() {
+        return {
+            userId: localStorage.userId,
+            convId: sessionStorage.convId,
+            emojis: ["😀", "😂", "😍", "😎", "😭", "😡", "🎉", "❤️", "👍", "🔥"],
+            errorMsg: "",
+        };
+    },
+    methods: {
+        closeModal() {
+            window.location.reload();
+            this.$emit('close');
         },
-        data() {
-            return {
-                userId: localStorage.userId,
-                convId: sessionStorage.convId,
-                emojis: ["😀", "😂", "😍", "😎", "😭", "😡", "🎉", "❤️", "👍", "🔥"],
-                errorMsg: "",
-            };
+        async commentMessage(emoji) {
+            this.errorMsg = "";
+            const url = `users/${this.userId}/conversation/${this.convId}/messages/${this.msg.MsgId}/reactions`;
+            try {
+                let response = await this.$axios.post(url, emoji, { headers: { 'Authorization': localStorage.token } });
+                this.msg.Reactions = response.data;
+            } catch (e) {
+                this.errorMsg = e.toString();
+            }
         },
-        methods: {
-            closeModal() {
-                window.location.reload();
-                this.$emit('close');
-            },
-            async commentMessage(emoji) {
-                this.errorMsg = "";
-                const url = `users/${this.userId}/conversation/${this.convId}/messages/${this.msg.MsgId}/reactions`;
-                try {
-                    let response = await this.$axios.post(url, emoji, { headers: { 'Authorization': localStorage.token } });
-                    this.msg.Reactions = response.data;
-                } catch (e) {
-                    this.errorMsg = e.toString();
-                }
-            },
-        },
-    };
+    },
+};
 </script>
 
 <template>
@@ -59,80 +59,80 @@
 </template>
 
 <style>
-    .modal-mask {
-        position: fixed;
-        z-index: 9998;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: black;
-        display: table;
-        transition: opeacity 0.3s ease;
-    }
+.modal-mask {
+    position: fixed;
+    z-index: 9998;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    display: table;
+    transition: opeacity 0.3s ease;
+}
 
-    .modal-wrapper {
-        display: table-cell;
-        vertical-align: middle;
-    }
-    
-    .modal-container {
-        width: 350px;
-        margin: 0px auto;
-        background-color: white;
-        border-radius: 2px;
-        box-shadow: 0 2px 8px black;
-        transition: all 0.3s ease;
-    }
+.modal-wrapper {
+    display: table-cell;
+    vertical-align: middle;
+}
 
-    .modal-header {
-        height: 70px;
-        padding: 20px 15px 10px 15px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
+.modal-container {
+    width: 350px;
+    margin: 0px auto;
+    background-color: white;
+    border-radius: 2px;
+    box-shadow: 0 2px 8px black;
+    transition: all 0.3s ease;
+}
 
-    .modal-header h3 {
-        margin: 0;
-        font-size: 20px;
-        color: lightgreen;
-    }
+.modal-header {
+    height: 70px;
+    padding: 20px 15px 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
-    .modal-header button {
-        color: gray;
-        background: none;
-        border: none;
-        padding: 5px;
-        line-height: 12px;
-        font-size: 15px;
-    }
+.modal-header h3 {
+    margin: 0;
+    font-size: 20px;
+    color: lightgreen;
+}
 
-    .modal-header button svg {
-        width: 20px;
-        height: 20px;
-    }
+.modal-header button {
+    color: gray;
+    background: none;
+    border: none;
+    padding: 5px;
+    line-height: 12px;
+    font-size: 15px;
+}
 
-    .modal-body {
-        padding: 15px;
-        text-align: center;
-    }
+.modal-header button svg {
+    width: 20px;
+    height: 20px;
+}
 
-    .emoji-grid {
-        display: grid;
-        grid-template-columns: repeat(5, lfr);
-        gap: 10px;
-        justify-items: center;
-        align-items: center;
-    }
+.modal-body {
+    padding: 15px;
+    text-align: center;
+}
 
-    .emoji {
-        font-size: 24px;
-        cursor: pointer;
-        transition: transform 0.2s;
-    }
+.emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(5, lfr);
+    gap: 10px;
+    justify-items: center;
+    align-items: center;
+}
 
-    .emoji:hover {
-        transform: scale(1.2);
-    }
+.emoji {
+    font-size: 24px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.emoji:hover {
+    transform: scale(1.2);
+}
 </style>
