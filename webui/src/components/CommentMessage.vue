@@ -23,6 +23,7 @@ export default {
             try {
                 let response = await this.$axios.post(url, emoji, { headers: { 'Authorization': localStorage.token } });
                 this.msg.Reactions = response.data;
+                this.closeModal();
             } catch (e) {
                 this.errorMsg = e.toString();
             }

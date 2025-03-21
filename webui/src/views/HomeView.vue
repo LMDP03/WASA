@@ -29,7 +29,7 @@ export default {
             sessionStorage.convName = preview.Name;
             sessionStorage.convImg = preview.Image;
             sessionStorage.isGroup = preview.Group;
-            this.$router.push('/conversations')
+            this.$router.push('/conversation')
         },
         handleSearchModal() {
             this.searchModalIsVisible = !this.searchModalIsVisible;

@@ -51,7 +51,7 @@ export default {
             });
         },
         check() {
-            if (this.convId === 0) {
+            if (!this.convId) {
                 this.startConversation();
             } else {
                 this.sendMessage();
@@ -64,13 +64,11 @@ export default {
             if (this.image != null) {
                 formData.append('image', this.image);
             }
-            this.$axios.post(`/users/${this.ownerId}/conversations/private?rcvId=${this.userId}`, formData, { headers: { 'Authorization': localStorage.token } }).then(response => {
-                console.log(response.data.Id);
-                this.convId = response.data.Id;
+            await this.$axios.post(`/users/${this.ownerId}/conversations/private?rcvId=${this.userId}`, formData, { headers: { 'Authorization': localStorage.token } }).then(response => {
+                sessionStorage.convId = response.data.Id;
                 this.messages = response.data.Messages;
                 window.location.reload();
             }).catch(e => {
-                console.error(e);
                 this.errorMsg = e.toString();
             });
         },
@@ -130,7 +128,7 @@ export default {
             this.$router.push("/");
             return;
         }
-        if (this.convId !== 0) {
+        if (this.convId) {
             this.getConversation();
             this.intervalId = setInterval(async () => {
                 clearInterval(this.intervalId);

@@ -16,7 +16,6 @@ export default {
     methods: {
         closeModal() {
             this.searchText = "";
-            window.location.reload();
             this.$emit('close');
         },
         async filterUsers() {
@@ -50,11 +49,10 @@ export default {
         async selectUser(user) {
             sessionStorage.clear();
             sessionStorage.userId = user.Id;
-            sessionStorage.convId = 0;
             sessionStorage.convImg = user.Image;
             sessionStorage.convName = user.Name;
             sessionStorage.isGroup = false;
-            this.$router.push('/conversation');
+            await this.$router.push('/conversation');
             this.closeModal();
         },
     },
