@@ -52,7 +52,7 @@ export default {
             }
         },
         async createGroup() {
-            if (this.groupName.length<3 || this.groupName > 16) {
+            if (this.groupName.length < 3 || this.groupName > 16) {
                 this.errorMsg = "Group name must be between 3 and 16 charcters.";
                 return;
             }
@@ -65,8 +65,6 @@ export default {
                 sessionStorage.convId = response.data.Id;
                 sessionStorage.convName = response.data.Name;
                 sessionStorage.convImg = response.data.Image;
-                sessionStorage.members = JSON.stringify(response.data.Participants);
-                sessionStorage.messages = [];
                 sessionStorage.isGroup = true;
                 this.closeModal();
                 this.$router.push(`/conversation`)
@@ -80,7 +78,7 @@ export default {
             }
         },
         removeUser(user) {
-            this.selectedUsers = this.selectedUsers.filter(u => u.name !== user.Name);
+            this.selectedUsers = this.selectedUsers.filter(u => u.Name !== user.Name);
         },
     },
     watch: {
@@ -145,7 +143,7 @@ export default {
 .selected-users {
     margin-top: 20px;
     padding: 10px;
-    border-top: ipx solid white;
+    border-top: 1px solid lightgray;
 }
 
 .selected-user {
@@ -153,6 +151,7 @@ export default {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 10px;
+
 }
 
 .selected-user span {

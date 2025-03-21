@@ -55,7 +55,7 @@ export default {
             sessionStorage.convName = user.Name;
             sessionStorage.isGroup = false;
             this.$router.push('/conversation');
-            closeModal();
+            this.closeModal();
         },
     },
     watch: {
@@ -200,5 +200,11 @@ export default {
 
 .username-form button {
     margin-bottom: 15px;
+}
+
+.user {
+    padding: 10px 0;
+    border-bottom: 1px solid gray;
+    cursor: pointer;
 }
 </style>

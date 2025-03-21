@@ -93,7 +93,7 @@ export default {
                     </button>
                 </div>
                 <div class="btn-group me-2">
-                    <button type="button" class="btn btn-sm btn-outline-primary" @click="handleCreateGroupModal">
+                    <button type="button" class="btn btn-sm btn-outline-primary" @click="handleSearchModal">
                         <svg class="feather">
                             <use href="/feather-sprite-v4.29.0.svg#user" />
                             Start New Chat

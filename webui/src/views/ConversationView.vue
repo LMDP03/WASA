@@ -13,7 +13,7 @@ export default {
             userId: sessionStorage.userId,
             text: "",
             image: null,
-            
+            users: [],
             messages: [],
             comments: [],
             messageToForward: null,
@@ -45,7 +45,7 @@ export default {
             this.$axios.get(`/users/${localStorage.userId}/conversation/${this.convId}`, { headers: {'Authorization': localStorage.token } }).then(response => {
                 this.messages = response.data.Messages;
                 this.isGroup = response.data.Group;
-                this.members = JSON.stringify(response.data.Participants);
+                sessionStorage.members = JSON.stringify(response.data.Participants);
             }).catch(e => {
                 this.errorMsg = e.toString();
             });
@@ -64,11 +64,13 @@ export default {
             if (this.image != null) {
                 formData.append('image', this.image);
             }
-            await this.$axios.post(`/users/${localStorage.userId}/conversations/private?rcvId=${sessionStorage.userId}`, formData, { headers: { 'Authorization': localStorage.token } }).then(response => {
+            this.$axios.post(`/users/${this.ownerId}/conversations/private?rcvId=${this.userId}`, formData, { headers: { 'Authorization': localStorage.token } }).then(response => {
+                console.log(response.data.Id);
                 this.convId = response.data.Id;
                 this.messages = response.data.Messages;
                 window.location.reload();
             }).catch(e => {
+                console.error(e);
                 this.errorMsg = e.toString();
             });
         },
@@ -169,6 +171,10 @@ export default {
                     <h3>Conversations</h3>
                 </template>
             </ForwardMessage>
+
+            <div>
+                {{ this.userId }} and {{ this.ownerId }}
+            </div>
 
             <div class="btn-toolbar mb2 mb-md-0">
                 <input type="file" ref="file" accept=".jpg,.jpeg" @change="handleFileChange" />
