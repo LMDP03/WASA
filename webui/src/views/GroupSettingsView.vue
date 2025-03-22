@@ -99,7 +99,7 @@ export default {
 
             <SearchUsers :show="updateNameModalisVisible" @close="handleUpdateName" title="username">
                 <template v-slot:header>
-                    <h3>Update Group Name</h3>
+                    <h3>Change Name</h3>
                 </template>
                 <template v-slot:body>
                     <form class="username-form">
@@ -111,7 +111,7 @@ export default {
             </SearchUsers>
             <SearchUsers :show="updateImgModalIsVisible" @close="handleUpdateImage" title="photo">
                 <template v-slot:header>
-                    <h3>Update Group Picture</h3>
+                    <h3>Change Picture</h3>
                 </template>
                 <template v-slot:body>
                     <form class="username-form">
@@ -123,7 +123,7 @@ export default {
             </SearchUsers>
             <AddMembers :show="addMembersIsVisible" @close="handleAddMembers" title="search">
                 <template v-slot:header>
-                    <h3>Add Members to Group</h3>
+                    <h3>Add Members</h3>
                 </template>
             </AddMembers>
 

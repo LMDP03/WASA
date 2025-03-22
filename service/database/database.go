@@ -48,7 +48,7 @@ type AppDatabase interface {
 	CreateMessage(convid int, senderid int, responseto int, text string, image string) (Message, error)
 	CreateReaction(convId int, senderId int, msgId int, emoji string) (Reaction, error)
 	CreateUser(username string) (User, error)
-	DeleteMessage(convid int, msgid int, senderid int) error
+	DeleteMessage(convid int, msgid int) error
 	DeleteParticipant(convid int, userid int) error
 	DeleteReaction(convid int, msgid int, senderid int) error
 	GetConversationById(convid int, userid int) (Conversation, error)
@@ -66,7 +66,7 @@ type AppDatabase interface {
 	SetGroupNameById(convid int, name string) error
 	SetUserNameById(username string, userid int) error
 	UpdateReaction(convId int, senderId int, msgId int, emoji string) (Reaction, error)
-	UpdateLastMessage(convid int, msgid int) error
+	UpdateLastMessage(convid int) error
 	Ping() error
 }
 

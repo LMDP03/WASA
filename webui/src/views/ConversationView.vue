@@ -97,9 +97,10 @@ export default {
             }
             
         },
-        async deleteMessage(msgId) {
+        async deleteMessage(msg) {
             this.errorMsg = "";
-            await this.$axios.delete(`/users/${localStorage.userId}/conversation/${this.convId}/messages/${msgId}`, { headers: { 'Authorization': localStorage.token } }).then(() => {}).catch(e => {
+            await this.$axios.delete(`/users/${localStorage.userId}/conversation/${this.convId}/messages/${msg.MsgId}`, { headers: { 'Authorization': localStorage.token } }).then(() => {
+            }).catch(e => {
                 this.errorMsg = e.toString();
             });
         },
@@ -201,7 +202,7 @@ export default {
             <div class="btn-group-me-2">
                 <button type="button" class="btn btn-sm btn-outline-secondary" @click="handleCommentModal(message)">Comment</button>
                 <button type="button" class="btn btn-sm btn-outline-secondary" @click="handleForwardModal(message)">Forward</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" @click="deleteMessage(message.MsgId)">Delete</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" @click="deleteMessage(message)">Delete</button>
             </div>
         </div>
     </div>

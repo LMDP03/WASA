@@ -16,7 +16,6 @@ export default {
     methods: {
         closeModal() {
             this.searchText = "";
-            window.location.reload();
             this.$emit('close');
         },
         async filterConvs() {
@@ -55,7 +54,7 @@ export default {
             sessionStorage.convName = conv.Name;
             sessionStorage.isGroup = conv.Group;
             this.$router.push('/conversation');
-            closeModal();
+            this.closeModal();
         },
     },
     watch: {

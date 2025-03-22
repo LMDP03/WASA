@@ -24,7 +24,7 @@ func (db *appdbimpl) CreateMessage(convid int, senderid int, responseto int, tex
 	if err != nil {
 		return msg, err
 	}
-	err = db.UpdateLastMessage(convid, max_id)
+	err = db.UpdateLastMessage(convid)
 	if err != nil {
 		return msg, err
 	}
