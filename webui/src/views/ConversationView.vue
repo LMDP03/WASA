@@ -81,7 +81,7 @@ export default {
                 formData.append('image', this.image);
             }
             if (this.messageToRespond) {
-                await this.$axios.post(`/users/${localStorage.userId}/conversation/${this.convId}/messages?responseTo=${this.messageToRespond}`, formData, { headers: { 'Authorization': localStorage.token } }).then(() => {
+                await this.$axios.post(`/users/${localStorage.userId}/conversation/${this.convId}/messages?responseTo=${this.messageToRespond.MsgId}`, formData, { headers: { 'Authorization': localStorage.token } }).then(() => {
                     this.text = "";
                     this.image = null;
                     this.messageToRespond = null;
@@ -112,6 +112,9 @@ export default {
         handleForwardModal(msg) {
             this.messageToForward = msg;
             this.forwardModalIsVisible = !this.forwardModalIsVisible;
+        },
+        replyToMessage(msg) {
+            this.messageToRespond = msg;
         },
         goToInfo() {
             this.$router.push(`/conversation/groupSettings`);
@@ -185,6 +188,11 @@ export default {
         <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
 
         <div class="messages" v-for="message in messages" :key="message.MsgId">
+            <div v-if="message.ResponseTo.Sender.Id !== 0">
+                <p>Response to: {{ message.ResponseTo.Sender.Name }}</p>
+                <span v-if="message.ResponseTo.Image !== ''"> Photo; </span>
+                <p>{{ message.ResponseTo.Text }}</p>
+            </div>
             <p>{{ message.Sender.Name }}</p>
             <img class="msg_photo" v-if="message.Image !== ''" :src="`data:image/jpg;base64,${message.Image}`" alt="Message Photo">
             <p>{{ message.Text }}</p>
@@ -198,6 +206,7 @@ export default {
                 <button v-if="cmt.Sender.Id == ownerId" type="button" class="btn btn-sm btn-outline-secondary" @click="uncommentMessage(message.MsgId)">Uncomment</button>
             </div>
             <div class="btn-group-me-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" @click="replyToMessage(message)">Reply</button>
                 <button type="button" class="btn btn-sm btn-outline-secondary" @click="handleCommentModal(message)">Comment</button>
                 <button type="button" class="btn btn-sm btn-outline-secondary" @click="handleForwardModal(message)">Forward</button>
                 <button type="button" class="btn btn-sm btn-outline-secondary" @click="deleteMessage(message)">Delete</button>
