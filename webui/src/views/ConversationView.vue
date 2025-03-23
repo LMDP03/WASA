@@ -173,6 +173,7 @@ export default {
             </ForwardMessage>
 
             <div class="btn-toolbar mb2 mb-md-0">
+                <span v-if="messageToRespond">Responding to: {{ messageToRespond.Sender.Id }}</span>
                 <input type="file" ref="file" accept=".jpg,.jpeg" @change="handleFileChange" />
                 <div class="input-group">
                     <input type="text" class="form-control" v-model="text" placeholder="Write a message">

@@ -93,7 +93,7 @@ export default {
     <div>
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
             <div class="top-profile-container">
-                <img :src="`data:image/jpg:base64,${groupImg}`">
+                <img :src="`data:image/jpg;base64,${this.groupImg}`">
             </div>
 
             <SearchUsers :show="updateNameModalisVisible" @close="handleUpdateName" title="username">
