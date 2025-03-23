@@ -7,8 +7,7 @@ export default {
         return{
             errorMsg: "",
             usernameValidate: new RegExp('^\\w{0,16}$'),
-            filteredUsers: [],
-            selectedUsers: [],
+            users: [],
             owner: localStorage.userName,
             addMembersIsVisible: false,
             newName: "",

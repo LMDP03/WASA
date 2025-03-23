@@ -4,11 +4,11 @@ export default {
         show: Boolean,
         title: String,
         msg: Object,
+        conversations: Array,
     },
     data() {
         return {
             errorMsg: "",
-            conversations: [],
             convId: sessionStorage.convId,
             searchText: "",
             filteredConvs: [],
@@ -18,7 +18,7 @@ export default {
     },
     methods: {
         closeModal() {
-            this.convs = [];
+            this.conversations = [];
             window.location.reload();
             this.$emit('close');
         },
@@ -32,38 +32,34 @@ export default {
                     return;
                 }
 
-                if (this.title === "search") {
-                    try {
-                        const url = `/users/${localStorage.userId}/conversations?srcName=${this.searchText}`;
-                        let response = await this.$axios.get(url, { headers: {'Authorization': `${localStorage.token}` } });
-                        if (response.data == null) {
-                            this.filteredConvs = [];
-                            return;
-                        }
-                        this.filteredConvs = response.data;
-                    } catch (e) {
-                        this.errorMsg = e.toString();
+                try {
+                    const url = `/users/${localStorage.userId}/conversations?srcName=${this.searchText}`;
+                    let response = await this.$axios.get(url, { headers: {'Authorization': localStorage.token } });
+                    if (response.data == null) {
                         this.filteredConvs = [];
+                        return;
                     }
-                } else {
-                    this.filteredConvs = this.conversations.filter(conv => conv.Name.toLowerCase().includes(this.searchText.toLowerCase()));
+                    this.filteredConvs = response.data;
+                } catch (e) {
+                    this.errorMsg = e.toString();
+                    this.filteredConvs = [];
                 }
+
             }
         },
         selectConv(conv) {
-            if (!this.selectedConvs.find(c => c.Name === conv.Name)) {
+            if (!this.selectedConvs.find(c => c.Id === conv.Id)) {
                 this.selectedConvs.push(conv);
             }
         },
         removeConv(conv) {
-            this.selectedConvs = this.selectedConvs.filter(c => c.name !== conv.Name);
+            this.selectedConvs = this.selectedConvs.filter(c => c.Id !== conv.Id);
         },
         async forwardMessage() {
             this.errorMsg = "";
-            destinations = [];
+            const destinations = [];
             for (let conv of this.selectedConvs) {
-                const dest = conv.Id;
-                destinations.push(dest)
+                destinations.push(conv.Id);
             }
             try {
                 const url = `/users/${localStorage.userId}/conversation/${this.convId}/messages/${this.msg.MsgId}`;
@@ -72,12 +68,13 @@ export default {
                 sessionStorage.convId = response.data.Id;
                 sessionStorage.convName = response.data.Name;
                 sessionStorage.convImg = response.data.Image;
+                sessionStorage.isGroup = response.data.Group;
                 sessionStorage.members = JSON.stringify(response.data.Participants);
                 sessionStorage.messages = response.data.Messages;
+                window.location.reload();
                 this.closeModal();
-                this.$router.push('/conversation');
             } catch (e) {
-                errorMsg = e.toString();
+                this.errorMsg = e.toString();
             }
         },
     },
@@ -121,7 +118,7 @@ export default {
                             </div>
                             <div class="selected-users">
                                 <h4>Selected Destinations</h4>
-                                <div v-for="conv in selectedConvs" :key="conv.Id" class="selected-users">
+                                <div v-for="conv in selectedConvs" :key="conv.Id" class="selected-user">
                                     <span>{{ conv.Name }}</span>
                                     <button @click="removeConv(conv)">Remove</button>
                                 </div>
@@ -149,7 +146,7 @@ export default {
     height: 100%;
     background-color: black;
     display: table;
-    transition: opeacity 0.3s ease;
+    transition: 0.3s ease;
 }
 
 .modal-wrapper {

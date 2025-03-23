@@ -13,6 +13,7 @@ export default {
             userId: sessionStorage.userId,
             text: "",
             image: null,
+            conversations: [],
             users: [],
             messages: [],
             comments: [],
@@ -170,10 +171,6 @@ export default {
                     <h3>Conversations</h3>
                 </template>
             </ForwardMessage>
-
-            <div>
-                {{ this.userId }} and {{ this.ownerId }}
-            </div>
 
             <div class="btn-toolbar mb2 mb-md-0">
                 <input type="file" ref="file" accept=".jpg,.jpeg" @change="handleFileChange" />

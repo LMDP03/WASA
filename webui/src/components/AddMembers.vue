@@ -35,7 +35,7 @@ export default {
                 if (this.title === "search") {
                     try {
                         const url = `/users/${localStorage.userId}/others?srcName=${this.searchText}`;
-                        let response = await this.$axios.get(url, { headers: {'Authorization': `${localStorage.token}` } });
+                        let response = await this.$axios.get(url, { headers: {'Authorization': localStorage.token } });
                         if (response.data == null) {
                             this.filteredUsers = [];
                             return;
@@ -105,7 +105,7 @@ export default {
                                 <button class="btn btn-sm btn-outline-primary" @click="addToGroup">Add To Group</button>
                             </div>
                             <div class="search-results">
-                                <div v-for="user in selectedUsers" :key="user.Id" @click="selectUser(user)" class="user">
+                                <div v-for="user in filteredUsers" :key="user.Name" @click="selectUser(user)" class="user">
                                     <p>{{ user.Name }}</p>
                                 </div>
                             </div>

@@ -31,7 +31,7 @@ export default {
                 if (this.title === "search") {
                     try {
                         const url = `/users/${localStorage.userId}/conversations?srcName=${this.searchText}`;
-                        let response = await this.$axios.get(url, {headers: {'Authorization': `${localStorage.token}`}});
+                        let response = await this.$axios.get(url, {headers: {'Authorization': localStorage.token }});
                         if (response.data == null) {
                             this.filteredConvs = [];
                             return;
@@ -89,7 +89,7 @@ export default {
                                 <input type="text" v-model="searchText" placeholder="Search" />
                             </div>
                             <div class="search-results">
-                                <div v-for="conv in filteredConvs" :key="conv.Name" @click="selectConv(conv)">
+                                <div v-for="conv in filteredConvs" :key="conv.Id" @click="selectConv(conv)">
                                     <div class="user">
                                         <p>{{ conv.Name }}</p>
                                     </div>
