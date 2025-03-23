@@ -124,10 +124,10 @@ export default {
                                 </div>
                             </div>
                             <div class="selected-users">
-                                <h4>Selectd Users</h4>
+                                <h4>Selected Users</h4>
                                 <span class="selected-user">{{ owner }}</span>
                                 <div v-for="user in selectedUsers" :key="user.Name" class="selected-user">
-                                    <span>{{ user.name }}</span>
+                                    <span>{{ user.Name }}</span>
                                     <button v-if="user.Name !== owner" @click="removeUser(user)">Remove</button>
                                 </div>
                             </div>

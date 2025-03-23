@@ -18,8 +18,7 @@ export default {
     },
     methods: {
         closeModal() {
-            this.conversations = [];
-            window.location.reload();
+            this.searchText = "";
             this.$emit('close');
         },
         async filterConvs() {
