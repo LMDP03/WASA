@@ -21,6 +21,8 @@ func (db *appdbimpl) GetConversationById(convid int, userid int) (Conversation, 
 	}
 	conv.Participants = participants
 
+	//add implementation for messages
+
 	if lastmsg != 0 {
 		conv.Messages, err = db.GetMessages(convid)
 		if err != nil {

@@ -20,6 +20,7 @@ var sql_PARTICIPANTS = `CREATE TABLE IF NOT EXISTS Participants
 (
 	convId INTEGER NOT NULL,
 	userId INTEGER NOT NULL,
+	lastRead INTEGER NOT NULL,
 	PRIMARY KEY (convId, userId)
 );`
 
@@ -33,6 +34,7 @@ var sql_MESSAGES = `CREATE TABLE IF NOT EXISTS Messages
 	timeStamp DATETIME DEFAULT CURRENT_TIMESTAMP,
 	responseTo INTEGER NOT NULL,
 	checkMark STRING NOT NULL,
+	accessCount INTEGER NOT NULL,
 	PRIMARY KEY (convId, msgId)
 );`
 

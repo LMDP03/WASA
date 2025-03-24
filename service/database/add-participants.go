@@ -1,6 +1,6 @@
 package database
 
-var queryAddParticipant = `INSERT INTO Participants (convId, userId) VALUES (?, ?);`
+var queryAddParticipant = `INSERT INTO Participants (convId, userId, lastRead) VALUES (?, ?, 0);`
 
 func (db *appdbimpl) AddParticipants(convid int, names []string) error {
 
