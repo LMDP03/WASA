@@ -1,6 +1,6 @@
 package database
 
-var queryGetMessages = `SELECT senderId, msgId, text, COALESCE(image, ""), timeStamp, responseTo, checkMark FROM Messages WHERE convId = ? ORDER BY msgId DESC;`
+var queryGetMessages = `SELECT senderId, msgId, text, COALESCE(image, ""), timeStamp, responseTo, checkMark FROM Messages WHERE convId = ? ORDER BY msgId;`
 
 func (db *appdbimpl) GetMessages(convId int) ([]Message, error) {
 

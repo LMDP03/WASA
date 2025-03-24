@@ -5,8 +5,7 @@ import (
 	"errors"
 )
 
-var queryAddMessage = `INSERT INTO Messages (convId, senderId, msgId, text, image, responseTo, checkMark) VALUES (?, ?, ?, ?, ?, ?, "received");`
-
+var queryAddMessage = `INSERT INTO Messages (convId, senderId, msgId, text, image, responseTo, checkMark, accessCount) VALUES (?, ?, ?, ?, ?, ?, "received", 1);`
 var queryGetLastMessageId = `SELECT last_message FROM Conversations WHERE id = ?;`
 
 func (db *appdbimpl) CreateMessage(convid int, senderid int, responseto int, text string, image string) (Message, error) {
@@ -28,6 +27,11 @@ func (db *appdbimpl) CreateMessage(convid int, senderid int, responseto int, tex
 	if err != nil {
 		return msg, err
 	}
+	_, err = db.c.Exec(queryUpdateLastRead, max_id, convid, senderid)
+	if err != nil {
+		return msg, err
+	}
+
 	msg, err = db.GetMessageById(convid, max_id)
 
 	return msg, err

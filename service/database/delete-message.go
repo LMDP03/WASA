@@ -8,6 +8,7 @@ import (
 var queryDeleteMessage = `DELETE FROM Messages WHERE msgId = ? AND convId = ?;`
 var queryUpdateLaterResponses = `UPDATE Messages SET responseTo = 0 WHERE convId = ? AND msgId > ? AND responseTo = ?;`
 var queryDeleteReactions = `DELETE FROM Reactions WHERE convId = ? AND msgId = ?;`
+var queryUpdateLastReadAll = `UPDATE Participants SET lastRead = (SELECT last_message FROM Conversations WHERE id = ?) WHERE convId = ?;`
 
 func (db *appdbimpl) DeleteMessage(convid int, msgid int) error {
 
@@ -32,6 +33,12 @@ func (db *appdbimpl) DeleteMessage(convid int, msgid int) error {
 		if err != nil {
 			return err
 		}
+
+		_, err = db.c.Exec(queryUpdateLastReadAll, convid, convid)
+		if err != nil {
+			return err
+		}
+
 	}
 
 	_, err = db.c.Exec(queryDeleteReactions, convid, msgid)
