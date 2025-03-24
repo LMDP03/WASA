@@ -55,7 +55,7 @@ export default {
     justify-content: center;
     align-items: center;
     height: 75vh;
-    width: 50vw;
+    width: 65vw;
 }
 
 .login-container form {
