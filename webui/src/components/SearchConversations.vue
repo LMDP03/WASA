@@ -115,7 +115,7 @@ export default {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: black;
+    background-color: rgba(0, 0, 0, 0.5);
     display: table;
     transition: opacity 0.3 ease;
 }
@@ -129,7 +129,7 @@ export default {
     margin: 0px auto;
     background-color: white;
     border-radius: 2px;
-    box-shadow: 0 2px 8px black;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
     transition: all 0.3s ease;
 }
 

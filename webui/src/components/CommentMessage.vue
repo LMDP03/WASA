@@ -67,7 +67,7 @@ export default {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: black;
+    background-color: rgba(0, 0, 0, 0.5);
     display: table;
     transition: opeacity 0.3s ease;
 }

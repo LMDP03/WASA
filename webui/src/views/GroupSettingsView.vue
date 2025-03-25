@@ -93,8 +93,23 @@ export default {
     <div>
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
             <div class="top-profile-container">
-                <img :src="`data:image/jpg;base64,${this.groupImg}`">
+                <img class="conv-photo" :src="`data:image/jpg;base64,${this.groupImg}`">
+                <h1 class="h1">{{ this.groupName }}</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
+                    <div class="btn-group me-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary" @click="handleUpdateName">Change Group Name</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" @click="handleUpdateImage">Change Group Photo</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" @click="handleAddMembers">Add New Members</button>
+                    </div>
+                </div>
             </div>
+
+            <div>
+                
+            </div>
+            
+            
 
             <SearchUsers :show="updateNameModalisVisible" @close="handleUpdateName" title="username">
                 <template v-slot:header>
@@ -126,15 +141,6 @@ export default {
                 </template>
             </AddMembers>
 
-            <h1 class="h1">{{ this.groupName }}</h1>
-            <div class="btn-toolbar mb-2 mb-md-0">
-                <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
-                <div class="btn-group me-2">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" @click="handleUpdateName">Change Group Name</button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" @click="handleUpdateImage">Change Group Photo</button>
-                </div>
-                <button type="button" class="btn btn-sm btn-outline-primary" @click="handleAddMembers">Add New Members</button>
-            </div>
         </div>
         <div v-for="user in groupMembers" :key="user.Id">
             <p class="username">

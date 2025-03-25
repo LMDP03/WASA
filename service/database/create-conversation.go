@@ -63,7 +63,7 @@ func (db *appdbimpl) CreateConversation(name string, group bool, otherid int, pa
 			return conv, err
 		}
 
-		conv, err = db.GetConversationById(new_id, 0)
+		conv, err = db.GetConversationById(new_id, otherid)
 		if err != nil {
 			return conv, err
 		}

@@ -1,6 +1,6 @@
 package database
 
-var queryGetParticipants = `SELECT userId FROM Participants WHERE convId = ?;`
+var queryGetParticipants = `SELECT userId, lastRead FROM Participants WHERE convId = ?;`
 
 func (db *appdbimpl) GetParticipants(convid int) ([]User, error) {
 
@@ -18,11 +18,11 @@ func (db *appdbimpl) GetParticipants(convid int) ([]User, error) {
 		}
 
 		var userid int
-		err = rows.Scan(&userid)
+		var lastRead int
+		err = rows.Scan(&userid, &lastRead)
 		if err != nil {
 			return nil, err
 		}
-
 		user, err := db.GetUserById(userid)
 		if err != nil {
 			return nil, err

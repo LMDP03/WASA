@@ -67,7 +67,7 @@ func (rt *_router) CreateGroup(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 	members = append(members, usr.Name)
-	dbConv, err := rt.db.CreateConversation(conv.Name, true, 0, members)
+	dbConv, err := rt.db.CreateConversation(conv.Name, true, userId, members)
 	if err != nil {
 		InternalServerError(w, err, "Error while creating the conversation", ctx)
 		return

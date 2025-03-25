@@ -23,7 +23,7 @@ export default {
             intervalId: null,
             commentModalIsVisible: false,
             forwardModalIsVisible: false,
-
+            emojis: ["😀", "😂", "😍", "😎", "😭", "😡", "🎉", "❤️", "👍", "🔥"],
             ownerId: localStorage.userId,
         }
     },
@@ -126,6 +126,12 @@ export default {
                 this.errorMsg = e.toString();
             });
         },
+        countEmojis(msg, emoji) {
+            return msg.Reactions.filter(c => c.Emoji === emoji).length;
+        },
+        checkReactions(msg) {
+            return msg.Reactions.filter(c => c.Sender.Id == this.ownerId).length;
+        }
     },
     emits: ['login-succes'],
     mounted() {
@@ -154,15 +160,11 @@ export default {
 <template>
     <div>
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <div class="top-profile-container">
-                <img :src="`data:image/jpg;base64,${this.convImg}`">
-            </div>
-            <div v-if="isGroup">
-                <h1 class="h1 clickable" @click="goToInfo">{{ this.convName }}</h1>
-            </div>
-            <div v-else>
+            <div class="top-profile-container">                
+                <img class="conv-photo" :src="`data:image/jpg;base64,${this.convImg}`">
                 <h1 class="h1">{{ this.convName }}</h1>
-            </div>
+                <button v-show="isGroup" type="button" class="btn btn-sm btn-outline-primary" @click="goToInfo">Group Settings</button>
+            </div>          
 
             <CommentMessage :show="commentModalIsVisible" :msg="messageToComment" @close="handleCommentModal" title="comments">
                 <template>
@@ -174,15 +176,6 @@ export default {
                     <h3>Conversations</h3>
                 </template>
             </ForwardMessage>
-
-            <div class="btn-toolbar mb2 mb-md-0">
-                <span v-if="messageToRespond">Responding to: {{ messageToRespond.Sender.Id }}</span>
-                <input type="file" ref="file" accept=".jpg,.jpeg" @change="handleFileChange" />
-                <div class="input-group">
-                    <input type="text" class="form-control" v-model="text" placeholder="Write a message">
-                    <button class="btn btn-outline-primary" @click="check">Send</button>
-                </div>
-            </div>
         </div>
 
         <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
@@ -195,21 +188,41 @@ export default {
             </div>
             <p>{{ message.Sender.Name }}</p>
             <img class="msg_photo" v-if="message.Image !== ''" :src="`data:image/jpg;base64,${message.Image}`" alt="Message Photo">
-            <p>{{ message.Text }}</p>
+            <p v-if="message.Text !== ''">{{ message.Text }}</p>
             <p>
                 {{ message.Timestamp }}
                 <span v-if="message.Checkmark === 'received'">✔️</span>
                 <span v-else>✔️✔️</span>
             </p>
-            <div v-for="cmt in message.Reactions" :key="cmt.Sender.Id">
-                <p>{{ cmt.Emoji }}</p>
-                <button v-if="cmt.Sender.Id == ownerId" type="button" class="btn btn-sm btn-outline-secondary" @click="uncommentMessage(message.MsgId)">Uncomment</button>
+            <div v-for="cmt in emojis" :key="cmt">
+                <p v-if="countEmojis(message, cmt) > 0">{{ cmt }}: {{ countEmojis(message, cmt) }}</p>
             </div>
             <div class="btn-group-me-2">
                 <button type="button" class="btn btn-sm btn-outline-secondary" @click="replyToMessage(message)">Reply</button>
                 <button type="button" class="btn btn-sm btn-outline-secondary" @click="handleCommentModal(message)">Comment</button>
                 <button type="button" class="btn btn-sm btn-outline-secondary" @click="handleForwardModal(message)">Forward</button>
                 <button type="button" class="btn btn-sm btn-outline-secondary" @click="deleteMessage(message)">Delete</button>
+                <button v-if="checkReactions(message) !== 0" type="button" class="btn btn-sm btn-outline-secondary" @click="uncommentMessage(message.MsgId)">Uncomment</button>
+            </div>
+        </div>
+
+        <div class="new-message">
+            <svg v-if="messageToRespond" class="feather" @click="messageToRespond = null">
+                    <use href="/feather-sprite-v4.29.0.svg#x" />
+                </svg>
+            <div v-if="messageToRespond" class="reply-snippet">
+                <h6>Replying to: {{ messageToRespond.Sender.Name }}</h6>
+                <p v-if="messageToRespond.Image === ''">{{ messageToRespond.Text }}</p>
+                <p v-else>
+                    <svg class="feather">
+                        <use href="/feather-sprite-v4.29.0.svg#image" />
+                    </svg> {{ messageToRespond.Text }}
+                </p>
+            </div>
+            <div class="input-group">
+                <input type="file" class="form-control" ref="file" accept=".jpg,.jpeg" @change="handleFileChange" />
+                <input type="text" class="form-control" v-model="text" placeholder="Write a message">
+                <button class="btn btn-outline-primary" @click="check">Send</button>
             </div>
         </div>
     </div>
@@ -217,26 +230,90 @@ export default {
 
 <style>
 .top-profile-container {
-    width: auto;
+    width: 100vw;
     height: auto;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     justify-content: space-between;
 }
 
 .msg_photo {
-    width: 25%;
-    height: 25%;
+    width: 15%;
+    height: 15%;
 }
 
-.clickable {
+.h1 {
+    font-weight: bold;
+}
+
+.conv-photo {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.messages {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-evenly;
+    padding: 10px;
+    border-bottom: 1px solid lightgray;
+    overflow-y: scroll;
+}
+
+.new-message {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    width: 83vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
+    padding: 10px;
+    border-top: 1px solid lightgray;
+    z-index: 999;
+    background-color: white;
+}
+
+.reply-snippet {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    justify-content: space-between;
+    padding: 10px;
+    border-bottom: 1px solid lightgray;
+    background-color: inherit;
+    margin-left: 60px;
+    width: inherit;
+    left: 0;
+}
+
+.new-message svg {
+    align-self: flex-end;
     cursor: pointer;
-    color: blue;
-    text-decoration: underline;
+    height: 20px;
+    width: 20px;
+    margin-right: 10px;
 }
 
-.clickable:hover {
-    color: darkblue;
+
+.input-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    background-color: inherit;
+    width: 100%;
 }
+
+.input-group input[type="text"] {
+    width: 50vw;
+}
+
+
 </style>
