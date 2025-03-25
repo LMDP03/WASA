@@ -69,9 +69,9 @@ export default {
                     <h3>New Group</h3>
                 </template>
             </CreateGroup>
-            <SearchUsers :show="searchModalIsVisible" @close="handleSearchModal" title="search">
+            <SearchUsers :show="searchModalIsVisible" :convs="conversations" @close="handleSearchModal" title="search">
                 <template v-slot:header>
-                    <h3>Start Conversation</h3>
+                    <h3>Start Chatting</h3>
                 </template>
             </SearchUsers>
 
@@ -80,24 +80,24 @@ export default {
                     <button type="button" class="btn btn-sm btn-outline-secondary" @click="getMyConversations">
                         <svg class="feather">
                             <use href="/feather-sprite-v4.29.0.svg#refresh-ccw" />
-                            Refresh
                         </svg>
+                        Refresh
                     </button>
                 </div>
                 <div class="btn-group me-2">
                     <button type="button" class="btn btn-sm btn-outline-primary" @click="handleCreateGroupModal">
                         <svg class="feather">
                             <use href="/feather-sprite-v4.29.0.svg#users" />
-                            New Group
                         </svg>
+                        New Group
                     </button>
                 </div>
                 <div class="btn-group me-2">
                     <button type="button" class="btn btn-sm btn-outline-primary" @click="handleSearchModal">
                         <svg class="feather">
                             <use href="/feather-sprite-v4.29.0.svg#user" />
-                            Start New Chat
                         </svg>
+                        Search Users
                     </button>
                 </div>
             </div>

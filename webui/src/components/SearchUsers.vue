@@ -4,6 +4,7 @@ export default {
         show: Boolean,
         users: Array,
         title: String,
+        convs: Array,
     },
     data() {
         return {
@@ -48,7 +49,12 @@ export default {
         },
         async selectUser(user) {
             sessionStorage.clear();
-            sessionStorage.userId = user.Id;
+            const conv = this.convs.filter(c => c.Group === false && c.Name === user.Name);
+            if (conv.length !== 0) {
+                sessionStorage.convId = conv[0].Id;
+            } else {
+                sessionStorage.userId = user.Id;
+            }
             sessionStorage.convImg = user.Image;
             sessionStorage.convName = user.Name;
             sessionStorage.isGroup = false;

@@ -10,8 +10,7 @@ tags:
   - name: 'conversation'
   - name: 'group'
   - name: 'message'
-  - name: 'image'
-
+  - name: 'reaction'
 
 components:
   
@@ -99,7 +98,6 @@ components:
       pattern: "[\u203C-\u3299\u1F004\u1F0CF\u1F9FF]"
       minLength: 0
       maxLength: 1
-      default: ""
 
     Reaction: 
       description: The reaction/emoji to a messsage; each person can put at most one emoji.
@@ -112,6 +110,7 @@ components:
           
 
     User:
+      description: The user object, containing all the user's information.
       type: object
       properties:
         id:
@@ -122,14 +121,17 @@ components:
           $ref: "#/components/schemas/Image"
 
     MessageContent:
+      description: The content of a message, which can be either a text or an image.
       type: object
       properties:
-        text:
-          $ref: "#/components/schemas/Text"
-        image:
-          $ref: "#/components/schemas/Image"
+      anyOf:
+        - text:
+            $ref: "#/components/schemas/Text"
+        - image:
+            $ref: "#/components/schemas/Image"
         
     Message:
+      description: The message object, containing all the message's information.
       type: object
       properties:
         id:
@@ -163,6 +165,7 @@ components:
             $ref: "#/components/schemas/Reaction"
 
     Conversation:
+      description: The conversation object, containing all the conversation's information.
       type: object
       properties:
         id:
@@ -179,11 +182,10 @@ components:
         participants:
           description: List of all members of a group chat. 
           type: array
-          minItems: 3
+          minItems: 1
           maxItems: 50
           items:
             $ref: "#/components/schemas/User"
-          nullable: true
         messages:
           description: The list of all messages sent of the chat.
           type: array
@@ -206,7 +208,6 @@ components:
         pattern: 'ˆ.*?$'
         minLength: 0
         maxLength: 20
-        default: ""
     
     UserId:
       description: The user identifier, which must be passed for any possible operation.
@@ -244,14 +245,11 @@ components:
   
   responses:
 
-    UnauthorizedError:
+    ForbiddenError:
       description: Access token is missing or invalid.
 
     ServerError: 
       description: Server error occurred. Please, try again in a few minutes.
-
-    NotFoundError:
-      description: The given id(s) doesn't correspond witha any user/session/message. Please try again.
 
     BadRequestError:
       description: You either aren't an admin to do this operation or the given input(s) are invalid.
@@ -336,9 +334,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "404":
-          $ref: "#/components/responses/NotFoundError"
+          $ref: "#/components/responses/ForbiddenError"
         "500":
           $ref: "#/components/responses/ServerError"
     
@@ -362,15 +358,11 @@ paths:
                   $ref: "#/components/schemas/Image"
       responses:
         "200":
-          description: User image modified successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/User"
+          $ref: "#/components/responses/UserInfoUpdated"
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":
-          $ref: "#/components/responses/UnauthorizedError"
+          $ref: "#/components/responses/ForbiddenError"
         "500":
           $ref: "#/components/responses/ServerError"
 
@@ -391,15 +383,11 @@ paths:
               $ref: "#/components/schemas/UserName"
       responses:
         "200":
-          description: User name modified successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/User"
+          $ref: "#/components/responses/UserInfoUpdated"
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":
-          $ref: "#/components/responses/UnauthorizedError"
+          $ref: "#/components/responses/ForbiddenError"
         "500":
           $ref: "#/components/responses/ServerError"
 
@@ -422,6 +410,7 @@ paths:
             application/json:
               schema:
                 type: array
+                description: The list of all conversations the user is part of.
                 minItems: 1
                 maxItems: 50
                 items:
@@ -429,9 +418,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "404":
-          $ref: "#/components/responses/NotFoundError"
+          $ref: "#/components/responses/ForbiddenError"
         "500":
           $ref: "#/components/responses/ServerError"
     
@@ -450,6 +437,7 @@ paths:
         - name: rcvId
           in: query
           required: true
+          description: The id of the user you want to start a conversation with.
           schema:
             $ref: "#/components/schemas/UserID"
       requestBody:
@@ -459,15 +447,11 @@ paths:
               $ref: "#/components/schemas/MessageContent"
       responses:
         "201":
-          description: New conversation succesfully started.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Conversation"
+          $ref: "#/components/responses/ConversationUpdated"
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":
-          $ref: "#/components/responses/UnauthorizedError"
+          $ref: "#/components/responses/ForbiddenError"
         "500":
           $ref: "#/components/responses/ServerError"
   
@@ -492,21 +476,18 @@ paths:
                   $ref: "#/components/schemas/ConversationName"
                 participants:
                   type: array
-                  minItems: 3
+                  description: The list of all members of the group chat.
+                  minItems: 1
                   maxItems: 1000
                   items:
                     $ref: "#/components/schemas/UserName"
       responses:
         "201":
-          description: New group succesfully created.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Conversation"
+          $ref: "#/components/responses/ConversationUpdated"
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":
-          $ref: "#/components/responses/UnauthorizedError"
+          $ref: "#/components/responses/ForbiddenError"
         "500":
           $ref: "#/components/responses/ServerError"
   
@@ -531,9 +512,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Conversation"
         "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "404":
-          $ref: "#/components/responses/NotFoundError"
+          $ref: "#/components/responses/ForbiddenError"
         "500":
           $ref: "#/components/responses/ServerError"
     post: 
@@ -550,6 +529,7 @@ paths:
               type: object
               properties:
                 participants:
+                  description: The list of the new members of the group chat.
                   type: array
                   minItems: 3
                   maxItems: 1000
@@ -564,17 +544,16 @@ paths:
                 type: object
                 properties:
                   participants:
+                    description: The list of all members of the group chat.
                     type: array
-                    minItems: 3
+                    minItems: 1
                     maxItems: 1000
                     items:
                       $ref: "#/components/schemas/User"
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "404":
-          $ref: "#/components/responses/NotFoundError"
+          $ref: "#/components/responses/ForbiddenError"
         "500":
           $ref: "#/components/responses/ServerError"
     delete:
@@ -588,7 +567,7 @@ paths:
         "204":
           $ref: "#/components/responses/ItemDeleted"
         "401":
-          $ref: "#/components/responses/UnauthorizedError"
+          $ref: "#/components/responses/ForbiddenError"
         "500":
           $ref: "#/components/responses/ServerError"
 
@@ -611,15 +590,11 @@ paths:
               $ref: "#/components/schemas/ConversationName"
       responses:
         "200":
-          description: Group name modified successfully
-          content:
-            text/plain:
-              schema:
-                $ref: "#/components/schemas/ConversationName"
+          $ref: "#/components/responses/ConversationUpdated"
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":
-          $ref: "#/components/responses/UnauthorizedError"
+          $ref: "#/components/responses/ForbiddenError"
         "500":
           $ref: "#/components/responses/ServerError"
 
@@ -637,7 +612,7 @@ paths:
       operationId: setGroupPhoto
       requestBody:
         content:
-          application/json:
+          multipart/form-data:
               schema:
                 type: object
                 properties:
@@ -645,18 +620,11 @@ paths:
                     $ref: "#/components/schemas/Image"
       responses:
         "200":
-          description: User image modified successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  image:
-                    $ref: "#/components/schemas/Image"
+          $ref: "#/components/responses/ConversationUpdated"
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":
-          $ref: "#/components/responses/UnauthorizedError"
+          $ref: "#/components/responses/ForbiddenError"
         "500":
           $ref: "#/components/responses/ServerError"
 
@@ -694,7 +662,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":
-          $ref: "#/components/responses/UnauthorizedError"
+          $ref: "#/components/responses/ForbiddenError"
         "500":
           $ref: "#/components/responses/ServerError"
 
@@ -711,25 +679,27 @@ paths:
         forwards the message to the conversation specified in the request.
         basically creating a copy of the message in the chosen conversation.
       operationId: forwardMessage
-      parameters:
-        - name: destId
-          in: query
-          required: true
-          schema:
-            $ref: "#/components/schemas/ConversationID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              description: The list of all conversations to which the message will be forwarded.
+              minItems: 1
+              maxItems: 10
+              items:
+                $ref: "#/components/schemas/ConversationID"
       responses:
         "201":
-          description: Message forwarded succesfully.
+          description: Message forwarded succesfully. The last Conversation is returned.
           content:
             application/json:
               schema: 
                 $ref: "#/components/schemas/Conversation"
         "401":
-          $ref: "#/components/responses/UnauthorizedError"
+          $ref: "#/components/responses/ForbiddenError"
         "400":
           $ref: "#/components/responses/BadRequestError"
-        "404":
-          $ref: "#/components/responses/NotFoundError"
         "500":
           $ref: "#/components/responses/ServerError"
     delete:
@@ -747,11 +717,9 @@ paths:
         "204": 
           $ref: "#/components/responses/ItemDeleted"
         "401":
-          $ref: "#/components/responses/UnauthorizedError"
+          $ref: "#/components/responses/ForbiddenError"
         "400":
           $ref: "#/components/responses/BadRequestError"
-        "404":
-          $ref: "#/components/responses/NotFoundError"
         "500":
           $ref: "#/components/responses/ServerError"
 
@@ -761,7 +729,7 @@ paths:
       - $ref: "#/components/parameters/ConversationId"
       - $ref: "#/components/parameters/MessageId"
     post: 
-      tags: [message]
+      tags: [reaction]
       summary: comments a message
       description: |-
         given a message in the chat, the user can comment it
@@ -783,20 +751,19 @@ paths:
             application/json:
               schema:
                 type: array
+                description: The list of all reactions to this message.
                 minItems: 0
                 maxItems: 100
                 items:
                   $ref: "#/components/schemas/Reaction"
-        "404":
-          $ref: "#/components/responses/NotFoundError"
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":
-          $ref: "#/components/responses/UnauthorizedError"
+          $ref: "#/components/responses/ForbiddenError"
         "500":
           $ref: "#/components/responses/ServerError"
     delete:
-      tags: [message]
+      tags: [reaction]
       summary: removes a reaction.
       description: |-
         checks for a reaction having the same sender id as the user,
@@ -806,7 +773,7 @@ paths:
         "204": 
           $ref: "#/components/responses/ItemDeleted"
         "401":
-          $ref: "#/components/responses/UnauthorizedError"
+          $ref: "#/components/responses/ForbiddenError"
         "400":
           $ref: "#/components/responses/BadRequestError"
         "500":

@@ -167,4 +167,13 @@ export default {
     padding: 5px 10px;
     cursor: pointer;
 }
+
+.selected-user button:hover {
+    background: white;
+    color: red;
+    border: red;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
 </style>

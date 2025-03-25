@@ -92,23 +92,39 @@ export default {
 <template>
     <div>
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <div class="top-profile-container">
-                <img class="conv-photo" :src="`data:image/jpg;base64,${this.groupImg}`">
-                <h1 class="h1">{{ this.groupName }}</h1>
-                <div class="btn-toolbar mb-2 mb-md-0">
-                    <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
-                    <div class="btn-group me-2">
-                        <button type="button" class="btn btn-sm btn-outline-primary" @click="handleUpdateName">Change Group Name</button>
-                        <button type="button" class="btn btn-sm btn-outline-primary" @click="handleUpdateImage">Change Group Photo</button>
-                        <button type="button" class="btn btn-sm btn-outline-primary" @click="handleAddMembers">Add New Members</button>
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                
-            </div>
+            <h1 class="h1">
+                <img class="conv-photo" :src="`data:image/jpg;base64,${this.groupImg}`" />
+                {{ this.groupName }}
+            </h1>
             
+            <div class="btn-toolbar mb-2 mb-md-0">
+                <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
+                <div class="btn-group me-2">
+                    <button type="button" class="btn btn-sm btn-outline-primary" @click="handleAddMembers">
+                        <svg class="feather">
+                            <use href="/feather-sprite-v4.29.0.svg#user-plus" />
+                        </svg>
+                        Add Members
+                    </button>
+                </div>
+                <div class="btn-group me-2">
+                    <button type="button" class="btn btn-sm btn-outline-primary" @click="handleUpdateName">
+                        <svg class="feather">
+                            <use href="/feather-sprite-v4.29.0.svg#edit" />
+                        </svg>
+                        Change Group Name
+
+                    </button>
+                </div>
+                <div class="btn-group me-2">
+                    <button type="button" class="btn btn-sm btn-outline-primary" @click="handleUpdateImage">
+                        <svg class="feather">
+                            <use href="/feather-sprite-v4.29.0.svg#edit" />
+                        </svg>
+                        Change Group Photo
+                    </button>
+                </div>
+            </div>            
             
 
             <SearchUsers :show="updateNameModalisVisible" @close="handleUpdateName" title="username">
@@ -165,5 +181,19 @@ export default {
 .username {
     font-size: 14px;
     font-weight: bold;
+}
+
+.username button {
+    background: red;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    margin-left: 10px;
+}
+
+.username button:hover {
+    background: white;
+    color: red;
+    border: 1px solid red;
 }
 </style>

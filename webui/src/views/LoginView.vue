@@ -67,7 +67,7 @@ export default {
 .login-container input{
     margin: 15px;
     padding: 10px;
-    border: 1px solid white;
+    border: 1px solid lightgray;
     border-radius: 5px;
 }
 
@@ -81,6 +81,9 @@ export default {
 }
 
 .login-container button:hover {
-    background-color: darkblue;
+    background-color: white;
+    color: blue;
+    border: blue 1px solid;
+
 }
 </style>

@@ -160,11 +160,16 @@ export default {
 <template>
     <div>
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <div class="top-profile-container">                
-                <img class="conv-photo" :src="`data:image/jpg;base64,${this.convImg}`">
-                <h1 class="h1">{{ this.convName }}</h1>
-                <button v-show="isGroup" type="button" class="btn btn-sm btn-outline-primary" @click="goToInfo">Group Settings</button>
-            </div>          
+            <h1 class="h1">
+                <img class="conv-photo" :src="`data:image/jpg;base64,${this.convImg}`" />
+                {{ this.convName }}
+            </h1>               
+            <button v-show="isGroup" type="button" class="btn btn-sm btn-outline-primary" @click="goToInfo">
+                <svg class="feather">
+                    <use href="/feather-sprite-v4.29.0.svg#settings" />
+                </svg>
+                Group Settings
+            </button>
 
             <CommentMessage :show="commentModalIsVisible" :msg="messageToComment" @close="handleCommentModal" title="comments">
                 <template>
@@ -180,40 +185,60 @@ export default {
 
         <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
 
-        <div class="messages" v-for="message in messages" :key="message.MsgId">
-            <div v-if="message.ResponseTo.Sender.Id !== 0">
-                <p>Response to: {{ message.ResponseTo.Sender.Name }}</p>
-                <span v-if="message.ResponseTo.Image !== ''"> Photo; </span>
-                <p>{{ message.ResponseTo.Text }}</p>
+        <div class="messages-container">
+            <div class="messages" v-for="message in messages" :key="message.MsgId">
+                <h3>
+                    <img class="profile-picture" :src="`data:image/jpg;base64,${message.Sender.Image}`" alt="Sender Photo">
+                    {{ message.Sender.Name }}
+                </h3>
+                <div class="reply-snippet" v-if="message.ResponseTo.Sender.Id !== 0">
+                    <h6>Response to: {{ message.ResponseTo.Sender.Name }}</h6>
+                    <p class="preview-snippet">
+                        <svg v-if="message.ResponseTo.Image !== ''" class="feather">
+                            <use href="/feather-sprite-v4.29.0.svg#image" />
+                        </svg> {{ message.ResponseTo.Text }}                </p>
+                </div>
+                <br>
+                <div class="message">
+                    <img class="msg_photo" v-if="message.Image !== ''" :src="`data:image/jpg;base64,${message.Image}`" alt="Message Photo">
+                    <p v-if="message.Text !== ''">{{ message.Text }}</p>
+                </div>
+                <p>
+                    {{ message.Timestamp }}
+                    <span v-if="message.Checkmark === 'received'">✔️</span>
+                    <span v-else>✔️✔️</span>
+                </p>
+                <div class="comments">
+                    <div v-for="cmt in emojis" :key="cmt">
+                        <p v-if="countEmojis(message, cmt) > 0">{{ cmt }}: {{ countEmojis(message, cmt) }}</p>
+                    </div>
+                </div>
+                
+                
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group me-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" @click="replyToMessage(message)">Reply</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" @click="handleForwardModal(message)">Forward</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" @click="deleteMessage(message)">Delete</button>
+                    </div>
+                    <div class="btn-group me-2" v-if="checkReactions(message) !== 0">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" @click="handleCommentModal(message)"> Change Comment</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" @click="uncommentMessage(message.MsgId)">Uncomment</button>
+                    </div>
+                    <button v-else type="button" class="btn btn-sm btn-outline-secondary" @click="handleCommentModal(message)">Comment</button>
+                </div>
             </div>
-            <p>{{ message.Sender.Name }}</p>
-            <img class="msg_photo" v-if="message.Image !== ''" :src="`data:image/jpg;base64,${message.Image}`" alt="Message Photo">
-            <p v-if="message.Text !== ''">{{ message.Text }}</p>
-            <p>
-                {{ message.Timestamp }}
-                <span v-if="message.Checkmark === 'received'">✔️</span>
-                <span v-else>✔️✔️</span>
-            </p>
-            <div v-for="cmt in emojis" :key="cmt">
-                <p v-if="countEmojis(message, cmt) > 0">{{ cmt }}: {{ countEmojis(message, cmt) }}</p>
-            </div>
-            <div class="btn-group-me-2">
-                <button type="button" class="btn btn-sm btn-outline-secondary" @click="replyToMessage(message)">Reply</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" @click="handleCommentModal(message)">Comment</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" @click="handleForwardModal(message)">Forward</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" @click="deleteMessage(message)">Delete</button>
-                <button v-if="checkReactions(message) !== 0" type="button" class="btn btn-sm btn-outline-secondary" @click="uncommentMessage(message.MsgId)">Uncomment</button>
-            </div>
+
         </div>
 
         <div class="new-message">
-            <svg v-if="messageToRespond" class="feather" @click="messageToRespond = null">
+            <div v-if="messageToRespond" class="reply-snippet">
+                <svg v-if="messageToRespond" class="feather" @click="messageToRespond = null">
                     <use href="/feather-sprite-v4.29.0.svg#x" />
                 </svg>
-            <div v-if="messageToRespond" class="reply-snippet">
                 <h6>Replying to: {{ messageToRespond.Sender.Name }}</h6>
-                <p v-if="messageToRespond.Image === ''">{{ messageToRespond.Text }}</p>
-                <p v-else>
+                <p class="preview-snippet" v-if="messageToRespond.Image === ''">{{ messageToRespond.Text }}</p>
+                <p class="preview-snippet" v-else>
                     <svg class="feather">
                         <use href="/feather-sprite-v4.29.0.svg#image" />
                     </svg> {{ messageToRespond.Text }}
@@ -236,12 +261,10 @@ export default {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+    width: 75vw;
 }
 
-.msg_photo {
-    width: 15%;
-    height: 15%;
-}
+
 
 .h1 {
     font-weight: bold;
@@ -254,6 +277,18 @@ export default {
     margin-right: 10px;
 }
 
+.messages-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-evenly;
+    border-bottom: 1px solid lightgray;
+    overflow-y: scroll;
+    padding-bottom: 75px;
+    box-sizing: border-box;
+    right: 0;
+}
+
 .messages {
     display: flex;
     flex-direction: column;
@@ -262,20 +297,65 @@ export default {
     padding: 10px;
     border-bottom: 1px solid lightgray;
     overflow-y: scroll;
+    width: 80vw;
+}
+
+.messages .reply-snippet {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    justify-content: space-between;
+    padding: 10px;
+    background-color: rgba(128, 128, 128, 0.5);
+    width: 76vw;
+    border-radius: 10px;
+    margin-left: 40px;
+    margin-bottom: 10px;
+}
+
+.messages .reply-snippet .preview-snippet {
+    margin-left: 30px;
+    font-size: medium;
+}
+
+.message img {
+    width: 100px;
+    height: 100px;
+    border-radius: 10px;
+    margin-right: 10px;
+    margin-left: 40px;
+    margin-bottom: 10px;
+}
+
+.message p {
+    font-size: large;
+    margin-left: 40px;
+}
+
+.comments {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    
+}
+
+.comments p {
+    font-size: medium;
+    margin-right: 10px;
 }
 
 .new-message {
     position: fixed;
     bottom: 0;
-    right: 0;
-    width: 83vw;
+    right: 24px;
+    width: 81.45vw;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: space-evenly;
     padding: 10px;
     border-top: 1px solid lightgray;
-    z-index: 999;
     background-color: white;
 }
 
@@ -285,21 +365,15 @@ export default {
     align-items: start;
     justify-content: space-between;
     padding: 10px;
-    border-bottom: 1px solid lightgray;
-    background-color: inherit;
-    margin-left: 60px;
-    width: inherit;
-    left: 0;
+    background-color: rgba(128, 128, 128, 0.5);
+    width: 80vw;
+    border-radius: 10px;
 }
 
-.new-message svg {
+.reply-snippet svg {
     align-self: flex-end;
     cursor: pointer;
-    height: 20px;
-    width: 20px;
-    margin-right: 10px;
 }
-
 
 .input-group {
     display: flex;
@@ -308,7 +382,6 @@ export default {
     justify-content: space-between;
     padding: 10px;
     background-color: inherit;
-    width: 100%;
 }
 
 .input-group input[type="text"] {
