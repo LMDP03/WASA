@@ -163,8 +163,8 @@ export default {
             <h1 class="h1">
                 <img class="conv-photo" :src="`data:image/jpg;base64,${this.convImg}`" />
                 {{ this.convName }}
-            </h1>               
-            <button v-show="isGroup" type="button" class="btn btn-sm btn-outline-primary" @click="goToInfo">
+            </h1>
+            <button v-if="isGroup === true" type="button" class="btn btn-sm btn-outline-primary" @click="goToInfo">
                 <svg class="feather">
                     <use href="/feather-sprite-v4.29.0.svg#settings" />
                 </svg>
@@ -205,8 +205,8 @@ export default {
                 </div>
                 <p>
                     {{ message.Timestamp }}
-                    <span v-if="message.Checkmark === 'received'">✔️</span>
-                    <span v-else>✔️✔️</span>
+                    <span v-if="message.Checkmark === 'received' && message.Sender.Id == ownerId">✔️</span>
+                    <span v-if="message.Checkmark !== 'received' && message.Sender.Id == ownerId">✔️✔️</span>
                 </p>
                 <div class="comments">
                     <div v-for="cmt in emojis" :key="cmt">
@@ -282,7 +282,6 @@ export default {
     flex-direction: column;
     align-items: flex-start;
     justify-content: space-evenly;
-    border-bottom: 1px solid lightgray;
     overflow-y: scroll;
     padding-bottom: 75px;
     box-sizing: border-box;

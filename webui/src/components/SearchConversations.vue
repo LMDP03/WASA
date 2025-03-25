@@ -53,7 +53,8 @@ export default {
             sessionStorage.convImg = conv.Image;
             sessionStorage.convName = conv.Name;
             sessionStorage.isGroup = conv.Group;
-            this.$router.push('/conversation');
+            await this.$router.push('/conversation');
+            window.location.reload();
             this.closeModal();
         },
     },
