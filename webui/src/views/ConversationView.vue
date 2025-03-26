@@ -131,6 +131,9 @@ export default {
         },
         checkReactions(msg) {
             return msg.Reactions.filter(c => c.Sender.Id == this.ownerId).length;
+        },
+        goBack() {
+            this.$router.push('/home');
         }
     },
     emits: ['login-succes'],
@@ -164,12 +167,25 @@ export default {
                 <img class="conv-photo" :src="`data:image/jpg;base64,${this.convImg}`" />
                 {{ this.convName }}
             </h1>
-            <button v-if="isGroup === true" type="button" class="btn btn-sm btn-outline-primary" @click="goToInfo">
-                <svg class="feather">
-                    <use href="/feather-sprite-v4.29.0.svg#settings" />
-                </svg>
-                Group Settings
-            </button>
+            <div class="btn-toolbar mb-2 mb-md-0">
+                <div class="btn-group me-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" @click="goBack">
+                        <svg class="feather">
+                            <use href="/feather-sprite-v4.29.0.svg#arrow-left" />
+                        </svg>
+                        Back
+                    </button>
+                </div>
+                <div v-if="isGroup === true" class="btn-group me-2">
+                    <button type="button" class="btn btn-sm btn-outline-primary" @click="goToInfo">
+                        <svg class="feather">
+                            <use href="/feather-sprite-v4.29.0.svg#settings" />
+                        </svg>
+                        Group Settings
+                    </button>
+                </div>
+            </div>
+            
 
             <CommentMessage :show="commentModalIsVisible" :msg="messageToComment" @close="handleCommentModal" title="comments">
                 <template>
@@ -189,7 +205,8 @@ export default {
             <div class="messages" v-for="message in messages" :key="message.MsgId">
                 <h3>
                     <img class="profile-picture" :src="`data:image/jpg;base64,${message.Sender.Image}`" alt="Sender Photo">
-                    {{ message.Sender.Name }}
+                    <span v-if="message.Sender.Id != ownerId">{{ message.Sender.Name }}</span>
+                    <span v-else>You</span>
                 </h3>
                 <div class="reply-snippet" v-if="message.ResponseTo.Sender.Id !== 0">
                     <h6>Response to: {{ message.ResponseTo.Sender.Name }}</h6>

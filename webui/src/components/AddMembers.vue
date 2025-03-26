@@ -13,7 +13,8 @@ export default {
             searchText: "",
             owner: localStorage.userName,
             convId: sessionStorage.convId,
-            selectedUsers:[],                
+            selectedUsers:[],
+            groupMembers: JSON.parse(sessionStorage.members),
         };
     },
     methods: {
@@ -49,6 +50,7 @@ export default {
                     this.filteredUsers = this.users.filter(user => user.Name.toLowerCase().includes(this.searchText.toLowerCase()));
                 }
             }
+            this.filteredUsers = this.filteredUsers.filter(user => !this.groupMembers.find(m => m.Name === user.Name));
         },
         async addToGroup() {
             try {
@@ -67,7 +69,7 @@ export default {
             }
         },
         removeUser(user) {
-            this.selectedUsers = this.selectedUsers.filter(u => u.name !== user.Name);
+            this.selectedUsers = this.selectedUsers.filter(u => u.Name !== user.Name);
         },
     },
     watch: {

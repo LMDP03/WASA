@@ -11,6 +11,7 @@ export default {
             createGroupModalIsVisible: false,
             users: [],
             intervalId: null,
+            owner: localStorage.userName,
         }
     },
     methods: {
@@ -111,10 +112,16 @@ export default {
                         {{ preview.Name }}
                     </h3>
                     <div class="preview-snippet" v-if="preview.LastMessage.MsgId !== 0 && preview.LastMessage.Image === ''">
-                        <p>{{ preview.LastMessage.Sender.Name }}: {{ preview.LastMessage.Text }}</p>
+                        <p v-if="preview.LastMessage.Sender.Name === owner">You: {{ preview.LastMessage.Text }}</p>
+                        <p v-else>{{ preview.LastMessage.Sender.Name }}: {{ preview.LastMessage.Text }}</p>
                     </div>
                     <div class="preview-snippet" v-if="preview.LastMessage.MsgId !== 0 && preview.LastMessage.Image !== ''">
-                        <p>{{ preview.LastMessage.Sender.Name }}: 
+                        <p v-if="preview.LastMessage.Sender.Name === owner">You: 
+                            <svg class="feather">
+                                <use href="/feather-sprite-v4.29.0.svg#image" />
+                            </svg> {{ preview.LastMessage.Text }}
+                        </p>
+                        <p v-else>{{ preview.LastMessage.Sender.Name }}: 
                             <svg class="feather">
                                 <use href="/feather-sprite-v4.29.0.svg#image" />
                             </svg> {{ preview.LastMessage.Text }}

@@ -9,6 +9,7 @@ export default {
             usernameValidate: new RegExp('^\\w{0,16}$'),
             users: [],
             owner: localStorage.userName,
+            ownerImg: localStorage.userImage,
             addMembersIsVisible: false,
             newName: "",
             newImage: null,
@@ -83,6 +84,24 @@ export default {
         handleAddMembers() {
             this.addMembersIsVisible = !this.addMembersIsVisible;
         },
+        membersSort(members) {
+            members.sort((a, b) => {
+                let x = a.Name.toLowerCase();
+                let y = b.Name.toLowerCase();
+                if (x < y) {
+                    return -1;
+                }
+                if (x > y) {
+                    return 1;
+                }
+                return 0;
+            });
+            members = members.filter(member => member.Name !== this.owner);
+            return members;
+        },
+        goBack() {
+            this.$router.push('/conversation');
+        }
     },
     emits: ['login-success'],
     components: {AddMembers, SearchUsers},
@@ -99,6 +118,14 @@ export default {
             
             <div class="btn-toolbar mb-2 mb-md-0">
                 <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
+                <div class="btn-group me-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" @click="goBack">
+                        <svg class="feather">
+                            <use href="/feather-sprite-v4.29.0.svg#arrow-left" />
+                        </svg>
+                        Back
+                    </button>
+                </div>
                 <div class="btn-group me-2">
                     <button type="button" class="btn btn-sm btn-outline-primary" @click="handleAddMembers">
                         <svg class="feather">
@@ -135,7 +162,7 @@ export default {
                     <form class="username-form">
                         <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
                         <input type="text" v-model="this.newName" placeholder="New Group Name" />
-                        <button type="submit" @click.prevent="setGroupName">Update</button>
+                        <button class="btn btn-sm btn-outline-primary" type="submit" @click.prevent="setGroupName">Update</button>
                     </form>
                 </template>
             </SearchUsers>
@@ -147,7 +174,7 @@ export default {
                     <form class="username-form">
                         <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
                         <input type="file" ref="file" accept=".jpg,.jpeg" @change="handleFileChange" />
-                        <button type="submit" @click.prevent="setGroupPhoto">Update</button>
+                        <button class="btn btn-sm btn-outline-primary" type="submit" @click.prevent="setGroupPhoto">Update</button>
                     </form>
                 </template>
             </SearchUsers>
@@ -158,11 +185,15 @@ export default {
             </AddMembers>
 
         </div>
-        <div v-for="user in groupMembers" :key="user.Id">
+        <p class="username">
+            <img :src="`data:image/jpg;base64,${this.ownerImg}`" class="profile-picture">
+            You
+            <button type="button" class="btn btn-sm btn-outline-primary" @click="leaveGroup">Leave Group</button>
+        </p>
+        <div v-for="user in membersSort(groupMembers)" :key="user.Id">
             <p class="username">
                 <img :src="`data:image/jpg;base64,${user.Image}`" class="profile-picture">
                 {{ user.Name}}
-                <button type="button" v-if="user.Name == owner" class="btn btn-sm btn-outline-primary" @click="leaveGroup">Leave</button>
             </p>
         </div>
         <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>

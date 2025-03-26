@@ -65,13 +65,13 @@ export default {
             this.errorMsg = "";
             const formData = new FormData();
             formData.append('image', this.newImage);
-
-            this.$axios.put(`/users/${localStorage.userId}/image`, formData, { headers: { 'Authorization': `${localStorage.token}` } }).then(response => {
+            await this.$axios.put(`/users/${localStorage.userId}/image`, formData, { headers: { 'Authorization': `${localStorage.token}` } }).then(response => {
                 this.userImage = response.data.Image;
                 this.handleUpdateImage();
             }).catch(e => {
                 this.errorMsg = e.toString();
             });
+            window.location.reload();
         },
         async setMyUserName() {
             if (this.userName == this.newName) {
@@ -93,6 +93,7 @@ export default {
                     this.errorMsg = e.toString();
                 }
             }
+            window.location.reload();
         }
     }
 }
@@ -121,7 +122,7 @@ export default {
                             <form class="username-form">
                                 <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
                                 <input type="text" v-model="newName" placeholder="Choose a new name" />
-                                <button type="submit" @click.prevent="setMyUserName">Update</button>
+                                <button class="btn btn-sm btn-outline-primary" type="submit" @click.prevent="setMyUserName">Update</button>
                             </form>
                         </template>
                     </SearchUsers>
@@ -133,7 +134,7 @@ export default {
                             <form class="username-form">
                                 <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
                                 <input type="file" ref="file" accept=".jpg,.jpeg" @change="handleFileChange" />
-                                <button type="submit" @click.prevent="setMyPhoto">Update</button>
+                                <button class="btn btn-sm btn-outline-primary" type="submit"  @click.prevent="setMyPhoto">Update</button>
                             </form>
                         </template>
                     </SearchUsers>
