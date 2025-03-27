@@ -1,6 +1,6 @@
 package database
 
-var queryGetMessages = `SELECT senderId, msgId, text, COALESCE(image, ""), timeStamp, responseTo, checkMark FROM Messages WHERE convId = ? ORDER BY msgId;`
+var queryGetMessages = `SELECT senderId, msgId, text, COALESCE(image, ""), timeStamp, responseTo, checkMark, forwarded FROM Messages WHERE convId = ? ORDER BY msgId;`
 
 func (db *appdbimpl) GetMessages(convId int) ([]Message, error) {
 
@@ -20,7 +20,8 @@ func (db *appdbimpl) GetMessages(convId int) ([]Message, error) {
 		msg.ConvId = convId
 		var senderId int
 		var responseTo int
-		err = rows.Scan(&senderId, &msg.MsgId, &msg.Text, &msg.Image, &msg.Timestamp, &responseTo, &msg.Checkmark)
+		var forwarded int
+		err = rows.Scan(&senderId, &msg.MsgId, &msg.Text, &msg.Image, &msg.Timestamp, &responseTo, &msg.Checkmark, &forwarded)
 		if err != nil {
 			return nil, err
 		}
@@ -43,6 +44,11 @@ func (db *appdbimpl) GetMessages(convId int) ([]Message, error) {
 			if err != nil {
 				return nil, err
 			}
+		}
+		if forwarded == 1 {
+			msg.Forwarded = true
+		} else {
+			msg.Forwarded = false
 		}
 		messages = append(messages, msg)
 	}

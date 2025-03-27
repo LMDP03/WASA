@@ -107,7 +107,7 @@ func (rt *_router) StartConversation(w http.ResponseWriter, r *http.Request, ps 
 		return
 	}
 
-	dbMsg, err := rt.db.CreateMessage(dbConv.Id, userId, 0, req.text, req.image)
+	dbMsg, err := rt.db.CreateMessage(dbConv.Id, userId, 0, req.text, req.image, false)
 	if err != nil {
 		InternalServerError(w, err, "Couldn't send the message", ctx)
 		return

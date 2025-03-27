@@ -35,6 +35,7 @@ var sql_MESSAGES = `CREATE TABLE IF NOT EXISTS Messages
 	responseTo INTEGER NOT NULL,
 	checkMark STRING NOT NULL,
 	accessCount INTEGER NOT NULL,
+	forwarded INTEGER NOT NULL,
 	PRIMARY KEY (convId, msgId)
 );`
 

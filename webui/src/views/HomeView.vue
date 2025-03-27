@@ -9,7 +9,6 @@ export default {
             conversations: [],
             searchModalIsVisible: false,
             createGroupModalIsVisible: false,
-            users: [],
             intervalId: null,
             owner: localStorage.userName,
         }

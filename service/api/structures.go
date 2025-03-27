@@ -86,6 +86,7 @@ type Message struct {
 	Timestamp  time.Time  `json: "timestamp"`
 	Checkmark  string     `json: "checkmark"`
 	Reactions  []Reaction `json: "reactions"`
+	Forwarded  bool       `json: "forwarded"`
 }
 
 func (m *Message) ConvertMessage(msg database.Message) error {
@@ -107,6 +108,7 @@ func (m *Message) ConvertMessage(msg database.Message) error {
 	m.Timestamp = msg.Timestamp
 	m.Checkmark = msg.Checkmark
 	m.Reactions = make([]Reaction, len(msg.Reactions))
+	m.Forwarded = msg.Forwarded
 
 	for i := range msg.Reactions {
 		var reac Reaction

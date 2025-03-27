@@ -116,7 +116,7 @@ func (rt *_router) SendMessage(w http.ResponseWriter, r *http.Request, ps httpro
 		responseid = 0
 	}
 
-	dbMsg, err := rt.db.CreateMessage(convId, userId, responseid, req.text, req.image)
+	dbMsg, err := rt.db.CreateMessage(convId, userId, responseid, req.text, req.image, false)
 	if err != nil {
 		InternalServerError(w, err, "Error while sending the message", ctx)
 		return

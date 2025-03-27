@@ -45,7 +45,7 @@ type AppDatabase interface {
 	CheckUserById(userid int) (bool, error)
 	CheckUserByName(username string) (bool, error)
 	CreateConversation(name string, group bool, otherid int, participants []string) (Conversation, error)
-	CreateMessage(convid int, senderid int, responseto int, text string, image string) (Message, error)
+	CreateMessage(convid int, senderid int, responseto int, text string, image string, forwarded bool) (Message, error)
 	CreateReaction(convId int, senderId int, msgId int, emoji string) (Reaction, error)
 	CreateUser(username string) (User, error)
 	DeleteMessage(convid int, msgid int) error

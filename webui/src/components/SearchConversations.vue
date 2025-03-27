@@ -2,7 +2,6 @@
 export default {
     props: {
         show: Boolean,
-        conversations: Array,
         title: String,
     },
     data() {
@@ -20,7 +19,7 @@ export default {
         },
         async filterConvs() {
             this.errorMsg = "";
-            this.filteredConvs = this.conversations;
+            this.filteredConvs = [];
             if (this.searchText.length > 0) {
                 if (this.searchText.length > 16 || !this.usernameValidate.test(this.searchText)) {
                     this.errorMsg = "Invalid username, it can contain at most 16 alphanumerical characters.";
@@ -41,8 +40,6 @@ export default {
                         this.errorMsg = e.toString();
                         this.filteredConvs = [];
                     }
-                } else {
-                    this.filteredConvs = this.conversations.filter(conv => conv.Name.toLowerCase().includes(this.searchText.toLowerCase()));
                 }
             }
         },
@@ -53,8 +50,10 @@ export default {
             sessionStorage.convImg = conv.Image;
             sessionStorage.convName = conv.Name;
             sessionStorage.isGroup = conv.Group;
-            await this.$router.push('/conversation');
-            window.location.reload();
+            this.$router.push('/conversation');
+            if (window.location.hash === "#/conversation") {
+                window.location.reload();
+            }
             this.closeModal();
         },
     },
@@ -63,7 +62,7 @@ export default {
             this.filterConvs();
         },
         show() {
-            this.filteredConvs = this.conversations;
+            this.filteredConvs = [];
         }
     },
 };

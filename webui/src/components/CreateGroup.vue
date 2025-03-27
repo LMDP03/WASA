@@ -2,7 +2,6 @@
 export default {
     props: {
         show: Boolean,
-        users: Array,
         title: String
     },
     data() {
@@ -25,7 +24,7 @@ export default {
         },
         async filterUsers() {
             this.errorMsg = "";
-            this.filteredUsers = this.users;
+            this.filteredUsers = [];
             if (this.searchText.length > 0) {
                 if (this.searchText.length > 16 || !this.usernameValidate.test(this.searchText)) {
                     this.errorMsg = "Invalid username, it can contain at most 16 alphanumerical characters.";
@@ -47,8 +46,6 @@ export default {
                         this.filteredUsers = [];
                     }
                 }
-            } else {
-                this.filteredUsers = this.users.filter(user => user.Name.toLowerCase().includes(this.searchText.toLowerCase()));
             }
         },
         async createGroup() {
@@ -86,7 +83,7 @@ export default {
             this.filterUsers();
         },
         show() {
-            this.filteredUsers = this.users;
+            this.filteredUsers = [];
         }
     },
 };

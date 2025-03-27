@@ -52,6 +52,13 @@ export default {
             });
         },
         check() {
+            if (this.text.length < 1 && this.image == null) {
+                return;
+            }
+            if (this.text.length > 1000) {
+                this.errorMsg = "Message cannot be longer than 1000 characters.";
+                return;
+            }
             if (!this.convId) {
                 this.startConversation();
             } else {
@@ -125,9 +132,6 @@ export default {
             await this.$axios.delete(url, { headers: { 'Authorization': localStorage.token } }).then(() => {}).catch(e => {
                 this.errorMsg = e.toString();
             });
-        },
-        countEmojis(msg, emoji) {
-            return msg.Reactions.filter(c => c.Emoji === emoji).length;
         },
         checkReactions(msg) {
             return msg.Reactions.filter(c => c.Sender.Id == this.ownerId).length;
@@ -208,6 +212,7 @@ export default {
                     <span v-if="message.Sender.Id != ownerId">{{ message.Sender.Name }}</span>
                     <span v-else>You</span>
                 </h3>
+                <p v-if="message.Forwarded">Forwarded</p>
                 <div class="reply-snippet" v-if="message.ResponseTo.Sender.Id !== 0">
                     <h6>Response to: {{ message.ResponseTo.Sender.Name }}</h6>
                     <p class="preview-snippet">
@@ -226,8 +231,9 @@ export default {
                     <span v-if="message.Checkmark !== 'received' && message.Sender.Id == ownerId">✔️✔️</span>
                 </p>
                 <div class="comments">
-                    <div v-for="cmt in emojis" :key="cmt">
-                        <p v-if="countEmojis(message, cmt) > 0">{{ cmt }}: {{ countEmojis(message, cmt) }}</p>
+                    <div v-for="reaction in message.Reactions" :key="cmt">
+                        <p v-if="reaction.Sender.Id == ownerId">You: {{ reaction.Emoji }}</p>
+                        <p v-else>{{ reaction.Sender.Name }}: {{ reaction.Emoji }}</p>
                     </div>
                 </div>
                 
@@ -236,7 +242,7 @@ export default {
                     <div class="btn-group me-2">
                         <button type="button" class="btn btn-sm btn-outline-secondary" @click="replyToMessage(message)">Reply</button>
                         <button type="button" class="btn btn-sm btn-outline-secondary" @click="handleForwardModal(message)">Forward</button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" @click="deleteMessage(message)">Delete</button>
+                        <button type="button" v-if="message.Sender.Id == ownerId" class="btn btn-sm btn-outline-secondary" @click="deleteMessage(message)">Delete</button>
                     </div>
                     <div class="btn-group me-2" v-if="checkReactions(message) !== 0">
                         <button type="button" class="btn btn-sm btn-outline-secondary" @click="handleCommentModal(message)"> Change Comment</button>

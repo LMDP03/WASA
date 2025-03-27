@@ -86,12 +86,9 @@ export default {
                 let _ = await this.$axios.put(`/users/${localStorage.userId}/name`, this.newName, { headers: { 'Authorization': `${localStorage.token}` } });
                 this.userName = this.newName;
                 this.handleUpdateName();
-            } catch (e) {
-                if (e.response.data == "Username already exists\n") {
-                    this.errorMsg = "Username already taken; please choose another one.";
-                } else {
-                    this.errorMsg = e.toString();
-                }
+            } catch (e) {            
+                this.errorMsg = "Username already taken; please choose another one.";
+                return;
             }
             window.location.reload();
         }

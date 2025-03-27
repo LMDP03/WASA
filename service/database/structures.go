@@ -25,6 +25,7 @@ type Message struct {
 	Timestamp  time.Time
 	Checkmark  string
 	Reactions  []Reaction
+	Forwarded  bool
 }
 
 type Response struct {
