@@ -231,7 +231,7 @@ export default {
                     <span v-if="message.Checkmark !== 'received' && message.Sender.Id == ownerId">✔️✔️</span>
                 </p>
                 <div class="comments">
-                    <div v-for="reaction in message.Reactions" :key="cmt">
+                    <div v-for="reaction in message.Reactions" :key="reaction.Sender.Name">
                         <p v-if="reaction.Sender.Id == ownerId">You: {{ reaction.Emoji }}</p>
                         <p v-else>{{ reaction.Sender.Name }}: {{ reaction.Emoji }}</p>
                     </div>

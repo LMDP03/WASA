@@ -51,7 +51,7 @@ export default {
                                 {{ emoji }}
                             </div>
                         </div>
-                        <ErrorMsg v-if="errorMsg" :msg="errormsg"></ErrorMsg>
+                        <ErrorMsg v-if="errorMsg" :msg="errorMsg"></ErrorMsg>
                     </div>
                 </div>
             </div>

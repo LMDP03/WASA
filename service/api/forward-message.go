@@ -83,43 +83,91 @@ func (rt *_router) ForwardMessage(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	var destinations []int
+	type Destination struct {
+		Id     int  `json:"id"`
+		IsConv bool `json:"isConv"`
+	}
+
+	var destinations []Destination
 	if err := json.NewDecoder(r.Body).Decode(&destinations); err != nil {
 		BadRequest(w, err, "Couldn't decode the request", ctx)
 		return
 	}
+
 	for i := range destinations {
 
-		exists, _, err := rt.db.CheckConversationById(destinations[i])
-		if err != nil {
-			InternalServerError(w, err, "Error checking the destination", ctx)
-			return
-		}
-		if !exists {
-			BadRequest(w, err, "The destination doesn't exists", ctx)
-			return
-		}
-		ok, err := rt.db.IsParticipant(destinations[i], userId)
-		if err != nil {
-			InternalServerError(w, err, "Couldn't check destination existance", ctx)
-			return
-		}
-		if !ok {
-			Forbidden(w, nil, "The user isn't a member of at least one conversation", ctx)
-			return
-		}
+		if destinations[i].IsConv {
+			exists, _, err := rt.db.CheckConversationById(destinations[i].Id)
+			if err != nil {
+				InternalServerError(w, err, "Error checking the destination", ctx)
+				return
+			}
+			if !exists {
+				BadRequest(w, err, "The destination doesn't exists", ctx)
+				return
+			}
+			ok, err := rt.db.IsParticipant(destinations[i].Id, userId)
+			if err != nil {
+				InternalServerError(w, err, "Couldn't check destination existance", ctx)
+				return
+			}
+			if !ok {
+				Forbidden(w, nil, "The user isn't a member of at least one conversation", ctx)
+				return
+			}
 
-		_, err = rt.db.CreateMessage(destinations[i], userId, 0, dbMsgOrig.Text, dbMsgOrig.Image, true)
-		if err != nil {
-			InternalServerError(w, err, "Error while sending the message", ctx)
-			return
+			_, err = rt.db.CreateMessage(destinations[i].Id, userId, 0, dbMsgOrig.Text, dbMsgOrig.Image, true)
+			if err != nil {
+				InternalServerError(w, err, "Error while sending the message", ctx)
+				return
+			}
+
+		} else {
+			exists, err := rt.db.CheckUserById(userId)
+			if err != nil {
+				InternalServerError(w, err, "Error while checking the receiver", ctx)
+				return
+			}
+			if !exists {
+				BadRequest(w, err, "Receiver doesn't exists", ctx)
+				return
+			}
+			var participants []string
+			you, err := rt.db.GetUserById(userId)
+			if err != nil {
+				InternalServerError(w, err, "Couldn't get user", ctx)
+				return
+			}
+			participants = append(participants, you.Name)
+
+			other, err := rt.db.GetUserById(destinations[i].Id)
+			if err != nil {
+				InternalServerError(w, err, "Couldn't get other user", ctx)
+				return
+			}
+			participants = append(participants, other.Name)
+
+			dbConv, err := rt.db.CreateConversation("", false, userId, participants)
+			if err != nil {
+				InternalServerError(w, err, "Error while creating the conversation", ctx)
+				return
+			}
+
+			_, err = rt.db.CreateMessage(dbConv.Id, userId, 0, dbMsgOrig.Text, dbMsgOrig.Image, true)
+			if err != nil {
+				InternalServerError(w, err, "Couldn't send the message", ctx)
+				return
+			}
+
+			destinations[i].Id = dbConv.Id
+			destinations[i].IsConv = true
 		}
 
 	}
 
 	k := len(destinations) - 1
 
-	dbConv, err := rt.db.GetConversationById(destinations[k], userId)
+	dbConv, err := rt.db.GetConversationById(destinations[k].Id, userId)
 	if err != nil {
 		InternalServerError(w, err, "Error while getting the destination conv", ctx)
 		return

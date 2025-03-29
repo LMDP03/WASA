@@ -13,6 +13,7 @@ export default {
             searchText: "",
             filteredConvs: [],
             selectedConvs: [],
+            filteredUsers: [],
             usernameValidate: new RegExp('^\\w{0,16}$'),
         };
     },
@@ -39,26 +40,45 @@ export default {
                         return;
                     }
                     this.filteredConvs = response.data;
+                    let response2 = await this.$axios.get(`/users/${localStorage.userId}/others?srcName=${this.searchText}`, { headers: {'Authorization': localStorage.token } });
+                    if (response2.data == null) {
+                        this.filteredUsers = [];
+                        return;
+                    }
+                    this.filteredUsers = response2.data;
+                    this.filteredUsers = this.filteredUsers.filter(user => !this.filteredConvs.some(conv => conv.Name === user.Name && conv.Group === false));
+                    this.filteredConvs = this.filteredConvs.concat(this.filteredUsers);
                 } catch (e) {
                     this.errorMsg = e.toString();
+                    this.filteredUsers = [];
                     this.filteredConvs = [];
                 }
 
             }
         },
         selectConv(conv) {
-            if (!this.selectedConvs.find(c => c.Id === conv.Id)) {
+            if (conv.hasOwnProperty('Group') && !this.selectedConvs.some(c => c.Id === conv.Id && c.hasOwnProperty('Group'))) {
+                this.selectedConvs.push(conv);
+            } else if (!conv.hasOwnProperty('Group') && !this.selectedConvs.some(c => c.Id === conv.Id && !c.hasOwnProperty('Group'))) {
                 this.selectedConvs.push(conv);
             }
         },
         removeConv(conv) {
-            this.selectedConvs = this.selectedConvs.filter(c => c.Id !== conv.Id);
+            if (conv.hasOwnProperty('Group')) {
+                this.selectedConvs = this.selectedConvs.filter(c => (c.Id !== conv.Id && c.hasOwnProperty('Group')) || !c.hasOwnProperty('Group'));
+            } else {
+                this.selectedConvs = this.selectedConvs.filter(c => (c.Id !== conv.Id && !c.hasOwnProperty('Group')) || c.hasOwnProperty('Group'));
+            }
         },
         async forwardMessage() {
             this.errorMsg = "";
             const destinations = [];
             for (let conv of this.selectedConvs) {
-                destinations.push(conv.Id);
+                var dest = {
+                    id: conv.Id,
+                    isConv: conv.hasOwnProperty('Group'),
+                };
+                destinations.push(dest);
             }
             try {
                 const url = `/users/${localStorage.userId}/conversation/${this.convId}/messages/${this.msg.MsgId}`;

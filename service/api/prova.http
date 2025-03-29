@@ -261,12 +261,15 @@ risposta
 ###
 
 # FORWARD MESSAGE #
-POST http://localhost:3000/users/1/conversation/1/messages/1 HTTP/1.1
-Authorization: 1
+POST http://localhost:3000/users/4/conversation/1/messages/1 HTTP/1.1
+Authorization: 4
 Content-Type: application/json
 
 [
-    2
+    {
+        "id": 2,
+        "isGroup": false
+    }
 ]
 
 ###
