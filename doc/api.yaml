@@ -122,13 +122,9 @@ components:
 
     MessageContent:
       description: The content of a message, which can be either a text or an image.
-      type: object
-      properties:
       anyOf:
-        - text:
-            $ref: "#/components/schemas/Text"
-        - image:
-            $ref: "#/components/schemas/Image"
+        - $ref: "#/components/schemas/Text"
+        - $ref: "#/components/schemas/Image"
         
     Message:
       description: The message object, containing all the message's information.
@@ -147,7 +143,6 @@ components:
           type: string
           format: byte
           enum:
-            - "sent"
             - "received"
             -  "read"
         text:
