@@ -319,7 +319,7 @@ export default {
     padding: 10px;
     border-bottom: 1px solid lightgray;
     overflow-y: scroll;
-    width: 80vw;
+    width: 78vw;
 }
 
 .messages .reply-snippet {
@@ -329,7 +329,7 @@ export default {
     justify-content: space-between;
     padding: 10px;
     background-color: rgba(128, 128, 128, 0.5);
-    width: 76vw;
+    width: 72vw;
     border-radius: 10px;
     margin-left: 40px;
     margin-bottom: 10px;
